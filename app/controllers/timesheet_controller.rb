@@ -17,7 +17,7 @@ class TimesheetController < ApplicationController
       @from = params[:date][:from]
       @to = params[:date][:to]
 
-      if params[:project][:id].nil?
+      if params[:project][:id] == ""
         @projects = Project.find(:all);
       else
         @projects = [Project.find(params[:project][:id])]
