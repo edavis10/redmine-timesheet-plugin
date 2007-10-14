@@ -9,6 +9,9 @@
 <p><label for="date_to">To:</label><br />
 <%= f.text_field "to", :size => 10, :value => @to %><%= calendar_for('date_to') %></p>
 
+<%= select("project","id", Project.find(:all).collect {|p| [ p.name, p.id ] }, { :include_blank => true }) %>
+
+
 <%= submit_tag "Get results" -%>
 <% end %>
 

@@ -9,6 +9,7 @@ class TimesheetController < ApplicationController
 
   def index
     @today = Date.today.to_s
+    @project_select = Project.find(:all)
 
     case request.method
     when :post
@@ -16,7 +17,11 @@ class TimesheetController < ApplicationController
       @from = params[:date][:from]
       @to = params[:date][:to]
 
-      @projects = Project.find(:all);
+      if params[:project][:id].nil?
+        @projects = Project.find(:all);
+      else
+        @projects = [Project.find(params[:project][:id])]
+      end
       @entries = { }
       @projects.each do |project|
         logs = project.time_entries.find(:all,
