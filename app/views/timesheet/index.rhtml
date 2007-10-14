@@ -1,6 +1,6 @@
-
 <h2>Timesheet</h2>
 
+<p>
 <%= form_tag({:action => 'index', :id => @project}) %>
 
 <label>From:</label><br />
@@ -12,8 +12,10 @@
 <%= submit_tag "Get results" -%>
 <%= end_form_tag %>
 
+</p>
+
 <% if @entries.length > 0 %>
-<h2><%= l(:label_spent_time) %></h2>
+<h2><%= l(:label_spent_time) %>(<%= @total -%>hours)</h2>
 
 <% @entries.each do |entryname,entry| -%>
 <%= render :partial => 'project_timesheet', :locals => {:entry => entry, :name => entryname} %>

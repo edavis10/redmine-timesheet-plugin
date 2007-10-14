@@ -27,6 +27,13 @@ class TimesheetController < ApplicationController
         @entries[project.name] = logs unless logs.empty?
       end
 
+      @total = 0
+      @entries.each do |project,logs|
+        logs.each do |log|
+          @total += log.hours
+        end
+     end
+
       @owner_id = logged_in_user ? logged_in_user.id : 0
 
       send_csv and return if 'csv' == params[:export]
