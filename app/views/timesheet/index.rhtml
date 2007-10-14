@@ -1,9 +1,14 @@
 
-<p>Timelogs since:</p>
+<h2>Timesheet</h2>
 
 <%= form_tag({:action => 'index', :id => @project}) %>
 
-<%= date_select("filter", "date") %>
+<label>From:</label><br />
+<%= date_select("from", "date") %>
+<br />
+<label>To:</label><br />
+<%= date_select("to", "date") %>
+
 <%= submit_tag "Get results" -%>
 <%= end_form_tag %>
 

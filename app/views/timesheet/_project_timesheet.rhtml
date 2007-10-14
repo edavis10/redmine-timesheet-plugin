@@ -1,34 +1,34 @@
 <h3><%= h name -%></h3>
 <table class="list">
-<thead>
-<%= sort_header_tag('spent_on', :caption => l(:label_date)) %>
-<%= sort_header_tag('user_id', :caption => l(:label_member)) %>
-<%= sort_header_tag('activity_id', :caption => l(:label_activity)) %>
-<%= sort_header_tag('issue_id', :caption => l(:label_issue)) %>
-<th><%= l(:field_comments) %></th>
-<%= sort_header_tag('hours', :caption => l(:field_hours)) %>
-<th></th>
-</thead>
-<tbody>
-<% entry.each do |e| %>
-<tr class="<%= cycle("odd", "even") %>">
-<td align="center"><%= format_date(e.spent_on) %></td>
-<td align="center"><%= e.user.name %></td>
-<td align="center"><%= e.activity.name %></td>
-<td align="center">
-    <% if e.issue %>
-    <div class="tooltip">
-    <%= link_to_issue e.issue %>
-    <span class="tip">
-    <%= render_issue_tooltip e.issue %>
-    </span>
-        </div>
-        <% end %>
-</td>
-<td><%=h e.comments %></td>
-<td align="center"><strong><%= e.hours %></strong></td>
-<td align="center"><%= link_to_if_authorized(l(:button_edit), {:controller => 'timelog', :action => 'edit', :id => e}, :class => "icon icon-edit") if e.user_id == @owner_id %></td>
-</tr>
-<% end %>
-</tbdoy>
+  <thead>
+    <th width="10%"><%= l(:label_date) %></th>
+    <th width="10%"><%= l(:label_member) %></th>
+    <th width="15%"><%= l(:label_activity) %></th>
+    <th width="10%"><%= l(:label_issue) %></th>
+    <th width="25%"><%= l(:field_comments) %></th>
+    <th width="10%"><%= l(:field_hours) %>
+    <th width="5%"></th>
+  </thead>
+  <tbody>
+    <% entry.each do |e| %>
+    <tr class="<%= cycle("odd", "even") %>">
+    <td align="center"><%= format_date(e.spent_on) %></td>
+    <td align="center"><%= e.user.name %></td>
+    <td align="center"><%= e.activity.name %></td>
+    <td align="center">
+      <% if e.issue %>
+      <div class="tooltip">
+        <%= link_to_issue e.issue %>
+        <span class="tip">
+          <%= render_issue_tooltip e.issue %>
+        </span>
+      </div>
+      <% end %>
+    </td>
+    <td><%=h e.comments %></td>
+    <td align="center"><strong><%= e.hours %></strong></td>
+    <td align="center"><%= link_to_if_authorized(l(:button_edit), {:controller => 'timelog', :action => 'edit', :id => e}, :class => "icon icon-edit") if e.user_id == @owner_id %></td>
+  </tr>
+  <% end %>
+</tbody>
 </table>
