@@ -8,25 +8,25 @@ class TimesheetController < ApplicationController
   helper :issues
 
   def index
+    @today = Date.today.to_s
+
     case request.method
     when :post
 
-      sort_init 'spent_on', 'desc'
-      sort_update
-
-      from_date = Date.civil(params[:from][:"date(1i)"].to_i,params[:from][:"date(2i)"].to_i,params[:from][:"date(3i)"].to_i)
-      to_date = Date.civil(params[:to][:"date(1i)"].to_i,params[:to][:"date(2i)"].to_i,params[:to][:"date(3i)"].to_i)
+      @from = params[:date][:from]
+      @to = params[:date][:to]
 
       @projects = Project.find(:all);
       @entries = { }
       @projects.each do |project|
         logs = project.time_entries.find(:all,
-                                         :conditions => ['spent_on >= (?) AND spent_on <= (?)',from_date,to_date],
+                                         :conditions => ['spent_on >= (?) AND spent_on <= (?)',@from,@to],
                                          :include => [:activity, :user, {:issue => [:tracker, :assigned_to, :priority]}],
                                          :order => "spent_on ASC")
         @entries[project.name] = logs unless logs.empty?
       end
 
+      # Sums
       @total = 0
       @entries.each do |project,logs|
         logs.each do |log|
@@ -40,6 +40,7 @@ class TimesheetController < ApplicationController
       render :action => 'details', :layout => false if request.xhr?
     when :get
       # nothing
+      @from,@to = @today,@today
       @entries = []
     end
   end

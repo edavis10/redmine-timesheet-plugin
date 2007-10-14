@@ -1,16 +1,17 @@
 <h2>Timesheet</h2>
 
 <p>
-<%= form_tag({:action => 'index', :id => @project}) %>
+<% form_for :date, :url =>{:action => 'index', :id => @project} do |f|  %>
 
-<label>From:</label><br />
-<%= date_select("from", "date") %>
-<br />
-<label>To:</label><br />
-<%= date_select("to", "date") %>
+<p><label for="date_from">From:</label><br />
+<%= f.text_field "from", :size => 10, :value => @from %><%= calendar_for('date_from') %></p>
+
+<p><label for="date_to">To:</label><br />
+<%= f.text_field "to", :size => 10, :value => @to %><%= calendar_for('date_to') %></p>
 
 <%= submit_tag "Get results" -%>
-<%= end_form_tag %>
+<% end %>
+
 
 </p>
 
@@ -21,3 +22,12 @@
 <%= render :partial => 'project_timesheet', :locals => {:entry => entry, :name => entryname} %>
 <% end -%>
 <% end -%>
+
+
+<% content_for :header_tags do %>
+    <%= javascript_include_tag 'calendar/calendar' %>
+    <%= javascript_include_tag "calendar/lang/calendar-#{current_language}.js" %>
+    <%= javascript_include_tag 'calendar/calendar-setup' %>
+    <%= stylesheet_link_tag 'calendar' %>
+<% end %>
+

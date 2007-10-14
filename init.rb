@@ -3,7 +3,7 @@ require 'redmine'
 
 RAILS_DEFAULT_LOGGER.info 'Starting Timesheet plugin for Redmine'
 
-Redmine::Plugin.register :timesheet_plugin do
+Redmine::Plugin.register "timesheet_plugin" do
   name 'Timesheet Plugin'
   author 'Eric Davis of Little Stream Software'
   description 'This is a Timesheet plugin for Redmine to show timelogs for all projects'
@@ -14,8 +14,7 @@ Redmine::Plugin.register :timesheet_plugin do
   project_module :timesheet_module do
     # This permission has to be explicitly given
     # It will be listed on the permissions screen
-    permission :timesheet_index, {:timesheet => [:index]}, :public => true
-    permission :timesheet_results, {:timesheet => [:timelog]}, :public => true
+    permission :run_timesheets, {:timesheet => [:index]}
   end
 
   # A new item is added to the project menu (because Redmine can't add it anywhere else)
