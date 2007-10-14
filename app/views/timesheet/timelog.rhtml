@@ -1,0 +1,5 @@
+<h2><%= l(:label_spent_time) %></h2>
+
+<% @entries.each do |entryname,entry| -%>
+<%= render :partial => 'project_timesheet', :locals => {:entry => entry, :name => entryname} %>
+<% end -%>

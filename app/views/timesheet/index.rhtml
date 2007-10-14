@@ -1,0 +1,16 @@
+
+<p>Timelogs since:</p>
+
+<%= form_tag({:action => 'index', :id => @project}) %>
+
+<%= date_select("filter", "date") %>
+<%= submit_tag "Get results" -%>
+<%= end_form_tag %>
+
+<% if @entries.length > 0 %>
+<h2><%= l(:label_spent_time) %></h2>
+
+<% @entries.each do |entryname,entry| -%>
+<%= render :partial => 'project_timesheet', :locals => {:entry => entry, :name => entryname} %>
+<% end -%>
+<% end -%>
