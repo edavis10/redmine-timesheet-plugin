@@ -9,23 +9,24 @@ class TimesheetController < ApplicationController
 
   def index
     @today = Date.today.to_s
-    @project_select = Project.find(:all)
 
     case request.method
     when :post
 
-      @from = params[:date][:from]
-      @to = params[:date][:to]
+      @timesheet = Timesheet.new
+      @timesheet.date_from = params[:timesheet][:date_from]
+      @timesheet.date_to = params[:timesheet][:date_to]
+      @timesheet.project_id = params[:timesheet][:project_id]
 
-      if params[:project][:id] == ""
+      if @timesheet.project_id == ""
         @projects = Project.find(:all);
       else
-        @projects = [Project.find(params[:project][:id])]
+        @projects = [Project.find(@timesheet.project_id)]
       end
       @entries = { }
       @projects.each do |project|
         logs = project.time_entries.find(:all,
-                                         :conditions => ['spent_on >= (?) AND spent_on <= (?)',@from,@to],
+                                         :conditions => ['spent_on >= (?) AND spent_on <= (?)',@timesheet.date_from,@timesheet.date_to],
                                          :include => [:activity, :user, {:issue => [:tracker, :assigned_to, :priority]}],
                                          :order => "spent_on ASC")
         @entries[project.name] = logs unless logs.empty?
@@ -38,8 +39,6 @@ class TimesheetController < ApplicationController
           @total += log.hours
         end
      end
-
-#      @owner_id = logged_in_user ? logged_in_user.id : 0
 
       send_csv and return if 'csv' == params[:export]
       render :action => 'details', :layout => false if request.xhr?

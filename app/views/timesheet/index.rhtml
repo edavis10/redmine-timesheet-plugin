@@ -1,15 +1,16 @@
 <h2>Timesheet</h2>
 
 <p>
-<% form_for :date, :url =>{:action => 'index', :id => @project} do |f|  %>
+<% form_for :timesheet, :url =>{:action => 'index', :id => @project} do |f|  %>
 
-<p><label for="date_from">From:</label><br />
-<%= f.text_field "from", :size => 10, :value => @from %><%= calendar_for('date_from') %></p>
+<p><label for="timesheet_date_from">From:</label><br />
+<%= f.text_field "date_from", :size => 10, :value => @from %><%= calendar_for('timesheet_date_from') %></p>
 
-<p><label for="date_to">To:</label><br />
-<%= f.text_field "to", :size => 10, :value => @to %><%= calendar_for('date_to') %></p>
+<p><label for="timesheet_date_to">To:</label><br />
+<%= f.text_field "date_to", :size => 10, :value => @to %><%= calendar_for('timesheet_date_to') %></p>
 
-<%= select("project","id", Project.find(:all).collect {|p| [ p.name, p.id ] }, { :include_blank => true }) %>
+<p><label for="timesheet_project_id">Project:</label><br />
+<%= f.select("project_id", Project.find(:all, :order => 'name ASC').collect {|p| [ p.name, p.id ] }, { :include_blank => true }) %></p>
 
 
 <%= submit_tag "Get results" -%>
