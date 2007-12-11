@@ -10,6 +10,8 @@ class TimesheetController < ApplicationController
   def index
     @today = Date.today.to_s
 
+    @activities = Enumeration::get_values('ACTI')
+
     case request.method
     when :post
 
@@ -23,10 +25,13 @@ class TimesheetController < ApplicationController
       else
         @projects = [Project.find(@timesheet.project_id)]
       end
+
+      activities = params[:activities] || @activities
       @entries = { }
       @projects.each do |project|
         logs = project.time_entries.find(:all,
-                                         :conditions => ['spent_on >= (?) AND spent_on <= (?)',@timesheet.date_from,@timesheet.date_to],
+                                         :conditions => ['spent_on >= (?) AND spent_on <= (?) AND activity_id IN (?) ',
+                                                         @timesheet.date_from, @timesheet.date_to, activities],
                                          :include => [:activity, :user, {:issue => [:tracker, :assigned_to, :priority]}],
                                          :order => "spent_on ASC")
         @entries[project.name] = logs unless logs.empty?

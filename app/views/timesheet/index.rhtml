@@ -12,6 +12,8 @@
 <p><label for="timesheet_project_id">Project:</label><br />
 <%= f.select("project_id", Project.find(:all, :order => 'name ASC').collect {|p| [ p.name, p.id ] }, { :include_blank => true }) %></p>
 
+<p><label for="activities[]">Activities:</label><br />
+<%= select_tag 'activities[]', options_for_select(@activities.collect {|p| [p.name, p.id]}), {:multiple => true, :size => @activities.length } %></p>
 
 <%= submit_tag "Get results" -%>
 <% end %>
