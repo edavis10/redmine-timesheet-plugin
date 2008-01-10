@@ -1,0 +1,41 @@
+2008-01-09  edavis
+
+	* COPYRIGHT.txt, GPL.txt, README:
+	  * Adding documentation and Licensing
+
+2007-12-11  edavis
+
+	* app/controllers/timesheet_controller.rb, app/views/timesheet/index.rhtml:
+	  * Allowing timesheets to display only specific activities
+	* app/controllers/timesheet_controller.rb, app/models, app/models/timesheet.rb, app/views/timesheet/index.rhtml:
+	  * Changed project selector so it will not clash with the Redmine id
+	  * Added a Timesheet model to save the field selections
+
+2007-11-30  edavis
+
+	* app/controllers/timesheet_controller.rb:
+	  * Removed @owner_id
+
+2007-10-14  edavis
+
+	* app/controllers/timesheet_controller.rb:
+	  * Fixed an error when all projects are submitted.
+	* app/controllers/timesheet_controller.rb, app/views/timesheet/index.rhtml:
+	  * Added a quick selector to limit project
+	* app/controllers/timesheet_controller.rb, app/views/timesheet/index.rhtml, init.rb:
+	  * Basic report will now show
+	  Total time
+	  Breakdown of time logs separated by project
+	* app/controllers/timesheet_controller.rb, app/views/timesheet/index.rhtml:
+	  * Added a sum of the hours for the range
+	* app/controllers/timesheet_controller.rb, app/views/timesheet/_project_timesheet.rhtml,
+	  app/views/timesheet/index.rhtml:
+	  * Cleaning up the report and added the date range
+	* README, app, app/controllers, app/controllers/timesheet_controller.rb, app/views, app/views/timesheet,
+	  app/views/timesheet/_project_timesheet.rhtml, app/views/timesheet/index.rhtml,
+	  app/views/timesheet/timelog.rhtml, assets, assets/images, assets/images/it_works.png, assets/stylesheets,
+	  assets/stylesheets/example.css, init.rb, lang, lang/en.yml, lang/fr.yml:
+	  * First draft of plugin by hacking on the example one
+	* .:
+	  * Adding trunk
+
