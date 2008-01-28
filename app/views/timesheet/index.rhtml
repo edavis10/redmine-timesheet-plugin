@@ -1,21 +1,21 @@
-<h2>Timesheet</h2>
+<h2><%= l(:timesheet_title)%></h2>
 
 <p>
 <% form_for :timesheet, :url =>{:action => 'index', :id => @project} do |f|  %>
 
-<p><label for="timesheet_date_from">From:</label><br />
+<p><label for="timesheet_date_from"><%= l(:timesheet_date_from_label)%>:</label><br />
 <%= f.text_field "date_from", :size => 10, :value => @from %><%= calendar_for('timesheet_date_from') %></p>
 
-<p><label for="timesheet_date_to">To:</label><br />
+<p><label for="timesheet_date_to"><%= l(:timesheet_date_from_label)%>:</label><br />
 <%= f.text_field "date_to", :size => 10, :value => @to %><%= calendar_for('timesheet_date_to') %></p>
 
-<p><label for="timesheet_project_id">Project:</label><br />
+<p><label for="timesheet_project_id"><%= l(:timesheet_project_label)%>:</label><br />
 <%= f.select("project_id", Project.find(:all, :order => 'name ASC').collect {|p| [ p.name, p.id ] }, { :include_blank => true }) %></p>
 
-<p><label for="activities[]">Activities:</label><br />
+<p><label for="activities[]"><%= l(:timesheet_activities_label)%>:</label><br />
 <%= select_tag 'activities[]', options_for_select(@activities.collect {|p| [p.name, p.id]}), {:multiple => true, :size => @activities.length } %></p>
 
-<%= submit_tag "Get results" -%>
+<%= submit_tag l(:button_apply),:class => 'button-small' -%>
 <% end %>
 
 
