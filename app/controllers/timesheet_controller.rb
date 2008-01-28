@@ -20,9 +20,9 @@ class TimesheetController < ApplicationController
       @timesheet = Timesheet.new
       @timesheet.date_from = params[:timesheet][:date_from]
       @timesheet.date_to = params[:timesheet][:date_to]
-      @timesheet.project_id = params[:timesheet][:project_id]
+      @timesheet.project_id = params[:timesheet][:project_id].to_i
 
-      if @timesheet.project_id == ""
+      if @timesheet.project_id == 0
         @projects = Project.find(:all);
       else
         @projects = [Project.find(@timesheet.project_id)]

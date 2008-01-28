@@ -10,7 +10,7 @@
 <%= f.text_field "date_to", :size => 10, :value => @to %><%= calendar_for('timesheet_date_to') %></p>
 
 <p><label for="timesheet_project_id"><%= l(:timesheet_project_label)%>:</label><br />
-<%= f.select("project_id", Project.find(:all, :order => 'name ASC').collect {|p| [ p.name, p.id ] }, { :include_blank => true }) %></p>
+<%= collection_select(:timesheet, :project_id, Project.find(:all, :order => 'name ASC'), :id, :name, {:include_blank => true}) %> </p>
 
 <p><label for="activities[]"><%= l(:timesheet_activities_label)%>:</label><br />
 <%= select_tag 'activities[]', options_for_select(@activities.collect {|p| [p.name, p.id]}), {:multiple => true, :size => @activities.length } %></p>
