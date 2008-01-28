@@ -24,13 +24,9 @@ This is a plugin to show timelogs across all projects in a Redmine install.
 
 This plugin is licensed under the GNU GPL v2.  See LICENSE.txt and GPL.txt for details.
 
-## Maintainer
-
-* Eric Davis (edavis@littlestreamsoftware.com)
-
 ## Project help
 
-If you need help you can contact the maintainer at his email address or create an issue in the Bug Tracker.
+If you need help you can contact the maintainer at his email address (See CREDITS.txt) or create an issue in the Bug Tracker.
 
 ### Bug tracker
 
