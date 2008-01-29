@@ -12,15 +12,17 @@ class TimesheetController < ApplicationController
   def index
     @today = Date.today.to_s
 
+    @timesheet = Timesheet.new
     @activities = Enumeration::get_values('ACTI')
-
+    
     case request.method
     when :post
-
-      @timesheet = Timesheet.new
       @timesheet.date_from = params[:timesheet][:date_from]
       @timesheet.date_to = params[:timesheet][:date_to]
       @timesheet.project_id = params[:timesheet][:project_id].to_i
+      if !params[:timesheet][:activities].blank?
+        @timesheet.activities = params[:timesheet][:activities].collect {|p| p.to_i }
+      end   
 
       if @timesheet.project_id == 0
         @projects = Project.find(:all);
@@ -28,12 +30,11 @@ class TimesheetController < ApplicationController
         @projects = [Project.find(@timesheet.project_id)]
       end
 
-      activities = params[:activities] || @activities
       @entries = { }
       @projects.each do |project|
         logs = project.time_entries.find(:all,
                                          :conditions => ['spent_on >= (?) AND spent_on <= (?) AND activity_id IN (?) ',
-                                                         @timesheet.date_from, @timesheet.date_to, activities],
+                                                         @timesheet.date_from, @timesheet.date_to, @timesheet.activities],
                                          :include => [:activity, :user, {:issue => [:tracker, :assigned_to, :priority]}],
                                          :order => "spent_on ASC")
         @entries[project.name] = logs unless logs.empty?
