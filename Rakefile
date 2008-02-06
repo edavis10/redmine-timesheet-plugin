@@ -27,7 +27,7 @@ task :zip => [:clean] do
     zipfile.mkdir(PROJECT)
 
     # Should skip svn files
-    files = Dir['**/*.*']
+    files = Dir['**/**']
 
     files.each do |file|
       print "Adding #{file} ...."
