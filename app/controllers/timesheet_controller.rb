@@ -22,6 +22,8 @@ class TimesheetController < ApplicationController
       @timesheet.project_id = params[:timesheet][:project_id].to_i
       if !params[:timesheet][:activities].blank?
         @timesheet.activities = params[:timesheet][:activities].collect {|p| p.to_i }
+      else 
+        @timesheet.activities = @activities.collect(&:id)
       end   
 
       if @timesheet.project_id == 0
