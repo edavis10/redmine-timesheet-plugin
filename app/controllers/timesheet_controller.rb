@@ -47,7 +47,12 @@ class TimesheetController < ApplicationController
                                                          @timesheet.date_from, @timesheet.date_to, @timesheet.activities, @timesheet.users ],
                                          :include => [:activity, :user, {:issue => [:tracker, :assigned_to, :priority]}],
                                          :order => "spent_on ASC")
-        @entries[project.name] = logs unless logs.empty?
+        # Append the parent project name
+        if project.parent.nil?
+          @entries[project.name] = logs unless logs.empty?
+        else
+          @entries[project.parent.name + ' / ' + project.name] = logs unless logs.empty?          
+        end
       end
 
       # Sums
