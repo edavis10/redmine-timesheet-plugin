@@ -6,7 +6,7 @@
 <p><label for="timesheet_date_from"><%= l(:timesheet_date_from_label)%>:</label><br />
 <%= f.text_field "date_from", :size => 10, :value => @from %><%= calendar_for('timesheet_date_from') %></p>
 
-<p><label for="timesheet_date_to"><%= l(:timesheet_date_from_label)%>:</label><br />
+<p><label for="timesheet_date_to"><%= l(:timesheet_date_to_label)%>:</label><br />
 <%= f.text_field "date_to", :size => 10, :value => @to %><%= calendar_for('timesheet_date_to') %></p>
 
 <p><label for="timesheet_project_id"><%= l(:timesheet_project_label)%>:</label><br />
@@ -25,7 +25,7 @@
 </p>
 
 <% if @entries.length > 0 %>
-<h2><%= l(:label_spent_time) %>(<%= @total -%>hours)</h2>
+<h2><%= l(:label_spent_time) %> (<%= @total -%> <%= h(l(:field_hours)) -%>)</h2>
 
 <% @entries.each do |entryname,entry| -%>
 <%= render :partial => 'project_timesheet', :locals => {:entry => entry, :name => entryname} %>
