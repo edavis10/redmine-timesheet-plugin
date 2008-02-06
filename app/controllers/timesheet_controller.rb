@@ -24,7 +24,14 @@ class TimesheetController < ApplicationController
         @timesheet.activities = params[:timesheet][:activities].collect {|p| p.to_i }
       else 
         @timesheet.activities = @activities.collect(&:id)
-      end   
+      end
+      
+      if !params[:timesheet][:users].blank?
+        @timesheet.users = params[:timesheet][:users].collect {|p| p.to_i }
+      else 
+        @timesheet.users = User.find(:all).collect(&:id)
+      end
+      
 
       if @timesheet.project_id == 0
         @projects = Project.find(:all);
@@ -35,8 +42,8 @@ class TimesheetController < ApplicationController
       @entries = { }
       @projects.each do |project|
         logs = project.time_entries.find(:all,
-                                         :conditions => ['spent_on >= (?) AND spent_on <= (?) AND activity_id IN (?) ',
-                                                         @timesheet.date_from, @timesheet.date_to, @timesheet.activities],
+                                         :conditions => ['spent_on >= (?) AND spent_on <= (?) AND activity_id IN (?) AND user_id IN (?)',
+                                                         @timesheet.date_from, @timesheet.date_to, @timesheet.activities, @timesheet.users ],
                                          :include => [:activity, :user, {:issue => [:tracker, :assigned_to, :priority]}],
                                          :order => "spent_on ASC")
         @entries[project.name] = logs unless logs.empty?

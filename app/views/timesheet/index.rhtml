@@ -18,6 +18,12 @@
     { :multiple => true, :size => @activities.length} %>
 </p>
 
+<p><label for="timesheet[users][]"><%= l(:timesheet_users_label)%>:</label><br />
+<%= select_tag 'timesheet[users][]',
+    options_from_collection_for_select(User.find(:all), :id, :name, @timesheet.users),
+    { :multiple => true, :size => User.count} %>
+</p>
+
 <%= submit_tag l(:button_apply),:class => 'button-small' -%>
 <% end %>
 
