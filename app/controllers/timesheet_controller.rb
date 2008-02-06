@@ -19,7 +19,15 @@ class TimesheetController < ApplicationController
     when :post
       @timesheet.date_from = params[:timesheet][:date_from]
       @timesheet.date_to = params[:timesheet][:date_to]
-      @timesheet.project_id = params[:timesheet][:project_id].to_i
+      
+      if !params[:timesheet][:projects].blank?
+        @timesheet.projects = Project.find(:all,
+                                           :conditions => ['id IN (?)', params[:timesheet][:projects].collect {|p| p.to_i }],
+                                           :order => 'name ASC')
+      else 
+        @timesheet.projects =  Project.find(:all, :order => 'name ASC')
+      end
+      
       if !params[:timesheet][:activities].blank?
         @timesheet.activities = params[:timesheet][:activities].collect {|p| p.to_i }
       else 
@@ -32,15 +40,8 @@ class TimesheetController < ApplicationController
         @timesheet.users = User.find(:all).collect(&:id)
       end
       
-
-      if @timesheet.project_id == 0
-        @projects = Project.find(:all);
-      else
-        @projects = [Project.find(@timesheet.project_id)]
-      end
-
       @entries = { }
-      @projects.each do |project|
+      @timesheet.projects.each do |project|
         logs = project.time_entries.find(:all,
                                          :conditions => ['spent_on >= (?) AND spent_on <= (?) AND activity_id IN (?) AND user_id IN (?)',
                                                          @timesheet.date_from, @timesheet.date_to, @timesheet.activities, @timesheet.users ],
@@ -61,6 +62,7 @@ class TimesheetController < ApplicationController
       render :action => 'details', :layout => false if request.xhr?
     when :get
       # nothing
+      @timesheet.projects = { }
       @from,@to = @today,@today
       @entries = []
     end
