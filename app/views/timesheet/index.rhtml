@@ -35,10 +35,10 @@
 </p>
 
 <% if @entries.length > 0 %>
-<h2><%= l(:label_spent_time) %> (<%= @total -%> <%= h(l(:field_hours)) -%>)</h2>
+<h2><%= l(:label_spent_time) %> (<%= h(@grand_total) -%> <%= h(l(:field_hours)) -%>)</h2>
 
 <% @entries.each do |entryname,entry| -%>
-<%= render :partial => 'project_timesheet', :locals => {:entry => entry, :name => entryname} %>
+<%= render :partial => 'project_timesheet', :locals => {:entry => entry, :name => entryname, :total => @total[entryname] } %>
 <% end -%>
 <% end -%>
 

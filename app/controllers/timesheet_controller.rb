@@ -51,12 +51,17 @@ class TimesheetController < ApplicationController
       end
 
       # Sums
-      @total = 0
+      @total = { }
       @entries.each do |project,logs|
+        project_total = 0
         logs.each do |log|
-          @total += log.hours
+          project_total += log.hours
         end
-     end
+        @total[project] = project_total
+      end
+      
+      @grand_total = @total.collect{|k,v| v}.inject{|sum,n| sum + n}
+
 
       send_csv and return if 'csv' == params[:export]
       render :action => 'details', :layout => false if request.xhr?
