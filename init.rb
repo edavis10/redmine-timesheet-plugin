@@ -7,7 +7,7 @@ Redmine::Plugin.register :timesheet_plugin do
   name 'Timesheet Plugin'
   author 'Eric Davis of Little Stream Software'
   description 'This is a Timesheet plugin for Redmine to show timelogs for all projects'
-  version '0.0.1'
+  version '0.0.2'
   
   settings :default => {'list_size' => '5'}, :partial => 'settings/settings'
 
