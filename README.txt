@@ -12,13 +12,13 @@ This is a plugin to show timelogs across all projects in a Redmine install.
 
 ## Install
 
-1. Follow the Redmine plugin installation steps at: http://www.redmine.org/wiki/redmine/Plugins
+1. Follow the Redmine plugin installation steps at: http://www.redmine.org/wiki/redmine/Plugins  Make sure to install Engines 2 if you use Rails 2.0.
 2. Login to your Redmine install as an Administrator
 3. Enable the "Run Timesheet" permissions for your Roles
 4. Add the "Timesheet module" to the enabled modules for your project [1]
 5. The link to the plugin should appear on that project's navigation
 
-[1] Currently Redmine only supports attaching plugins to the project menus.  Eventully this plugin should attach to the main menu and not have to be assigned to a project.
+[1] Currently Redmine only supports attaching plugins to the project menus.  Eventully this plugin should attach to the main menu and not have to be assigned to a project.  http://www.redmine.org/issues/show/631
 
 ## License
 
