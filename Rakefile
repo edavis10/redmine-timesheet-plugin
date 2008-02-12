@@ -3,7 +3,7 @@ require "fileutils"
 
 require 'rake/clean'
 CLEAN.include('**/semantic.cache','**/*~')
-PROJECT = 'redmine_timesheet_plugin'
+PROJECT = 'timesheet_plugin'
 ZIP_FILE = "#{PROJECT}.zip"
 
 desc "Generate a changelog from svn"
