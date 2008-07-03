@@ -18,7 +18,7 @@ There are three ways to download it:
 
 1. Download the plugin.  There are three supported ways:
   * Downloading the latest archive file from [Little Stream Software projects][1]
-  * Checkout the source from Subversion
+  * Checkout the source from Git
 
        cd vendor/plugins/ && git clone git://github.com/edavis10/redmine-timesheet-plugin.git timesheet_plugin
 
