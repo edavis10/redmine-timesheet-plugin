@@ -5,3 +5,6 @@ Eric Davis <edavis[AT]littlestreamsoftware[DOT]com>
 
 Michael Pirogov
 - added Russian and Czech translation
+
+Michele Franzin
+- added Italian translation
