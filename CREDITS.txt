@@ -8,3 +8,4 @@ Michael Pirogov
 
 Michele Franzin
 - added Italian translation
+- fixed menu highlight

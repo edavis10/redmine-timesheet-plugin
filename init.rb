@@ -19,5 +19,5 @@ Redmine::Plugin.register :timesheet_plugin do
   end
 
   # A new item is added to the project menu (because Redmine can't add it anywhere else)
-  menu :project_menu, "Timesheets", :controller => 'timesheet', :action => 'index'
+  menu :project_menu, :timesheet, {:controller => 'timesheet', :action => 'index'}, :caption => :timesheet_title
 end
