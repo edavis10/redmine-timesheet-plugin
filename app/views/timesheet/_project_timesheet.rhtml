@@ -27,7 +27,16 @@
     </td>
     <td><%=h e.comments %></td>
     <td align="center"><strong><%= e.hours %></strong></td>
-    <td align="center"><%= link_to_if_authorized(l(:button_edit), {:controller => 'timelog', :action => 'edit', :id => e}, :class => "icon icon-edit") if e.user_id == @owner_id %></td>
+    <td align="center">
+      <% if e.editable_by?(User.current) -%>
+        <%= link_to image_tag('edit.png'), {:controller => 'timelog', :action => 'edit', :id => e},
+                                         :title => l(:button_edit) %>
+        <%= link_to image_tag('delete.png'), {:controller => 'timelog', :action => 'destroy', :id => e},
+                                           :confirm => l(:text_are_you_sure),
+                                           :method => :post,
+                                           :title => l(:button_delete) %>
+     <% end -%>
+    </td>
   </tr>
   <% end %>
 </tbody>
