@@ -6,7 +6,6 @@ describe TimesheetController do
   end
 
 end
-
 describe TimesheetController,"#index with GET request" do
   it 'should set @project to the current project' do
     project = mock_model(Project, :to_param => '1')
@@ -63,5 +62,52 @@ describe TimesheetController,"#index with GET request" do
 end
 
 
-# describe TimesheetController,"#index with POST request"
+describe TimesheetController,"#index with POST request" do
+  before(:each) do
+    # Timesheet mock
+    @timesheet = mock_model(Timesheet)
+    @timesheet.stub!(:projects=)
+    @timesheet.stub!(:date_from=)
+    @timesheet.stub!(:date_to=)
+    @timesheet.stub!(:activities=)
+    @timesheet.stub!(:users=)
+    @timesheet.stub!(:projects).and_return([ ])
+    Timesheet.stub!(:new).and_return(@timesheet)
+    
+    
+  end
+  
+  def post_index(data={ })
+    post 'index', data
+  end
+  
+  it 'should set @project to the current project' do
+    project = mock_model(Project, :to_param => '1')
+    Project.should_receive(:find).with('1').and_return(project)
+    
+    post 'index', :timesheet => { }, :id => '1'
+    assigns[:project].should_not be_nil
+  end
+
+  it 'should set @project to nil if there are no projects' do
+    post 'index', :timesheet => { }
+    assigns[:project].should be_nil
+  end
+  
+  it 'should get the list size from the settings' do
+    settings = { 'list_size' => 10 }
+    Setting.should_receive(:plugin_timesheet_plugin).and_return(settings)
+    
+    post 'index', :timesheet => { }
+    assigns[:list_size].should eql(10)
+  end
+
+  it 'should create a new @timesheet' do
+    Timesheet.should_receive(:new).and_return(@timesheet)
+
+    post 'index', :timesheet => { }
+    assigns[:timesheet].should eql(@timesheet)
+  end
+
+end
 
