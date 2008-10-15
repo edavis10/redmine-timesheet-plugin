@@ -18,6 +18,5 @@ Redmine::Plugin.register :timesheet_plugin do
     permission :run_timesheets, {:timesheet => [:index]}
   end
 
-  # A new item is added to the project menu (because Redmine can't add it anywhere else)
-  menu :project_menu, :timesheet, {:controller => 'timesheet', :action => 'index'}, :caption => :timesheet_title
+  menu :top_menu, :timesheet, {:controller => 'timesheet', :action => 'index'}, :caption => :timesheet_title
 end

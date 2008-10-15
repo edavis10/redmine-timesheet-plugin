@@ -3,7 +3,7 @@ class TimesheetController < ApplicationController
   unloadable
 
   layout 'base'
-  before_filter :find_project, :authorize, :get_list_size
+  before_filter :find_project, :get_list_size
 
   helper :sort
   include SortHelper
@@ -81,7 +81,7 @@ class TimesheetController < ApplicationController
 
 private
   def find_project
-    @project=Project.find(params[:id])
+    @project=Project.find(params[:id]) unless params[:id].blank?
   end
   
   def get_list_size
