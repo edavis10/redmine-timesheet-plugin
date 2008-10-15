@@ -72,7 +72,8 @@ class TimesheetController < ApplicationController
       render :action => 'details', :layout => false if request.xhr?
     when :get
       # nothing
-      @timesheet.projects = allowed_projects
+      @timesheet.projects = { }
+      @timesheet.allowed_projects = allowed_projects
       @from,@to = @today,@today
       @entries = []
     end
@@ -85,6 +86,10 @@ private
   end
   
   def allowed_projects
-    return Project.find(:all)
+    if User.current.admin?
+      return Project.find(:all, :order => 'name ASC')
+    else
+      return User.current.projects.find(:all, :order => 'name ASC')
+    end
   end
 end
