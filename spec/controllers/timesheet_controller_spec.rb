@@ -17,10 +17,18 @@ module TimesheetControllerHelper
     
     # Timesheet
     @timesheet = mock_model(Timesheet)
-    @timesheet.stub!(:projects)
+    @timesheet.stub!(:projects).and_return([ ])
     @timesheet.stub!(:projects=)
     @timesheet.stub!(:allowed_projects)
     @timesheet.stub!(:allowed_projects=)
+    @timesheet.stub!(:date_from)
+    @timesheet.stub!(:date_from=)
+    @timesheet.stub!(:date_to)
+    @timesheet.stub!(:date_to=)
+    @timesheet.stub!(:activities)
+    @timesheet.stub!(:activities=)
+    @timesheet.stub!(:users)
+    @timesheet.stub!(:users=)
     stub_timesheet
   end
   
@@ -69,7 +77,7 @@ describe TimesheetController,"#index with GET request" do
     assigns[:timesheet].should eql(@timesheet)
   end
 
-  it 'should set @timesheet.projects to the list of current projects the user is a member of' do
+  it 'should set @timesheet.allowed_projects to the list of current projects the user is a member of' do
     project1 = mock_model(Project)
     project2 = mock_model(Project)
     projects = [project1, project2]
@@ -85,7 +93,7 @@ describe TimesheetController,"#index with GET request" do
     assigns[:timesheet].allowed_projects.should eql(projects)
   end
 
-  it 'should set @timesheet.projects to all the projects if the user is an admin' do
+  it 'should set @timesheet.allowed_projects to all the projects if the user is an admin' do
     mock_admin
     project1 = mock_model(Project)
     project2 = mock_model(Project)
@@ -124,18 +132,10 @@ end
 
 
 describe TimesheetController,"#index with POST request" do
+  include TimesheetControllerHelper
+  
   before(:each) do
-    # Timesheet mock
-    @timesheet = mock_model(Timesheet)
-    @timesheet.stub!(:projects=)
-    @timesheet.stub!(:date_from=)
-    @timesheet.stub!(:date_to=)
-    @timesheet.stub!(:activities=)
-    @timesheet.stub!(:users=)
-    @timesheet.stub!(:projects).and_return([ ])
-    Timesheet.stub!(:new).and_return(@timesheet)
-    
-    
+    default_mocks
   end
   
   def post_index(data={ })
