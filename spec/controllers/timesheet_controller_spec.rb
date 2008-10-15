@@ -59,7 +59,7 @@ describe 'TimesheetControllerShared', :shared => true do
     @user_project_mock.should_receive(:find).and_return(projects)
     stub_current_user
     @timesheet.should_receive(:allowed_projects=).with(projects)
-    @timesheet.should_receive(:allowed_projects).and_return(projects)
+    @timesheet.stub!(:allowed_projects).and_return(projects)
     stub_timesheet
     
     send_request
@@ -75,7 +75,7 @@ describe 'TimesheetControllerShared', :shared => true do
     # Adjust mocks
     Project.stub!(:find).with(:all, { :order => "name ASC" }).and_return(projects)
     @timesheet.should_receive(:allowed_projects=).with(projects)
-    @timesheet.should_receive(:allowed_projects).and_return(projects)
+    @timesheet.stub!(:allowed_projects).and_return(projects)
     stub_timesheet
     
     send_request
@@ -156,5 +156,22 @@ describe TimesheetController,"#index with POST request" do
   end
   
   it_should_behave_like "TimesheetControllerShared"
+  
+  it 'should only allow the allowed projects into @timesheet.projects' do
+    project1 = mock_model(Project, :to_param => '1', :id => 1)
+    project2 = mock_model(Project, :to_param => '2', :id => 2)
+    projects = [project1, project2]
+    
+    # Adjust mocks
+    @user_project_mock.should_receive(:find).and_return(projects)
+    stub_current_user
+
+    @timesheet.should_receive(:allowed_projects=).with(projects)
+    @timesheet.should_receive(:allowed_projects).and_return(projects)
+    @timesheet.should_receive(:projects=).with([project1])
+    stub_timesheet
+
+    post_index({ :timesheet => { :projects => ['1'] } })
+  end
 end
 

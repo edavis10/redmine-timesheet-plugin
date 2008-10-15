@@ -22,13 +22,13 @@ class TimesheetController < ApplicationController
       @timesheet.date_to = params[:timesheet][:date_to]
       
       if !params[:timesheet][:projects].blank?
-        @timesheet.projects = Project.find(:all,
-                                           :conditions => ['id IN (?)', params[:timesheet][:projects].collect {|p| p.to_i }],
-                                           :order => 'name ASC')
+        @timesheet.projects = @timesheet.allowed_projects.find_all { |project| 
+          params[:timesheet][:projects].include?(project.id.to_s)
+        }
       else 
-        @timesheet.projects =  Project.find(:all, :order => 'name ASC')
+        @timesheet.projects = @timesheet.allowed_projects
       end
-      
+
       if !params[:timesheet][:activities].blank?
         @timesheet.activities = params[:timesheet][:activities].collect {|p| p.to_i }
       else 
