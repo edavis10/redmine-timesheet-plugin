@@ -4,7 +4,7 @@
 
 <div id="timesheet-form">
 <fieldset>
-<% form_for :timesheet, :url =>{:action => 'index', :id => @project} do |f|  %>
+<% form_for :timesheet, :url =>{:action => 'index'} do |f|  %>
 
 <p>
   <label for="timesheet_date_from"><%= l(:timesheet_date_from_label)%>:</label><br />

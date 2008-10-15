@@ -7,19 +7,6 @@ describe TimesheetController do
 
 end
 describe TimesheetController,"#index with GET request" do
-  it 'should set @project to the current project' do
-    project = mock_model(Project, :to_param => '1')
-    Project.should_receive(:find).with('1').and_return(project)
-    
-    get 'index', :id => '1'
-    assigns[:project].should_not be_nil
-  end
-
-  it 'should set @project to nil if there are no projects' do
-    get 'index'
-    assigns[:project].should be_nil
-  end
-  
   it 'should get the list size from the settings' do
     settings = { 'list_size' => 10 }
     Setting.should_receive(:plugin_timesheet_plugin).and_return(settings)
@@ -79,19 +66,6 @@ describe TimesheetController,"#index with POST request" do
   
   def post_index(data={ })
     post 'index', data
-  end
-  
-  it 'should set @project to the current project' do
-    project = mock_model(Project, :to_param => '1')
-    Project.should_receive(:find).with('1').and_return(project)
-    
-    post 'index', :timesheet => { }, :id => '1'
-    assigns[:project].should_not be_nil
-  end
-
-  it 'should set @project to nil if there are no projects' do
-    post 'index', :timesheet => { }
-    assigns[:project].should be_nil
   end
   
   it 'should get the list size from the settings' do

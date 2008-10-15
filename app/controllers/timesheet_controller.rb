@@ -3,7 +3,7 @@ class TimesheetController < ApplicationController
   unloadable
 
   layout 'base'
-  before_filter :find_project, :get_list_size
+  before_filter :get_list_size
 
   helper :sort
   include SortHelper
@@ -80,10 +80,6 @@ class TimesheetController < ApplicationController
 
 
 private
-  def find_project
-    @project=Project.find(params[:id]) unless params[:id].blank?
-  end
-  
   def get_list_size
     @list_size = Setting.plugin_timesheet_plugin['list_size'].to_i
   end
