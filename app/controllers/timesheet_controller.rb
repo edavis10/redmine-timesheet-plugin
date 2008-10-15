@@ -13,6 +13,7 @@ class TimesheetController < ApplicationController
     @today = Date.today.to_s
 
     @timesheet = Timesheet.new
+    @timesheet.allowed_projects = allowed_projects
     @activities = Enumeration::get_values('ACTI')
     
     case request.method
@@ -73,7 +74,6 @@ class TimesheetController < ApplicationController
     when :get
       # nothing
       @timesheet.projects = { }
-      @timesheet.allowed_projects = allowed_projects
       @from,@to = @today,@today
       @entries = []
     end

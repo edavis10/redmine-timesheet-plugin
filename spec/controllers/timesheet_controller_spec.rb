@@ -49,34 +49,7 @@ module TimesheetControllerHelper
   end
 end
 
-describe TimesheetController do
-  it "should use TimesheetController" do
-    controller.should be_an_instance_of(TimesheetController)
-  end
-
-end
-describe TimesheetController,"#index with GET request" do
-  include TimesheetControllerHelper
-  
-  before(:each) do
-    default_mocks
-  end
-  
-  it 'should get the list size from the settings' do
-    settings = { 'list_size' => 10 }
-    Setting.should_receive(:plugin_timesheet_plugin).and_return(settings)
-    
-    get 'index'
-    assigns[:list_size].should eql(10)
-  end
-
-  it 'should create a new @timesheet' do
-    Timesheet.should_receive(:new).and_return(@timesheet)
-
-    get 'index'
-    assigns[:timesheet].should eql(@timesheet)
-  end
-
+describe 'TimesheetControllerShared', :shared => true do
   it 'should set @timesheet.allowed_projects to the list of current projects the user is a member of' do
     project1 = mock_model(Project)
     project2 = mock_model(Project)
@@ -89,7 +62,7 @@ describe TimesheetController,"#index with GET request" do
     @timesheet.should_receive(:allowed_projects).and_return(projects)
     stub_timesheet
     
-    get 'index'
+    send_request
     assigns[:timesheet].allowed_projects.should eql(projects)
   end
 
@@ -100,25 +73,51 @@ describe TimesheetController,"#index with GET request" do
     projects = [project1, project2]
     
     # Adjust mocks
-    Project.should_receive(:find).with(:all, { :order => "name ASC" }).and_return(projects)
+    Project.stub!(:find).with(:all, { :order => "name ASC" }).and_return(projects)
     @timesheet.should_receive(:allowed_projects=).with(projects)
     @timesheet.should_receive(:allowed_projects).and_return(projects)
     stub_timesheet
     
-    get 'index'
+    send_request
     assigns[:timesheet].allowed_projects.should eql(projects)
   end
 
-  it 'should set the from date to today' do
-    get 'index'
-    assigns[:from].should eql(Date.today.to_s)
+    it 'should get the list size from the settings' do
+    settings = { 'list_size' => 10 }
+    Setting.should_receive(:plugin_timesheet_plugin).and_return(settings)
+    
+    send_request
+    assigns[:list_size].should eql(10)
   end
 
-  it 'should set the to date to today' do
-    get 'index'
-    assigns[:to].should eql(Date.today.to_s)
+  it 'should create a new @timesheet' do
+    Timesheet.should_receive(:new).and_return(@timesheet)
+
+    send_request
+    assigns[:timesheet].should eql(@timesheet)
+  end
+end
+
+
+describe TimesheetController do
+  it "should use TimesheetController" do
+    controller.should be_an_instance_of(TimesheetController)
   end
 
+end
+describe TimesheetController,"#index with GET request" do
+  include TimesheetControllerHelper
+  
+  def send_request
+    get 'index'
+  end
+  
+  before(:each) do
+    default_mocks
+  end
+
+  it_should_behave_like "TimesheetControllerShared"
+  
   it 'should have no timelog entries' do
     get 'index'
     assigns[:entries].should be_empty
@@ -127,6 +126,16 @@ describe TimesheetController,"#index with GET request" do
   it 'should render the index template' do
     get 'index'
     response.should render_template('index')
+  end
+  
+    it 'should set the from date to today' do
+    send_request
+    assigns[:from].should eql(Date.today.to_s)
+  end
+
+  it 'should set the to date to today' do
+    send_request
+    assigns[:to].should eql(Date.today.to_s)
   end
 end
 
@@ -137,25 +146,15 @@ describe TimesheetController,"#index with POST request" do
   before(:each) do
     default_mocks
   end
+
+  def send_request
+    post_index
+  end
   
-  def post_index(data={ })
+  def post_index(data={ :timesheet => { } })
     post 'index', data
   end
   
-  it 'should get the list size from the settings' do
-    settings = { 'list_size' => 10 }
-    Setting.should_receive(:plugin_timesheet_plugin).and_return(settings)
-    
-    post 'index', :timesheet => { }
-    assigns[:list_size].should eql(10)
-  end
-
-  it 'should create a new @timesheet' do
-    Timesheet.should_receive(:new).and_return(@timesheet)
-
-    post 'index', :timesheet => { }
-    assigns[:timesheet].should eql(@timesheet)
-  end
-  
+  it_should_behave_like "TimesheetControllerShared"
 end
 
