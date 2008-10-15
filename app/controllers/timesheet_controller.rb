@@ -41,24 +41,11 @@ class TimesheetController < ApplicationController
         @timesheet.users = User.find(:all).collect(&:id)
       end
       
-      @entries = { }
-      @timesheet.projects.each do |project|
-        logs = project.time_entries.find(:all,
-                                         :conditions => ['spent_on >= (?) AND spent_on <= (?) AND activity_id IN (?) AND user_id IN (?)',
-                                                         @timesheet.date_from, @timesheet.date_to, @timesheet.activities, @timesheet.users ],
-                                         :include => [:activity, :user, {:issue => [:tracker, :assigned_to, :priority]}],
-                                         :order => "spent_on ASC")
-        # Append the parent project name
-        if project.parent.nil?
-          @entries[project.name] = logs unless logs.empty?
-        else
-          @entries[project.parent.name + ' / ' + project.name] = logs unless logs.empty?          
-        end
-      end
+      @timesheet.fetch_time_entries
 
       # Sums
       @total = { }
-      @entries.each do |project,logs|
+      @timesheet.time_entries.each do |project,logs|
         project_total = 0
         logs.each do |log|
           project_total += log.hours
@@ -75,7 +62,6 @@ class TimesheetController < ApplicationController
       # nothing
       @timesheet.projects = { }
       @from,@to = @today,@today
-      @entries = []
     end
   end
 

@@ -29,6 +29,8 @@ module TimesheetControllerHelper
     @timesheet.stub!(:activities=)
     @timesheet.stub!(:users)
     @timesheet.stub!(:users=)
+    @timesheet.stub!(:fetch_time_entries)
+    @timesheet.stub!(:time_entries).and_return([ ])
     stub_timesheet
   end
   
@@ -120,7 +122,7 @@ describe TimesheetController,"#index with GET request" do
   
   it 'should have no timelog entries' do
     get 'index'
-    assigns[:entries].should be_empty
+    assigns[:timesheet].time_entries.should be_empty
   end
 
   it 'should render the index template' do
