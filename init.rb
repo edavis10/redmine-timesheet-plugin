@@ -10,13 +10,7 @@ Redmine::Plugin.register :timesheet_plugin do
   
   settings :default => {'list_size' => '5'}, :partial => 'settings/settings'
 
-  # This plugin adds a project module
-  # It can be enabled/disabled at project level (Project settings -> Modules)
-  project_module :timesheet_module do
-    # This permission has to be explicitly given
-    # It will be listed on the permissions screen
-    permission :run_timesheets, {:timesheet => [:index]}
-  end
+  permission :see_project_timesheets, { }, :require => :member
 
   menu :top_menu, :timesheet, {:controller => 'timesheet', :action => 'index'}, :caption => :timesheet_title
 end
