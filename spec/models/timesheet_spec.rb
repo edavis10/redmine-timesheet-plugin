@@ -9,9 +9,14 @@ module TimesheetSpecHelper
     return timesheet
   end
   
-  def project_factory(id)
-    # First project
-    project = mock_model(Project, :parent => nil, :id => id, :to_param => id.to_s)
+  def project_factory(id, options = { })
+    object_options = { 
+      :parent => nil,
+      :id => id,
+      :to_param => id.to_s
+    }.merge(options)
+
+    project = mock_model(Project, object_options)
     project_te1 = mock_model(TimeEntry, :id => '100' + id.to_s, :project_id => project.id, :issue_id => '1', :hours => '5', :activity_id => '1', :spent_on => Date.today)
     project_te2 = mock_model(TimeEntry, :id => '101' + id.to_s, :project_id => project.id, :issue_id => '1', :hours => '10', :activity_id => '1', :spent_on => Date.today)
     project_time_entries_mock = mock('project_time_entries_mock')
@@ -136,7 +141,21 @@ describe Timesheet,'.fetch_time_entries' do
     timesheet.time_entries.should include("Project 2")
   end
 
-  it 'should add the parent project name for each time_entry array for sub-projects'
+  it 'should add the parent project name for each time_entry array for sub-projects' do
+    timesheet = timesheet_factory
+
+    project1 = project_factory(1)
+    project1.should_receive(:name).twice.and_return('Project 1')
+    project2 = project_factory(2, :parent => project1 )
+    project2.should_receive(:name).and_return('Project 2')
+
+    timesheet.projects = [project1, project2]
+    
+    timesheet.fetch_time_entries
+    timesheet.time_entries.should include("Project 1")
+    timesheet.time_entries.should include("Project 1 / Project 2")
+  end
+
   it 'should fetch all the time entries on a project in the date range'
   it 'should fetch all the time entries on a project matching the activities'
   it 'should fetch all the time entries on a project matching the users'
