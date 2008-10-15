@@ -72,7 +72,7 @@ class TimesheetController < ApplicationController
       render :action => 'details', :layout => false if request.xhr?
     when :get
       # nothing
-      @timesheet.projects = { }
+      @timesheet.projects = allowed_projects
       @from,@to = @today,@today
       @entries = []
     end
@@ -82,5 +82,9 @@ class TimesheetController < ApplicationController
 private
   def get_list_size
     @list_size = Setting.plugin_timesheet_plugin['list_size'].to_i
+  end
+  
+  def allowed_projects
+    return Project.find(:all)
   end
 end

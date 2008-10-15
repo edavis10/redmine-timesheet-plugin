@@ -25,7 +25,21 @@ describe TimesheetController,"#index with GET request" do
   end
 
   it 'should set @timesheet.projects to the list of current projects the user is a member of (#746)'
-  it 'should set @timesheet.projects to all the projects if the user is an admin (#746)'
+
+  it 'should set @timesheet.projects to all the projects if the user is an admin' do
+    project1 = mock_model(Project)
+    project2 = mock_model(Project)
+    projects = [project1, project2]
+    Project.should_receive(:find).with(:all).and_return(projects)
+    
+    timesheet = mock_model(Timesheet)
+    timesheet.should_receive(:projects=).with(projects)
+    timesheet.should_receive(:projects).and_return(projects)
+    Timesheet.should_receive(:new).and_return(timesheet)
+    
+    get 'index'
+    assigns[:timesheet].projects.should eql(projects)
+  end
 
   it 'should set the from date to today' do
     get 'index'
@@ -82,6 +96,6 @@ describe TimesheetController,"#index with POST request" do
     post 'index', :timesheet => { }
     assigns[:timesheet].should eql(@timesheet)
   end
-
+  
 end
 
