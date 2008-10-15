@@ -9,6 +9,10 @@ class Timesheet
   
   def initialize
     self.time_entries = { }
+    self.projects = [ ]
+    self.allowed_projects = [ ]
+    self.activities = [ ]
+    self.users = [ ]
   end
   
   # Gets all the time_entries for all the projects
