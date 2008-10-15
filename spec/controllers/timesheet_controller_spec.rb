@@ -1,26 +1,8 @@
 require File.dirname(__FILE__) + '/../spec_helper'
 
-describe TimesheetController do
-  it "should use TimesheetController" do
-    controller.should be_an_instance_of(TimesheetController)
-  end
-
-end
-describe TimesheetController,"#index with GET request" do
-  def mock_admin
-    @current_user.stub!(:admin?).and_return(true)
-    stub_current_user
-  end
-  
-  def stub_current_user
-    User.stub!(:current).and_return(@current_user)
-  end
-  
-  def stub_timesheet
-    Timesheet.stub!(:new).and_return(@timesheet)
-  end
-  
-  before(:each) do
+module TimesheetControllerHelper
+  # Sets up the default mocks
+  def default_mocks
     # User
     @current_user = mock_model(User)
     @current_user.stub!(:admin?).and_return(false)
@@ -40,6 +22,36 @@ describe TimesheetController,"#index with GET request" do
     @timesheet.stub!(:allowed_projects)
     @timesheet.stub!(:allowed_projects=)
     stub_timesheet
+  end
+  
+  # Converts current user to admin
+  def mock_admin
+    @current_user.stub!(:admin?).and_return(true)
+    stub_current_user
+  end
+  
+  # Restubs the current user
+  def stub_current_user
+    User.stub!(:current).and_return(@current_user)
+  end
+  
+  # Restubs the new timesheet
+  def stub_timesheet
+    Timesheet.stub!(:new).and_return(@timesheet)
+  end
+end
+
+describe TimesheetController do
+  it "should use TimesheetController" do
+    controller.should be_an_instance_of(TimesheetController)
+  end
+
+end
+describe TimesheetController,"#index with GET request" do
+  include TimesheetControllerHelper
+  
+  before(:each) do
+    default_mocks
   end
   
   it 'should get the list size from the settings' do
