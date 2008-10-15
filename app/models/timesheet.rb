@@ -7,12 +7,12 @@ class Timesheet
   # project.name could be the parent project name also
   attr_accessor :time_entries
   
-  def initialize
-    self.time_entries = { }
-    self.projects = [ ]
-    self.allowed_projects = [ ]
-    self.activities = [ ]
-    self.users = [ ]
+  def initialize(options = { })
+    self.time_entries = options[:time_entries] || { }
+    self.projects = options[:projects] || [ ]
+    self.allowed_projects = options[:allowed_projects] || [ ]
+    self.activities = options[:activities] || [ ]
+    self.users = options[:users] || [ ]
   end
   
   # Gets all the time_entries for all the projects

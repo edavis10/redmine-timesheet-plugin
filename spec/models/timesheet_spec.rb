@@ -19,7 +19,9 @@ describe Timesheet do
   it 'should not be an ActiveRecord class' do
     Timesheet.should_not be_a_kind_of(ActiveRecord::Base)
   end
-  
+end
+
+describe Timesheet, 'initializing' do
   it 'should initialize time_entries to an empty Hash' do 
     timesheet = Timesheet.new
     timesheet.time_entries.should be_a_kind_of(Hash)
@@ -48,6 +50,41 @@ describe Timesheet do
     timesheet = Timesheet.new
     timesheet.users.should be_a_kind_of(Array)
     timesheet.users.should be_empty
+  end
+
+  it 'should initialize time_entries to the passed in options' do 
+    data = { :test => true }
+    timesheet = Timesheet.new({ :time_entries => data })
+    timesheet.time_entries.should_not be_empty
+    timesheet.time_entries.should eql(data)
+  end
+
+  it 'should initialize projects to the passed in options' do 
+    data = ['project1', 'project2']
+    timesheet = Timesheet.new({ :projects => data })
+    timesheet.projects.should_not be_empty
+    timesheet.projects.should eql(data)
+  end
+
+  it 'should initialize allowed_projects to the passed in options' do 
+    data = ['project1', 'project2']
+    timesheet = Timesheet.new({ :allowed_projects => data })
+    timesheet.allowed_projects.should_not be_empty
+    timesheet.allowed_projects.should eql(data)
+  end
+
+  it 'should initialize activities to the passed in options' do 
+    data = ['code', 'test']
+    timesheet = Timesheet.new({ :activities => data })
+    timesheet.activities.should_not be_empty
+    timesheet.activities.should eql(data)
+  end
+
+  it 'should initialize users to the passed in options' do 
+    data = ['user1', 'user2']
+    timesheet = Timesheet.new({ :users => data })
+    timesheet.users.should_not be_empty
+    timesheet.users.should eql(data)
   end
 end
 
