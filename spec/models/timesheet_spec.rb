@@ -1,6 +1,14 @@
 require File.dirname(__FILE__) + '/../spec_helper'
 
 module TimesheetSpecHelper
+  def timesheet_factory(options={ })
+    timesheet = Timesheet.new(options)
+    timesheet.date_from ||= Date.today.to_s
+    timesheet.date_to ||= Date.today.to_s
+    
+    return timesheet
+  end
+  
   def project_factory(id)
     # First project
     project = mock_model(Project, :parent => nil, :id => id, :to_param => id.to_s)
@@ -101,9 +109,7 @@ describe Timesheet,'.fetch_time_entries' do
   end
 
   it 'should add a time_entry array for each project' do
-    timesheet = Timesheet.new
-    timesheet.date_from = Date.today.to_s
-    timesheet.date_to = Date.today.to_s
+    timesheet = timesheet_factory
 
     project1 = project_factory(1)
     project2 = project_factory(2)
@@ -116,9 +122,7 @@ describe Timesheet,'.fetch_time_entries' do
   end
   
   it 'should use the project name for each time_entry array' do 
-    timesheet = Timesheet.new
-    timesheet.date_from = Date.today.to_s
-    timesheet.date_to = Date.today.to_s
+    timesheet = timesheet_factory
 
     project1 = project_factory(1)
     project1.should_receive(:name).and_return('Project 1')
