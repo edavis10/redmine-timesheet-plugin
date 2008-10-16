@@ -1,4 +1,4 @@
-<h3><%= h name -%> (<%= h total %> <%= h(l(:field_hours)) -%>)</h3>
+<h3><%= h name -%> (<%= h total %> <%= h(l(:field_hours)) -%>) <%= showing_users(entry[:users]) %></h3>
 <table class="list">
   <thead>
     <th width="10%"><%= l(:label_date) %></th>
@@ -10,7 +10,7 @@
     <th width="4%"></th>
   </thead>
   <tbody>
-    <% entry.each do |e| %>
+    <% entry[:logs].each do |e| %>
     <tr class="<%= cycle("odd", "even") %>">
     <td align="center"><%= format_date(e.spent_on) %></td>
     <td align="center"><%= e.user.name %></td>

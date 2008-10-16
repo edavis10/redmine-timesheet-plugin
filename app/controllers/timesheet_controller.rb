@@ -47,10 +47,12 @@ class TimesheetController < ApplicationController
       @total = { }
       @timesheet.time_entries.each do |project,logs|
         project_total = 0
-        logs.each do |log|
-          project_total += log.hours
+        unless logs[:logs].nil?
+          logs[:logs].each do |log|
+            project_total += log.hours
+          end
+          @total[project] = project_total
         end
-        @total[project] = project_total
       end
       
       @grand_total = @total.collect{|k,v| v}.inject{|sum,n| sum + n}

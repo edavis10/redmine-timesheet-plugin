@@ -2,8 +2,8 @@ class Timesheet
   attr_accessor :date_from, :date_to, :projects, :activities, :users, :allowed_projects
 
   # Time entries on the Timesheet in the form of:
-  #   project.name => [entries]
-  #   project.name => [entries]
+  #   project.name => {:logs => [time entries], :users => [users shown in logs] }
+  #   project.name => {:logs => [time entries], :users => [users shown in logs] }
   # project.name could be the parent project name also
   attr_accessor :time_entries
   
@@ -19,25 +19,33 @@ class Timesheet
   def fetch_time_entries
     self.time_entries = { }
     self.projects.each do |project|
+      logs = []
+      users = []
       if User.current.admin?
         # Administrators can see all time entries
         logs = time_entries_for_all_users(project)
+        users = logs.collect(&:user).uniq.sort
       elsif User.current.allowed_to?(:see_project_timesheets, project)
         # Users with the Role and correct permission can see all time entries
         logs = time_entries_for_all_users(project)
+        users = logs.collect(&:user).uniq.sort
       elsif User.current.allowed_to?(:view_time_entries, project)
         # Users with permission to see their time entries
         logs = time_entries_for_current_user(project)
+        users = logs.collect(&:user).uniq.sort
       else
         # Rest can see nothing
-        logs = []
       end
       
       # Append the parent project name
       if project.parent.nil?
-        self.time_entries[project.name] = logs unless logs.empty?
+        unless logs.empty?
+          self.time_entries[project.name] = { :logs => logs, :users => users } 
+        end
       else
-        self.time_entries[project.parent.name + ' / ' + project.name] = logs unless logs.empty?          
+        unless logs.empty?
+          self.time_entries[project.parent.name + ' / ' + project.name] = { :logs => logs, :users => users }
+        end
       end
     end
   end
