@@ -17,14 +17,51 @@ module TimesheetSpecHelper
     }.merge(options)
 
     project = mock_model(Project, object_options)
-    project_te1 = mock_model(TimeEntry, :id => '100' + id.to_s, :project_id => project.id, :issue_id => '1', :hours => '5', :activity_id => '1', :spent_on => Date.today)
-    project_te2 = mock_model(TimeEntry, :id => '101' + id.to_s, :project_id => project.id, :issue_id => '1', :hours => '10', :activity_id => '1', :spent_on => Date.today)
+    project_te1 = mock_model(TimeEntry, :id => '100' + id.to_s, :project_id => project.id, :issue_id => '1', :hours => '5', :activity_id => '1', :spent_on => Date.today, :user => 1)
+    project_te2 = mock_model(TimeEntry, :id => '101' + id.to_s, :project_id => project.id, :issue_id => '1', :hours => '10', :activity_id => '1', :spent_on => Date.today, :user => 1)
     project_time_entries_mock = mock('project_time_entries_mock')
     project_time_entries_mock.stub!(:find).and_return([project_te1, project_te2])
     project.stub!(:time_entries).and_return(project_time_entries_mock)
     project.stub!(:name).and_return('Project ' + id.to_s)
     
     return project
+  end
+
+  def stub_non_member_user(projects)
+    @current_user = mock_model(User)
+    @current_user.stub!(:admin?).and_return(false)
+    projects.each do |project|
+      @current_user.stub!(:allowed_to?).with(:view_time_entries, project).and_return(false)
+      @current_user.stub!(:allowed_to?).with(:see_project_timesheets, project).and_return(false)
+    end
+    User.stub!(:current).and_return(@current_user)
+  end
+  
+  def stub_normal_user(projects)
+    @current_user = mock_model(User)
+    @current_user.stub!(:admin?).and_return(false)
+    projects.each do |project|
+      @current_user.stub!(:allowed_to?).with(:view_time_entries, project).and_return(true)
+      @current_user.stub!(:allowed_to?).with(:see_project_timesheets, project).and_return(false)
+    end
+    User.stub!(:current).and_return(@current_user)
+  end
+  
+  def stub_manager_user(projects)
+    @current_user = mock_model(User)
+    @current_user.stub!(:admin?).and_return(false)
+    projects.each do |project|
+      @current_user.stub!(:allowed_to?).with(:view_time_entries, project).and_return(true)
+      @current_user.stub!(:allowed_to?).with(:see_project_timesheets, project).and_return(true)
+    end
+    User.stub!(:current).and_return(@current_user)
+  end
+  
+  def stub_admin_user
+    @current_user = mock_model(User)
+    @current_user.stub!(:admin?).and_return(true)
+    @current_user.stub!(:allowed_to?).and_return(true)
+    User.stub!(:current).and_return(@current_user)    
   end
 end
 
@@ -119,6 +156,7 @@ describe Timesheet,'.fetch_time_entries' do
     project1 = project_factory(1)
     project2 = project_factory(2)
 
+    stub_admin_user
     timesheet.projects = [project1, project2]
     
     timesheet.fetch_time_entries
@@ -127,6 +165,7 @@ describe Timesheet,'.fetch_time_entries' do
   end
   
   it 'should use the project name for each time_entry array' do 
+    
     timesheet = timesheet_factory
 
     project1 = project_factory(1)
@@ -134,6 +173,7 @@ describe Timesheet,'.fetch_time_entries' do
     project2 = project_factory(2)
     project2.should_receive(:name).and_return('Project 2')
 
+    stub_admin_user
     timesheet.projects = [project1, project2]
     
     timesheet.fetch_time_entries
@@ -149,6 +189,7 @@ describe Timesheet,'.fetch_time_entries' do
     project2 = project_factory(2, :parent => project1 )
     project2.should_receive(:name).and_return('Project 2')
 
+    stub_admin_user
     timesheet.projects = [project1, project2]
     
     timesheet.fetch_time_entries
