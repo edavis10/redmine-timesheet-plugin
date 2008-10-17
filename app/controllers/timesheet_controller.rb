@@ -4,33 +4,27 @@ class TimesheetController < ApplicationController
 
   layout 'base'
   before_filter :get_list_size
+  before_filter :get_activities
 
   helper :sort
   include SortHelper
   helper :issues
 
   def index
-    @today = Date.today.to_s
-
+    @from = Date.today.to_s
+    @to = Date.today.to_s
     @timesheet = Timesheet.new
     @timesheet.allowed_projects = allowed_projects
-    @activities = Enumeration::get_values('ACTI')
     
     if @timesheet.allowed_projects.empty?
       render :action => 'no_projects'
       return
     end
-
-    @timesheet.projects = { }
-    @from,@to = @today,@today
   end
 
   def report
-    @today = Date.today.to_s
-
     @timesheet = Timesheet.new
     @timesheet.allowed_projects = allowed_projects
-    @activities = Enumeration::get_values('ACTI')
     
     if @timesheet.allowed_projects.empty?
       render :action => 'no_projects'
@@ -83,6 +77,10 @@ class TimesheetController < ApplicationController
 private
   def get_list_size
     @list_size = Setting.plugin_timesheet_plugin['list_size'].to_i
+  end
+  
+  def get_activities
+    @activities = Enumeration::get_values('ACTI')
   end
   
   def allowed_projects
