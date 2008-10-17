@@ -16,6 +16,11 @@ class TimesheetController < ApplicationController
     @timesheet.allowed_projects = allowed_projects
     @activities = Enumeration::get_values('ACTI')
     
+    if @timesheet.allowed_projects.empty?
+      render :action => 'no_projects'
+      return
+    end
+
     case request.method
     when :post
       @timesheet.date_from = params[:timesheet][:date_from]

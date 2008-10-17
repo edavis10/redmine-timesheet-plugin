@@ -19,7 +19,7 @@ module TimesheetControllerHelper
     @timesheet = mock_model(Timesheet)
     @timesheet.stub!(:projects).and_return([ ])
     @timesheet.stub!(:projects=)
-    @timesheet.stub!(:allowed_projects)
+    @timesheet.stub!(:allowed_projects).and_return(['not empty'])
     @timesheet.stub!(:allowed_projects=)
     @timesheet.stub!(:date_from)
     @timesheet.stub!(:date_from=)
@@ -141,6 +141,16 @@ describe TimesheetController,"#index with GET request" do
   end
 end
 
+describe TimesheetController,"#index with GET request from an Anonymous user" do
+  include TimesheetControllerHelper
+
+  it 'should render the no_projects template' do
+    get 'index'
+    response.should render_template('no_projects')
+  end
+
+end
+
 
 describe TimesheetController,"#index with POST request" do
   include TimesheetControllerHelper
@@ -169,7 +179,7 @@ describe TimesheetController,"#index with POST request" do
     stub_current_user
 
     @timesheet.should_receive(:allowed_projects=).with(projects)
-    @timesheet.should_receive(:allowed_projects).and_return(projects)
+    @timesheet.should_receive(:allowed_projects).twice.and_return(projects)
     @timesheet.should_receive(:projects=).with([project1])
     stub_timesheet
 
