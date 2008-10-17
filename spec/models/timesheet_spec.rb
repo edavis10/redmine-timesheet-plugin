@@ -90,16 +90,14 @@ describe Timesheet, 'initializing' do
     timesheet.allowed_projects.should be_empty
   end
 
-  it 'should initialize activities to an empty Array' do 
+  it 'should initialize activities to an Array' do 
     timesheet = Timesheet.new
     timesheet.activities.should be_a_kind_of(Array)
-    timesheet.activities.should be_empty
   end
 
-  it 'should initialize users to an empty Array' do 
+  it 'should initialize users to an Array' do 
     timesheet = Timesheet.new
     timesheet.users.should be_a_kind_of(Array)
-    timesheet.users.should be_empty
   end
 
   it 'should initialize time_entries to the passed in options' do 
@@ -109,13 +107,6 @@ describe Timesheet, 'initializing' do
     timesheet.time_entries.should eql(data)
   end
 
-  it 'should initialize projects to the passed in options' do 
-    data = ['project1', 'project2']
-    timesheet = Timesheet.new({ :projects => data })
-    timesheet.projects.should_not be_empty
-    timesheet.projects.should eql(data)
-  end
-
   it 'should initialize allowed_projects to the passed in options' do 
     data = ['project1', 'project2']
     timesheet = Timesheet.new({ :allowed_projects => data })
@@ -123,18 +114,26 @@ describe Timesheet, 'initializing' do
     timesheet.allowed_projects.should eql(data)
   end
 
-  it 'should initialize activities to the passed in options' do 
-    data = ['code', 'test']
+  it 'should initialize activities to the integers of the passed in options' do 
+    act1 = mock('act1')
+    act1.stub!(:to_i).and_return(200)
+    act2 = mock('act2')
+    act2.stub!(:to_i).and_return(300)
+    data = [act1, act2]
     timesheet = Timesheet.new({ :activities => data })
     timesheet.activities.should_not be_empty
-    timesheet.activities.should eql(data)
+    timesheet.activities.should eql([200, 300])
   end
 
-  it 'should initialize users to the passed in options' do 
-    data = ['user1', 'user2']
+  it 'should initialize users to the ids of the passed in options' do 
+    user1 = mock('user1')
+    user1.stub!(:to_i).and_return(100)
+    user2 = mock('user2')
+    user2.stub!(:to_i).and_return(101)
+    data = [user1, user2]
     timesheet = Timesheet.new({ :users => data })
     timesheet.users.should_not be_empty
-    timesheet.users.should eql(data)
+    timesheet.users.should eql([100, 101])
   end
 end
 

@@ -8,16 +8,27 @@ class Timesheet
   attr_accessor :time_entries
 
   def initialize(options = { })
-    self.projects = { }
+    self.projects = [ ]
     self.time_entries = options[:time_entries] || { }
     self.allowed_projects = options[:allowed_projects] || [ ]
-    self.activities = options[:activities] || Enumeration::get_values('ACTI').collect(&:id)
-    self.users = options[:users] || User.find(:all).collect(&:id)
+
+    unless options[:activities].nil?
+      self.activities = options[:activities].collect { |a| a.to_i }
+    else
+      self.activities =  Enumeration::get_values('ACTI').collect(&:id)
+    end
+    
+    unless options[:users].nil?
+      self.users = options[:users].collect { |u| u.to_i }
+    else
+      self.users = User.find(:all).collect(&:id)
+    end
+    
     
     self.date_from = options[:date_from] || Date.today.to_s
     self.date_to = options[:date_to] || Date.today.to_s
   end
-  
+
   # Gets all the time_entries for all the projects
   def fetch_time_entries
     self.time_entries = { }

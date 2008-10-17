@@ -13,7 +13,7 @@ class TimesheetController < ApplicationController
   def index
     @from = Date.today.to_s
     @to = Date.today.to_s
-    @timesheet = Timesheet.new({ :activities => [ ], :users => [ ]})
+    @timesheet = Timesheet.new
     @timesheet.allowed_projects = allowed_projects
     
     if @timesheet.allowed_projects.empty?
@@ -23,7 +23,12 @@ class TimesheetController < ApplicationController
   end
 
   def report
-    @timesheet = Timesheet.new( params[:timesheet] )
+    if params && params[:timesheet]
+      @timesheet = Timesheet.new( params[:timesheet] )
+    else
+      @timesheet = Timesheet.new
+    end
+    
     @timesheet.allowed_projects = allowed_projects
     
     if @timesheet.allowed_projects.empty?
