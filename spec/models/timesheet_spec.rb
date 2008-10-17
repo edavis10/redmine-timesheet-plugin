@@ -202,3 +202,90 @@ describe Timesheet,'.fetch_time_entries' do
   it 'should fetch all the time entries on a project matching the users'
 end
 
+describe Timesheet,'.fetch_time_entries as an administrator' do
+  include TimesheetSpecHelper
+
+  it 'should collect time entries for all users on each project' do
+    timesheet = timesheet_factory
+
+    project1 = project_factory(1)
+    project1.stub!(:name).and_return('Project 1')
+    project2 = project_factory(2)
+    project2.stub!(:name).and_return('Project 2')
+
+    stub_admin_user
+    timesheet.projects = [project1, project2] 
+
+    timesheet.should_receive(:time_entries_for_all_users).with(project1).and_return([ ])
+    timesheet.should_receive(:time_entries_for_all_users).with(project2).and_return([ ])
+    timesheet.fetch_time_entries
+  end
+end
+
+describe Timesheet,'.fetch_time_entries as a user with see_project_timesheet permission on a project' do
+  include TimesheetSpecHelper
+
+  it 'should collect time entries for all users' do
+    timesheet = timesheet_factory
+
+    project1 = project_factory(1)
+    project1.stub!(:name).and_return('Project 1')
+    project2 = project_factory(2)
+    project2.stub!(:name).and_return('Project 2')
+    project3 = project_factory(3)
+    project3.stub!(:name).and_return('Project 3')
+
+    stub_manager_user([project1, project2])
+    # Make user a 'non-manager' on project3 
+    @current_user.stub!(:allowed_to?).with(:view_time_entries, project3).and_return(true)
+    @current_user.stub!(:allowed_to?).with(:see_project_timesheets, project3).and_return(false)
+    User.stub!(:current).and_return(@current_user)
+
+    timesheet.projects = [project1, project2, project3]
+
+    timesheet.should_receive(:time_entries_for_all_users).with(project1).and_return([ ])
+    timesheet.should_receive(:time_entries_for_all_users).with(project2).and_return([ ])
+    timesheet.should_receive(:time_entries_for_current_user).with(project3).and_return([ ])
+    timesheet.fetch_time_entries
+  end
+end
+
+describe Timesheet,'.fetch_time_entries as a user with view_time_entries permission on a project' do
+  include TimesheetSpecHelper
+
+  it 'should collect time entries for only themself' do
+    timesheet = timesheet_factory
+
+    project1 = project_factory(1)
+    project1.stub!(:name).and_return('Project 1')
+    project2 = project_factory(2)
+    project2.stub!(:name).and_return('Project 2')
+
+    stub_normal_user([project1, project2])
+    timesheet.projects = [project1, project2]
+
+    timesheet.should_receive(:time_entries_for_current_user).with(project1).and_return([ ])
+    timesheet.should_receive(:time_entries_for_current_user).with(project2).and_return([ ])
+    timesheet.fetch_time_entries
+  end
+end
+
+describe Timesheet,'.fetch_time_entries as a non-member of a project' do
+  include TimesheetSpecHelper
+
+  it 'should get no time entries' do
+    timesheet = timesheet_factory
+
+    project1 = project_factory(1)
+    project1.stub!(:name).and_return('Project 1')
+    project2 = project_factory(2)
+    project2.stub!(:name).and_return('Project 2')
+
+    stub_non_member_user([project1, project2])
+    timesheet.projects = [project1, project2]
+
+    timesheet.should_not_receive(:time_entries_for_current_user).with(project1).and_return([ ])
+    timesheet.should_not_receive(:time_entries_for_current_user).with(project2).and_return([ ])
+    timesheet.fetch_time_entries
+  end
+end
