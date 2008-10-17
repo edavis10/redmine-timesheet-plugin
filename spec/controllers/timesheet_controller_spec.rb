@@ -151,8 +151,27 @@ describe TimesheetController,"#index with GET request from an Anonymous user" do
 
 end
 
+describe TimesheetController,"#report with GET request from an Anonymous user" do
+  include TimesheetControllerHelper
 
-describe TimesheetController,"#index with POST request" do
+  it 'should render the no_projects template' do
+    get 'report'
+    response.should render_template('no_projects')
+  end
+
+end
+
+describe TimesheetController,"#report with POST request from an Anonymous user" do
+  include TimesheetControllerHelper
+
+  it 'should render the no_projects template' do
+    get 'report'
+    response.should render_template('no_projects')
+  end
+
+end
+
+describe TimesheetController,"#report with POST request" do
   include TimesheetControllerHelper
   
   before(:each) do
@@ -160,11 +179,11 @@ describe TimesheetController,"#index with POST request" do
   end
 
   def send_request
-    post_index
+    post_report
   end
   
-  def post_index(data={ :timesheet => { } })
-    post 'index', data
+  def post_report(data={ :timesheet => { } })
+    post 'report', data
   end
   
   it_should_behave_like "TimesheetControllerShared"
@@ -183,7 +202,7 @@ describe TimesheetController,"#index with POST request" do
     @timesheet.should_receive(:projects=).with([project1])
     stub_timesheet
 
-    post_index({ :timesheet => { :projects => ['1'] } })
+    post_report({ :timesheet => { :projects => ['1'] } })
   end
 end
 
