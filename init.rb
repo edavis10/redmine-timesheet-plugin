@@ -8,7 +8,7 @@ Redmine::Plugin.register :timesheet_plugin do
   description 'This is a Timesheet plugin for Redmine to show timelogs for all projects'
   version '0.3.0'
   
-  settings :default => {'list_size' => '5'}, :partial => 'settings/settings'
+  settings :default => {'list_size' => '5'}, :partial => 'settings/timesheet_settings'
 
   permission :see_project_timesheets, { }, :require => :member
 
