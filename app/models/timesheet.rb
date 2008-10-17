@@ -6,13 +6,16 @@ class Timesheet
   #   project.name => {:logs => [time entries], :users => [users shown in logs] }
   # project.name could be the parent project name also
   attr_accessor :time_entries
-  
+
   def initialize(options = { })
+    self.projects = { }
     self.time_entries = options[:time_entries] || { }
-    self.projects = options[:projects] || [ ]
     self.allowed_projects = options[:allowed_projects] || [ ]
-    self.activities = options[:activities] || [ ]
-    self.users = options[:users] || [ ]
+    self.activities = options[:activities] || Enumeration::get_values('ACTI').collect(&:id)
+    self.users = options[:users] || User.find(:all).collect(&:id)
+    
+    self.date_from = options[:date_from] || Date.today.to_s
+    self.date_to = options[:date_to] || Date.today.to_s
   end
   
   # Gets all the time_entries for all the projects

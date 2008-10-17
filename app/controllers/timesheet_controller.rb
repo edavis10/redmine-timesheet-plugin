@@ -13,7 +13,7 @@ class TimesheetController < ApplicationController
   def index
     @from = Date.today.to_s
     @to = Date.today.to_s
-    @timesheet = Timesheet.new
+    @timesheet = Timesheet.new({ :activities => [ ], :users => [ ]})
     @timesheet.allowed_projects = allowed_projects
     
     if @timesheet.allowed_projects.empty?
@@ -23,7 +23,7 @@ class TimesheetController < ApplicationController
   end
 
   def report
-    @timesheet = Timesheet.new
+    @timesheet = Timesheet.new( params[:timesheet] )
     @timesheet.allowed_projects = allowed_projects
     
     if @timesheet.allowed_projects.empty?
@@ -31,9 +31,6 @@ class TimesheetController < ApplicationController
       return
     end
 
-    @timesheet.date_from = params[:timesheet][:date_from]
-    @timesheet.date_to = params[:timesheet][:date_to]
-    
     if !params[:timesheet][:projects].blank?
       @timesheet.projects = @timesheet.allowed_projects.find_all { |project| 
         params[:timesheet][:projects].include?(project.id.to_s)
@@ -42,18 +39,6 @@ class TimesheetController < ApplicationController
       @timesheet.projects = @timesheet.allowed_projects
     end
 
-    if !params[:timesheet][:activities].blank?
-      @timesheet.activities = params[:timesheet][:activities].collect {|p| p.to_i }
-    else 
-      @timesheet.activities = @activities.collect(&:id)
-    end
-    
-    if !params[:timesheet][:users].blank?
-      @timesheet.users = params[:timesheet][:users].collect {|p| p.to_i }
-    else 
-      @timesheet.users = User.find(:all).collect(&:id)
-    end
-    
     @timesheet.fetch_time_entries
 
     # Sums
