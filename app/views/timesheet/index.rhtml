@@ -1,17 +1,6 @@
-
-
 <h2><%= l(:timesheet_title)%></h2>
 
 <%= render :partial => 'form' %>
-
-<% if @timesheet.time_entries.length > 0 %>
-<h2><%= l(:label_spent_time) %> (<%= h(@grand_total) -%> <%= h(l(:field_hours)) -%>)</h2>
-
-<% @timesheet.time_entries.each do |entryname,entry| -%>
-<%= render :partial => 'project_timesheet', :locals => {:entry => entry, :name => entryname, :total => @total[entryname] } %>
-<% end -%>
-<% end -%>
-
 
 <% content_for(:header_tags) do %>
 <style type="text/css">
