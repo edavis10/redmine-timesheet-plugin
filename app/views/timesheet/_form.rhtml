@@ -1,0 +1,44 @@
+<div id="timesheet-form">
+<fieldset>
+<% form_for :timesheet, :url =>{:action => 'report'} do |f|  %>
+
+<p>
+  <label for="timesheet_date_from"><%= l(:timesheet_date_from_label)%>:</label><br />
+  <%= f.text_field "date_from", :size => 10, :value => @from %><%= calendar_for('timesheet_date_from') %><br /><br />
+
+  <label for="timesheet_date_to"><%= l(:timesheet_date_to_label)%>:</label><br />
+  <%= f.text_field "date_to", :size => 10, :value => @to %><%= calendar_for('timesheet_date_to') %>
+</p>
+
+<p>
+  <label for="timesheet[projects][]"><%= l(:timesheet_project_label)%>:</label><br />
+  <%= select_tag 'timesheet[projects][]',
+    options_from_collection_for_select(@timesheet.allowed_projects, :id, :name, @timesheet.projects.collect(&:id)),
+    { :multiple => true, :size => @list_size}
+  %>
+</p>
+
+
+<p>
+  <label for="timesheet[activities][]"><%= l(:timesheet_activities_label)%>:</label><br />
+  <%= select_tag 'timesheet[activities][]',
+    options_from_collection_for_select(@activities, :id, :name, @timesheet.activities),
+    { :multiple => true, :size => @list_size}
+  %>
+</p>
+
+<p>
+  <label for="timesheet[users][]"><%= l(:timesheet_users_label)%>:</label><br />
+  <%= select_tag 'timesheet[users][]',
+    options_from_collection_for_select(User.find(:all), :id, :name, @timesheet.users),
+    { :multiple => true, :size => @list_size}
+
+           %>
+</p>
+
+<div class="clear"></div>
+<%= submit_tag l(:button_apply),:class => 'button-small' -%>
+
+<% end %>
+</fieldset>
+</div>
