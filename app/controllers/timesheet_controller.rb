@@ -1,4 +1,3 @@
-# Sample plugin controller
 class TimesheetController < ApplicationController
   unloadable
 
@@ -64,7 +63,12 @@ class TimesheetController < ApplicationController
     render :action => 'details', :layout => false if request.xhr?
   end
   
-private
+  def context_menu
+    @time_entries = TimeEntry.find(:all, :conditions => ['id IN (?)', params[:ids]])
+    render :layout => false
+  end
+
+  private
   def get_list_size
     @list_size = Setting.plugin_timesheet_plugin['list_size'].to_i
   end
