@@ -25,6 +25,7 @@
 div#timesheet-form p { padding:0px 10px; float:left; }
 
 </style>
+<%= call_hook(:plugin_timesheet_view_timesheets_report_header_tags, { :timesheet => @timesheet }) %>
 <% end %>
 
 <div id="context-menu" style="display: none;"></div>
