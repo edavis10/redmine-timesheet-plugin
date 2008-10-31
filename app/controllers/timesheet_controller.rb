@@ -8,6 +8,7 @@ class TimesheetController < ApplicationController
   helper :sort
   include SortHelper
   helper :issues
+  include ApplicationHelper
 
   def index
     @from = Date.today.to_s
@@ -42,6 +43,8 @@ class TimesheetController < ApplicationController
     else 
       @timesheet.projects = @timesheet.allowed_projects
     end
+
+    call_hook(:plugin_timesheet_controller_report_pre_fetch_time_entries, { :timesheet => @timesheet, :params => params })
 
     @timesheet.fetch_time_entries
 

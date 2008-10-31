@@ -64,22 +64,31 @@ class Timesheet
     end
   end
   
+  protected
+
+  def conditions(users)
+    conditions = ['spent_on >= (?) AND spent_on <= (?) AND activity_id IN (?) AND user_id IN (?)',
+                  self.date_from, self.date_to, self.activities, users ]
+
+    Redmine::Hook.call_hook(:plugin_timesheet_model_timesheet_conditions, { :timesheet => self, :conditions => conditions})
+    return conditions
+  end
+
   private
 
   
   def time_entries_for_all_users(project)
     return project.time_entries.find(:all,
-                                     :conditions => ['spent_on >= (?) AND spent_on <= (?) AND activity_id IN (?) AND user_id IN (?)',
-                                                     self.date_from, self.date_to, self.activities, self.users ],
+                                     :conditions => self.conditions(self.users),
                                      :include => [:activity, :user, {:issue => [:tracker, :assigned_to, :priority]}],
                                      :order => "spent_on ASC")
   end
   
   def time_entries_for_current_user(project)
     return project.time_entries.find(:all,
-                                     :conditions => ['spent_on >= (?) AND spent_on <= (?) AND activity_id IN (?) AND user_id = (?)',
-                                                     self.date_from, self.date_to, self.activities, User.current.id ],
+                                     :conditions => self.conditions(User.current.id),
                                      :include => [:activity, :user, {:issue => [:tracker, :assigned_to, :priority]}],
                                      :order => "spent_on ASC")
   end
+  
 end
