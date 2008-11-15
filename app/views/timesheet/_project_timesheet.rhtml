@@ -1,4 +1,4 @@
-<h3><%= h name -%> (<%= h total %> <%= h(l(:field_hours)) -%>) <%= showing_users(entry[:users]) %></h3>
+<h3><%= h name -%> (<%= h number_with_precision(total, @precision) %> <%= h(l(:field_hours)) -%>) <%= showing_users(entry[:users]) %></h3>
 <table class="list issues">
   <thead>
     <th width="2%">
@@ -31,7 +31,7 @@
       <% end %>
     </td>
     <td><%=h e.comments %></td>
-    <td align="center"><strong><%= e.hours %></strong></td>
+    <td align="center"><strong><%= number_with_precision(e.hours, @precision) %></strong></td>
     <td align="center">
       <% if e.editable_by?(User.current) -%>
         <%= link_to image_tag('edit.png'), {:controller => 'timelog', :action => 'edit', :id => e},

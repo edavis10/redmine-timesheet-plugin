@@ -8,7 +8,7 @@
 
 <% form_tag({}) do -%>
 <% if @timesheet.time_entries.length > 0 %>
-<h2><%= l(:label_spent_time) %> (<%= h(@grand_total) -%> <%= h(l(:field_hours)) -%>)</h2>
+<h2><%= l(:label_spent_time) %> (<%= h(number_with_precision(@grand_total, @precision)) -%> <%= h(l(:field_hours)) -%>)</h2>
 
 <% @timesheet.time_entries.each do |entryname,entry| -%>
 <%= render :partial => 'project_timesheet', :locals => {:entry => entry, :name => entryname, :total => @total[entryname] } %>

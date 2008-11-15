@@ -3,6 +3,7 @@ class TimesheetController < ApplicationController
 
   layout 'base'
   before_filter :get_list_size
+  before_filter :get_precision
   before_filter :get_activities
 
   helper :sort
@@ -75,7 +76,10 @@ class TimesheetController < ApplicationController
   def get_list_size
     @list_size = Setting.plugin_timesheet_plugin['list_size'].to_i
   end
-  
+
+  def get_precision
+    @precision = Setting.plugin_timesheet_plugin['precision'].to_i
+  end
   def get_activities
     @activities = Enumeration::get_values('ACTI')
   end
