@@ -100,6 +100,11 @@ describe Timesheet, 'initializing' do
     timesheet.users.should be_a_kind_of(Array)
   end
 
+  it 'should initialize sort to :project' do 
+    timesheet = Timesheet.new
+    timesheet.sort.should eql(:project)
+  end
+
   it 'should initialize time_entries to the passed in options' do 
     data = { :test => true }
     timesheet = Timesheet.new({ :time_entries => data })
@@ -134,6 +139,21 @@ describe Timesheet, 'initializing' do
     timesheet = Timesheet.new({ :users => data })
     timesheet.users.should_not be_empty
     timesheet.users.should eql([100, 101])
+  end
+
+  it 'should initialize sort to the :user option when passed :user' do 
+    timesheet = Timesheet.new({ :sort => :user })
+    timesheet.sort.should eql(:user)
+  end
+
+  it 'should initialize sort to the :project option when passed :project' do 
+    timesheet = Timesheet.new({ :sort => :project })
+    timesheet.sort.should eql(:project)
+  end
+
+  it 'should initialize sort to the :project option when passed an invalid sort' do 
+    timesheet = Timesheet.new({ :sort => :invalid })
+    timesheet.sort.should eql(:project)
   end
 end
 

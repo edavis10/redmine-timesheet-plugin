@@ -7,6 +7,10 @@ class Timesheet
   # project.name could be the parent project name also
   attr_accessor :time_entries
 
+  # Sort time entries by this field
+  attr_accessor :sort
+  ValidSortOptions = [:project, :user]
+  
   def initialize(options = { })
     self.projects = [ ]
     self.time_entries = options[:time_entries] || { }
@@ -24,6 +28,11 @@ class Timesheet
       self.users = User.find(:all).collect(&:id)
     end
     
+    if !options[:sort].nil? && ValidSortOptions.include?(options[:sort])
+      self.sort = options[:sort]
+    else
+      self.sort = :project
+    end
     
     self.date_from = options[:date_from] || Date.today.to_s
     self.date_to = options[:date_to] || Date.today.to_s
