@@ -26,6 +26,17 @@ module TimesheetSpecHelper
     
     return project
   end
+  
+  def time_entry_factory(id, options = { })
+    object_options = {
+      :id => id,
+      :to_param => id.to_s,
+      :spent_on => Date.today,
+    }.merge(options)
+    
+    time_entry = mock_model(TimeEntry, object_options)
+    return time_entry
+  end
 
   def stub_non_member_user(projects)
     @current_user = mock_model(User)
@@ -237,28 +248,38 @@ describe Timesheet,'.fetch_time_entries with user sorting' do
   it 'should add a time_entry array for each user' do
     timesheet = timesheet_factory(:sort => :user)
 
-    project1 = project_factory(1)
-    project2 = project_factory(2)
-
     stub_admin_user
-    timesheet.projects = [project1, project2]
+    time_entries = [
+                    time_entry_factory(1, { :user => User.current }),
+                    time_entry_factory(2, { :user => User.current }),
+                    time_entry_factory(3, { :user => User.current }),
+                    time_entry_factory(4, { :user => User.current }),
+                    time_entry_factory(5, { :user => User.current })
+                   ]
     
+    TimeEntry.stub!(:find).and_return(time_entries)
+    User.stub!(:find_by_id).and_return(User.current)
+
     timesheet.fetch_time_entries
     timesheet.time_entries.should_not be_empty
-    timesheet.time_entries.should have(2).things
+    timesheet.time_entries.should have(1).thing # One user
   end
   
   it 'should use the user name for each time_entry array' do 
     
     timesheet = timesheet_factory(:sort => :user)
 
-    project1 = project_factory(1)
-    project1.should_receive(:name).and_return('Project 1')
-    project2 = project_factory(2)
-    project2.should_receive(:name).and_return('Project 2')
-
     stub_admin_user
-    timesheet.projects = [project1, project2]
+        time_entries = [
+                    time_entry_factory(1, { :user => User.current }),
+                    time_entry_factory(2, { :user => User.current }),
+                    time_entry_factory(3, { :user => User.current }),
+                    time_entry_factory(4, { :user => User.current }),
+                    time_entry_factory(5, { :user => User.current })
+                   ]
+
+    TimeEntry.stub!(:find).and_return(time_entries)
+    User.stub!(:find_by_id).and_return(User.current)
     
     timesheet.fetch_time_entries
     timesheet.time_entries.should include("Administrator Bob")

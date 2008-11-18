@@ -45,7 +45,7 @@ class Timesheet
     when :project
       fetch_time_entries_by_project
     when :user
-      # TODO
+      fetch_time_entries_by_user
     else
       fetch_time_entries_by_project
     end
@@ -78,6 +78,13 @@ class Timesheet
                                      :order => "spent_on ASC")
   end
   
+  def time_entries_for_user(user)
+    return TimeEntry.find(:all,
+                          :conditions => self.conditions([user]),
+                          :include => [:activity, :user, {:issue => [:tracker, :assigned_to, :priority]}],
+                          :order => "spent_on ASC"
+                          )
+  end
   
   def fetch_time_entries_by_project
     self.projects.each do |project|
@@ -108,6 +115,26 @@ class Timesheet
         unless logs.empty?
           self.time_entries[project.parent.name + ' / ' + project.name] = { :logs => logs, :users => users }
         end
+      end
+    end
+  end
+  
+  def fetch_time_entries_by_user
+    self.users.each do |user_id|
+      logs = []
+      if User.current.admin?
+        # Administrators can see all time entries
+        logs = time_entries_for_user(user_id)
+      elsif User.current.id == user_id
+        # Users can see their own their time entries
+        logs = time_entries_for_user(user_id)
+      else
+        # Rest can see nothing
+      end
+      
+      unless logs.empty?
+        user = User.find_by_id(user_id)
+        self.time_entries[user.name] = { :logs => logs }  unless user.nil?
       end
     end
   end
