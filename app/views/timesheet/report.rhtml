@@ -10,12 +10,18 @@
 <% if @timesheet.time_entries.length > 0 %>
 <h2><%= l(:label_spent_time) %> (<%= h(number_with_precision(@grand_total, @precision)) -%> <%= h(l(:field_hours)) -%>)</h2>
 
-<% @timesheet.time_entries.each do |entryname,entry| -%>
-<%= render :partial => 'project_timesheet', :locals => {:entry => entry, :name => entryname, :total => @total[entryname] } %>
-<% end -%>
-<% end -%>
-
-<% end  # form_tag -%>
+<% @timesheet.time_entries.each do |entryname,entry|
+   if @timesheet.sort == :user %>
+   <h3><%= h entryname -%> (<%= h number_with_precision(@total[entryname], @precision) %> <%= h(l(:field_hours)) -%>)</h3>
+   <% else %>
+   <h3><%= h entryname -%> (<%= h number_with_precision(@total[entryname], @precision) %> <%= h(l(:field_hours)) -%>) <%= showing_users(entry[:users]) %></h3>
+   <% end %>
+   <%= render :partial => 'timesheet_group', :locals => {:entry => entry, :name => entryname, :total => @total[entryname] } %>
+<%-
+end # each
+end # length
+end # form_tag
+-%>
 
 <% content_for(:header_tags) do %>
 <%= javascript_include_tag 'context_menu' %>

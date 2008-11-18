@@ -25,9 +25,9 @@ class TimesheetController < ApplicationController
 
   def report
     if params && params[:timesheet]
-      @timesheet = Timesheet.new( params[:timesheet] )
+      @timesheet = Timesheet.new( params[:timesheet].merge({ :sort => :user }) )
     else
-      @timesheet = Timesheet.new
+      @timesheet = Timesheet.new({ :sort => :user })
     end
     
     @timesheet.allowed_projects = allowed_projects
