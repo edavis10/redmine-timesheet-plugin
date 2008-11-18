@@ -61,6 +61,7 @@ module TimesheetSpecHelper
     @current_user = mock_model(User)
     @current_user.stub!(:admin?).and_return(true)
     @current_user.stub!(:allowed_to?).and_return(true)
+    @current_user.stub!(:name).and_return("Administrator Bob")
     User.stub!(:current).and_return(@current_user)    
   end
 end
@@ -219,6 +220,49 @@ describe Timesheet,'.fetch_time_entries' do
   it 'should fetch all the time entries on a project in the date range'
   it 'should fetch all the time entries on a project matching the activities'
   it 'should fetch all the time entries on a project matching the users'
+end
+
+describe Timesheet,'.fetch_time_entries with user sorting' do
+  include TimesheetSpecHelper
+  
+  it 'should clear .time_entries' do
+    timesheet = Timesheet.new({ :sort => :user })
+    timesheet.time_entries = { :filled => 'data' }
+    proc { 
+      timesheet.fetch_time_entries
+    }.should change(timesheet, :time_entries)
+    
+  end
+
+  it 'should add a time_entry array for each user' do
+    timesheet = timesheet_factory(:sort => :user)
+
+    project1 = project_factory(1)
+    project2 = project_factory(2)
+
+    stub_admin_user
+    timesheet.projects = [project1, project2]
+    
+    timesheet.fetch_time_entries
+    timesheet.time_entries.should_not be_empty
+    timesheet.time_entries.should have(2).things
+  end
+  
+  it 'should use the user name for each time_entry array' do 
+    
+    timesheet = timesheet_factory(:sort => :user)
+
+    project1 = project_factory(1)
+    project1.should_receive(:name).and_return('Project 1')
+    project2 = project_factory(2)
+    project2.should_receive(:name).and_return('Project 2')
+
+    stub_admin_user
+    timesheet.projects = [project1, project2]
+    
+    timesheet.fetch_time_entries
+    timesheet.time_entries.should include("Administrator Bob")
+  end
 end
 
 describe Timesheet,'.fetch_time_entries as an administrator' do

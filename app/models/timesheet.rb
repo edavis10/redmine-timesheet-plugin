@@ -41,6 +41,45 @@ class Timesheet
   # Gets all the time_entries for all the projects
   def fetch_time_entries
     self.time_entries = { }
+    case self.sort
+    when :project
+      fetch_time_entries_by_project
+    when :user
+      # TODO
+    else
+      fetch_time_entries_by_project
+    end
+  end
+  
+  protected
+
+  def conditions(users)
+    conditions = ['spent_on >= (?) AND spent_on <= (?) AND activity_id IN (?) AND user_id IN (?)',
+                  self.date_from, self.date_to, self.activities, users ]
+
+    Redmine::Hook.call_hook(:plugin_timesheet_model_timesheet_conditions, { :timesheet => self, :conditions => conditions})
+    return conditions
+  end
+
+  private
+
+  
+  def time_entries_for_all_users(project)
+    return project.time_entries.find(:all,
+                                     :conditions => self.conditions(self.users),
+                                     :include => [:activity, :user, {:issue => [:tracker, :assigned_to, :priority]}],
+                                     :order => "spent_on ASC")
+  end
+  
+  def time_entries_for_current_user(project)
+    return project.time_entries.find(:all,
+                                     :conditions => self.conditions(User.current.id),
+                                     :include => [:activity, :user, {:issue => [:tracker, :assigned_to, :priority]}],
+                                     :order => "spent_on ASC")
+  end
+  
+  
+  def fetch_time_entries_by_project
     self.projects.each do |project|
       logs = []
       users = []
@@ -72,32 +111,4 @@ class Timesheet
       end
     end
   end
-  
-  protected
-
-  def conditions(users)
-    conditions = ['spent_on >= (?) AND spent_on <= (?) AND activity_id IN (?) AND user_id IN (?)',
-                  self.date_from, self.date_to, self.activities, users ]
-
-    Redmine::Hook.call_hook(:plugin_timesheet_model_timesheet_conditions, { :timesheet => self, :conditions => conditions})
-    return conditions
-  end
-
-  private
-
-  
-  def time_entries_for_all_users(project)
-    return project.time_entries.find(:all,
-                                     :conditions => self.conditions(self.users),
-                                     :include => [:activity, :user, {:issue => [:tracker, :assigned_to, :priority]}],
-                                     :order => "spent_on ASC")
-  end
-  
-  def time_entries_for_current_user(project)
-    return project.time_entries.find(:all,
-                                     :conditions => self.conditions(User.current.id),
-                                     :include => [:activity, :user, {:issue => [:tracker, :assigned_to, :priority]}],
-                                     :order => "spent_on ASC")
-  end
-  
 end
