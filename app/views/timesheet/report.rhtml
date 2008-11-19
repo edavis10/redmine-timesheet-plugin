@@ -6,7 +6,7 @@
 
 <%= render :partial => 'form' %>
 
-<% form_tag({}) do -%>
+<% form_tag({}, { :id => 'time_entries'}) do -%>
 <% if @timesheet.time_entries.length > 0 %>
 <h2><%= l(:label_spent_time) %> (<%= h(@grand_total) -%> <%= h(l(:field_hours)) -%>)</h2>
 
