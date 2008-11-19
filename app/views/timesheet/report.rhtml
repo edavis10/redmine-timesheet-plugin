@@ -30,3 +30,5 @@ div#timesheet-form p { padding:0px 10px; float:left; }
 
 <div id="context-menu" style="display: none;"></div>
 <%= javascript_tag "new ContextMenu('#{url_for(:controller => 'timesheet', :action => 'context_menu')}')" %>
+
+<%= call_hook(:plugin_timesheet_view_timesheets_report_bottom, { :timesheet => @timesheet }) %>
