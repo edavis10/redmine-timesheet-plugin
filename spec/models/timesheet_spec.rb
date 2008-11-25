@@ -246,9 +246,9 @@ describe Timesheet,'.fetch_time_entries with user sorting' do
   end
 
   it 'should add a time_entry array for each user' do
-    timesheet = timesheet_factory(:sort => :user)
-
     stub_admin_user
+    timesheet = timesheet_factory(:sort => :user, :users => [User.current.id])
+
     time_entries = [
                     time_entry_factory(1, { :user => User.current }),
                     time_entry_factory(2, { :user => User.current }),
@@ -266,11 +266,10 @@ describe Timesheet,'.fetch_time_entries with user sorting' do
   end
   
   it 'should use the user name for each time_entry array' do 
-    
-    timesheet = timesheet_factory(:sort => :user)
-
     stub_admin_user
-        time_entries = [
+    timesheet = timesheet_factory(:sort => :user, :users => [User.current.id])
+
+    time_entries = [
                     time_entry_factory(1, { :user => User.current }),
                     time_entry_factory(2, { :user => User.current }),
                     time_entry_factory(3, { :user => User.current }),
