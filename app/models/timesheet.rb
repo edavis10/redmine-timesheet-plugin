@@ -159,31 +159,48 @@ class Timesheet
     end
   end
   
+  #   project => { :users => [users shown in logs],
+  #                :issues => 
+  #                  { issue => {:logs => [time entries],
+  #                    issue => {:logs => [time entries],
+  #                    issue => {:logs => [time entries]}
+  #     
   def fetch_time_entries_by_issue
     self.projects.each do |project|
+      logs = []
+      users = []
       project.issues.each do |issue|
-        logs = []
-        users = []
         if User.current.admin?
           # Administrators can see all time entries
-          logs = issue_time_entries_for_all_users(project)
-          users = logs.collect(&:user).uniq.sort
+          logs << issue_time_entries_for_all_users(issue)
         elsif User.current.allowed_to?(:see_project_timesheets, project)
           # Users with the Role and correct permission can see all time entries
-          logs = issue_time_entries_for_all_users(project)
-          users = logs.collect(&:user).uniq.sort
+          logs << issue_time_entries_for_all_users(issue)
         elsif User.current.allowed_to?(:view_time_entries, project)
           # Users with permission to see their time entries
-          logs = issue_time_entries_for_current_user(project)
-          users = logs.collect(&:user).uniq.sort
+          logs << issue_time_entries_for_current_user(issue)
         else
           # Rest can see nothing
         end
-        unless logs.empty?
-          self.time_entries[issue] = { :logs => logs, :users => users}
-        end
       end
+
+      logs.flatten! if logs.respond_to?(:flatten!)
+      logs.uniq! if logs.respond_to?(:uniq!)
       
+      unless logs.empty?
+        users << logs.collect(&:user).uniq.sort
+
+        
+        issues = logs.collect(&:issue).uniq
+        issue_logs = { }
+        issues.each do |issue|
+          issue_logs[issue] = logs.find_all {|time_log| time_log.issue == issue } # TimeEntry is for this issue
+        end
+        
+        # TODO: TE without an issue
+        
+        self.time_entries[project] = { :issues => issue_logs, :users => users}
+      end
     end
   end
   
