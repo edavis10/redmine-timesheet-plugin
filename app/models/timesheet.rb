@@ -87,14 +87,14 @@ class Timesheet
   def issue_time_entries_for_all_users(issue)
     return issue.time_entries.find(:all,
                                    :conditions => self.conditions(self.users),
-                                   :include => [:activity, :user, :tracker, :assigned_to, :priority],
+                                   :include => [:activity, :user],
                                    :order => "spent_on ASC")
   end
   
   def issue_time_entries_for_current_user(issue)
     return issue.time_entries.find(:all,
                                    :conditions => self.conditions(User.current.id),
-                                   :include => [:activity, :user, :tracker, :assigned_to, :priority],
+                                   :include => [:activity, :user],
                                    :order => "spent_on ASC")
   end
   
