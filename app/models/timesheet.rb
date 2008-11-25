@@ -11,7 +11,8 @@ class Timesheet
   attr_accessor :sort
   ValidSortOptions = {
     :project => 'Project',
-    :user => 'User'
+    :user => 'User',
+    :issue => 'Issue'
   }
   
   def initialize(options = { })
@@ -49,6 +50,8 @@ class Timesheet
       fetch_time_entries_by_project
     when :user
       fetch_time_entries_by_user
+    when :issue
+      fetch_time_entries_by_issue
     else
       fetch_time_entries_by_project
     end
@@ -79,6 +82,20 @@ class Timesheet
                                      :conditions => self.conditions(User.current.id),
                                      :include => [:activity, :user, {:issue => [:tracker, :assigned_to, :priority]}],
                                      :order => "spent_on ASC")
+  end
+  
+  def issue_time_entries_for_all_users(issue)
+    return issue.time_entries.find(:all,
+                                   :conditions => self.conditions(self.users),
+                                   :include => [:activity, :user, :tracker, :assigned_to, :priority],
+                                   :order => "spent_on ASC")
+  end
+  
+  def issue_time_entries_for_current_user(issue)
+    return issue.time_entries.find(:all,
+                                   :conditions => self.conditions(User.current.id),
+                                   :include => [:activity, :user, :tracker, :assigned_to, :priority],
+                                   :order => "spent_on ASC")
   end
   
   def time_entries_for_user(user)
@@ -141,4 +158,33 @@ class Timesheet
       end
     end
   end
+  
+  def fetch_time_entries_by_issue
+    self.projects.each do |project|
+      project.issues.each do |issue|
+        logs = []
+        users = []
+        if User.current.admin?
+          # Administrators can see all time entries
+          logs = issue_time_entries_for_all_users(project)
+          users = logs.collect(&:user).uniq.sort
+        elsif User.current.allowed_to?(:see_project_timesheets, project)
+          # Users with the Role and correct permission can see all time entries
+          logs = issue_time_entries_for_all_users(project)
+          users = logs.collect(&:user).uniq.sort
+        elsif User.current.allowed_to?(:view_time_entries, project)
+          # Users with permission to see their time entries
+          logs = issue_time_entries_for_current_user(project)
+          users = logs.collect(&:user).uniq.sort
+        else
+          # Rest can see nothing
+        end
+        unless logs.empty?
+          self.time_entries[issue] = { :logs => logs, :users => users}
+        end
+      end
+      
+    end
+  end
+  
 end

@@ -163,6 +163,11 @@ describe Timesheet, 'initializing' do
     timesheet.sort.should eql(:project)
   end
 
+  it 'should initialize sort to the :issue option when passed :issue' do 
+    timesheet = Timesheet.new({ :sort => :issue })
+    timesheet.sort.should eql(:issue)
+  end
+
   it 'should initialize sort to the :project option when passed an invalid sort' do 
     timesheet = Timesheet.new({ :sort => :invalid })
     timesheet.sort.should eql(:project)
@@ -282,6 +287,74 @@ describe Timesheet,'.fetch_time_entries with user sorting' do
     
     timesheet.fetch_time_entries
     timesheet.time_entries.should include("Administrator Bob")
+  end
+end
+
+describe Timesheet,'.fetch_time_entries with issue sorting' do
+  include TimesheetSpecHelper
+  
+  it 'should clear .time_entries' do
+    timesheet = Timesheet.new({ :sort => :issue })
+    timesheet.time_entries = { :filled => 'data' }
+    proc { 
+      timesheet.fetch_time_entries
+    }.should change(timesheet, :time_entries)
+    
+  end
+
+  it 'should add a time_entry array for each issue' do
+    stub_admin_user
+    project1 = project_factory(1)
+    timesheet = timesheet_factory(:sort => :issue, :users => [User.current.id])
+    timesheet.projects = [project1]
+
+    @issue1 = mock_model(Issue, :id => 1, :to_param => '1', :project => project1)
+    @issue2 = mock_model(Issue, :id => 1, :to_param => '1', :project => project1)
+    @issue3 = mock_model(Issue, :id => 1, :to_param => '1', :project => project1)
+    
+    project1.should_receive(:issues).and_return([@issue1, @issue2, @issue3])
+    
+    time_entries = [
+                    time_entry_factory(1, { :user => User.current, :issue => @issue1 }),
+                    time_entry_factory(2, { :user => User.current, :issue => @issue1 }),
+                    time_entry_factory(3, { :user => User.current, :issue => @issue2 }),
+                    time_entry_factory(4, { :user => User.current, :issue => @issue2 }),
+                    time_entry_factory(5, { :user => User.current, :issue => @issue3 })
+                   ]
+    
+    TimeEntry.stub!(:find).and_return(time_entries)
+    User.stub!(:find_by_id).and_return(User.current)
+
+    timesheet.fetch_time_entries
+    timesheet.time_entries.should_not be_empty
+    timesheet.time_entries.should have(3).things
+  end
+  
+  it 'should use the issue for each time_entry array' do 
+    stub_admin_user
+    project1 = project_factory(1)
+    timesheet = timesheet_factory(:sort => :issue, :users => [User.current.id])
+    timesheet.projects = [project1]
+
+    @issue1 = mock_model(Issue, :id => 1, :to_param => '1', :project => project1)
+    @issue2 = mock_model(Issue, :id => 1, :to_param => '1', :project => project1)
+    @issue3 = mock_model(Issue, :id => 1, :to_param => '1', :project => project1)
+    
+    project1.should_receive(:issues).and_return([@issue1, @issue2, @issue3])
+
+    time_entries = [
+                    time_entry_factory(1, { :user => User.current, :issue => @issue1 }),
+                    time_entry_factory(2, { :user => User.current, :issue => @issue1 }),
+                    time_entry_factory(3, { :user => User.current, :issue => @issue2 }),
+                    time_entry_factory(4, { :user => User.current, :issue => @issue2 }),
+                    time_entry_factory(5, { :user => User.current, :issue => @issue3 })
+                   ]
+
+    TimeEntry.stub!(:find).and_return(time_entries)
+    User.stub!(:find_by_id).and_return(User.current)
+    
+    timesheet.fetch_time_entries
+    timesheet.time_entries.should include(@issue1)
   end
 end
 
