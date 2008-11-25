@@ -50,7 +50,9 @@ class TimesheetController < ApplicationController
     @timesheet.fetch_time_entries
 
     # Sums
+    # TODO: issue
     @total = { }
+    unless @timesheet.sort == :issue
     @timesheet.time_entries.each do |project,logs|
       project_total = 0
       unless logs[:logs].nil?
@@ -59,6 +61,7 @@ class TimesheetController < ApplicationController
         end
         @total[project] = project_total
       end
+    end
     end
     
     @grand_total = @total.collect{|k,v| v}.inject{|sum,n| sum + n}

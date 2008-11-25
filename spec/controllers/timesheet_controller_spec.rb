@@ -31,6 +31,8 @@ module TimesheetControllerHelper
     @timesheet.stub!(:users=)
     @timesheet.stub!(:fetch_time_entries)
     @timesheet.stub!(:time_entries).and_return([ ])
+    @timesheet.stub!(:sort)
+    @timesheet.stub!(:sort=)
     stub_timesheet
   end
   

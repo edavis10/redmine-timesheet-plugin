@@ -11,13 +11,19 @@
 <h2><%= l(:label_spent_time) %> (<%= h(number_with_precision(@grand_total, @precision)) -%> <%= h(l(:field_hours)) -%>)</h2>
 
 <% @timesheet.time_entries.each do |entryname,entry|
-   if @timesheet.sort == :user %>
+    case @timesheet.sort
+    when :user %>
    <h3><%= h entryname -%> (<%= h number_with_precision(@total[entryname], @precision) %> <%= h(l(:field_hours)) -%>)</h3>
-   <% else %>
-   <h3><%= h entryname -%> (<%= h number_with_precision(@total[entryname], @precision) %> <%= h(l(:field_hours)) -%>) <%= showing_users(entry[:users]) %></h3>
-   <% end %>
    <%= render :partial => 'timesheet_group', :locals => {:entry => entry, :name => entryname, :total => @total[entryname] } %>
-<%-
+<% when :issue %>
+   <h3><%= h entryname.name -%> (<%= h number_with_precision(@total[entryname], @precision) %> <%= h(l(:field_hours)) -%>)</h3>
+   <%# TODO: Total %>
+   <%= render :partial => 'by_issue', :locals => {:entry => entry, :name => entryname, :total => 0 } %>
+<% else # Default to :project %>
+   <h3><%= h entryname -%> (<%= h number_with_precision(@total[entryname], @precision) %> <%= h(l(:field_hours)) -%>) <%= showing_users(entry[:users]) %></h3> 
+   <%= render :partial => 'timesheet_group', :locals => {:entry => entry, :name => entryname, :total => @total[entryname] } %>
+
+<% end
 end # each
 end # length
 end # form_tag

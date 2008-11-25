@@ -1,0 +1,25 @@
+<% issue = issue_time_entries[0] %>
+<% time_entries = issue_time_entries[1] %>
+<% unless issue.nil? %>
+  <tr class="<%= cycle("odd", "even") %>">
+    <td align="center"></td>
+    <td align="center">
+      <%= link_to image_tag('arrow.png'), {}, :onclick => "toggleTimeEntries('#{issue.id}'); return false;",
+                                                           :title => "Display / Hide all" %>
+    </td>
+    <td align="center"></td>
+    <td align="center"></td>
+    <td align="center">#<%= h issue.id %>: <%= h issue.subject %></td>
+    <td align="center"><strong><%# number_with_precision(time_entry.hours, @precision) %></strong></td>
+  </tr>
+<% time_entries.each do |time_entry| %>
+  <tr class="<%= cycle("odd", "even") %> issue-time-entry-<%= issue.id -%>" style="display:none;">
+    <td align="center"></td>
+    <td align="center"></td>
+    <td align="center"><%= format_date(time_entry.spent_on) %></td>
+    <td align="center"><%= time_entry.user.name %></td>
+    <td align="center"><%= h time_entry.comments %></td>
+    <td align="center"><strong><%= number_with_precision(time_entry.hours, @precision) %></strong></td>
+  </tr>
+<% end %>
+<% end %>
