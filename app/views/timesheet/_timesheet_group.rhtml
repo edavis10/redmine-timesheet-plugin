@@ -13,36 +13,7 @@
     <th width="4%"></th>
   </thead>
   <tbody>
-    <% entry[:logs].each do |e| %>
-    <tr class="<%= cycle("odd", "even") %> hascontextmenu">
-    <td align="center"><%= check_box_tag 'ids[]', e.id, false, { :class => 'checkbox' } %></td>
-    <td align="center"><%= format_date(e.spent_on) %></td>
-    <td align="center"><%= e.user.name %></td>
-    <td align="center"><%= e.activity.name %></td>
-    <td align="center">
-      <% if e.issue %>
-      <div class="tooltip">
-        <%= link_to_issue e.issue %>
-        <span class="tip">
-          <%= render_issue_tooltip e.issue %>
-        </span>
-      </div>
-      <% end %>
-    </td>
-    <td><%=h e.comments %></td>
-    <td align="center"><strong><%= number_with_precision(e.hours, @precision) %></strong></td>
-    <td align="center">
-      <% if e.editable_by?(User.current) -%>
-        <%= link_to image_tag('edit.png'), {:controller => 'timelog', :action => 'edit', :id => e},
-                                         :title => l(:button_edit) %>
-        <%= link_to image_tag('delete.png'), {:controller => 'timelog', :action => 'destroy', :id => e},
-                                           :confirm => l(:text_are_you_sure),
-                                           :method => :post,
-                                           :title => l(:button_delete) %>
-     <% end -%>
-    </td>
-  </tr>
-  <% end %>
-</tbody>
+    <%= render :partial => "time_entry", :collection => entry[:logs] %>
+  </tbody>
 </table>
 <br />
