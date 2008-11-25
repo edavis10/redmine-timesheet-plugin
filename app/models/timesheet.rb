@@ -9,7 +9,10 @@ class Timesheet
 
   # Sort time entries by this field
   attr_accessor :sort
-  ValidSortOptions = [:project, :user]
+  ValidSortOptions = {
+    :project => 'Project',
+    :user => 'User'
+  }
   
   def initialize(options = { })
     self.projects = [ ]
@@ -27,9 +30,9 @@ class Timesheet
     else
       self.users = User.find(:all).collect(&:id)
     end
-    
-    if !options[:sort].nil? && ValidSortOptions.include?(options[:sort])
-      self.sort = options[:sort]
+
+    if !options[:sort].nil? && options[:sort].respond_to?(:to_sym) && ValidSortOptions.keys.include?(options[:sort].to_sym)
+      self.sort = options[:sort].to_sym
     else
       self.sort = :project
     end
