@@ -9,3 +9,6 @@ Michael Pirogov
 Michele Franzin
 - added Italian translation
 - fixed menu highlight
+
+Pau Garcia i Quiles
+- Catalan translation
