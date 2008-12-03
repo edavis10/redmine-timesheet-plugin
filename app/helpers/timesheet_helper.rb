@@ -12,7 +12,8 @@ module TimesheetHelper
               :date_from => timesheet.date_from,
               :date_to => timesheet.date_to,
               :activities => timesheet.activities,
-              :users => timesheet.users
+              :users => timesheet.users,
+              :sort => timesheet.sort
             })
   end
   
