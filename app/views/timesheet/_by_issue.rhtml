@@ -21,4 +21,13 @@ $$('.issue-time-entry-' + id).each(function(ele) { ele.toggle();} )
 $$('.toggle-' + id).each(function(ele) { ele.toggle();} )
 }
 
+/*
+ * Checks all the Time Entries under issue_id
+ */
+function toggleTimeEntriesSelection(issue_id) {
+    $$('.issue-time-entry-' + issue_id).each(function(ele) {
+        toggleIssuesSelection(ele);
+    });
+}
+
 </script>
