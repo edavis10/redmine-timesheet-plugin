@@ -88,8 +88,16 @@ class TimesheetController < ApplicationController
   end
 
   def get_precision
-    @precision = Setting.plugin_timesheet_plugin['precision'].to_i
+    precision = Setting.plugin_timesheet_plugin['precision']
+    
+    if precision.blank?
+      # Set precision to a high number
+      @precision = 10
+    else
+      @precision = precision.to_i
+    end
   end
+
   def get_activities
     @activities = Enumeration::get_values('ACTI')
   end
