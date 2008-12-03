@@ -34,4 +34,8 @@ module TimesheetHelper
                 )
     
   end
+  
+  def displayed_time_entries_for_issue(time_entries)
+    time_entries.collect(&:hours).sum
+  end
 end

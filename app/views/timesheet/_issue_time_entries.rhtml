@@ -7,9 +7,9 @@
       <%= toggle_issue_arrows(issue.id) %>
     </td>
     <td align="center"></td>
-    <td align="center"></td>
-    <td><%= link_to("##{issue.id}", :controller => 'issue', :action => 'show', :id => issue.id) %>: <%= h issue.subject %></td>
-    <td align="center"><strong><%# number_with_precision(time_entry.hours, @precision) %></strong></td>
+    <td align="center"><%= issue.assigned_to.to_s %></td>
+    <td><%= link_to("##{issue.id}", :controller => 'issues', :action => 'show', :id => issue.id) %>: <%= h issue.subject %></td>
+    <td align="center"><strong><%= number_with_precision(displayed_time_entries_for_issue(time_entries), @precision) %></strong></td>
   </tr>
 <% time_entries.each do |time_entry| %>
   <tr class="<%= cycle("odd", "even") %> issue-time-entry-<%= issue.id -%>" style="display:none;">
