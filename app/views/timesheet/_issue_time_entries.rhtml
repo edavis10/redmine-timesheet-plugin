@@ -8,7 +8,7 @@
     </td>
     <td align="center"></td>
     <td align="center"></td>
-    <td>#<%= h issue.id %>: <%= h issue.subject %></td>
+    <td><%= link_to("##{issue.id}", :controller => 'issue', :action => 'show', :id => issue.id) %>: <%= h issue.subject %></td>
     <td align="center"><strong><%# number_with_precision(time_entry.hours, @precision) %></strong></td>
   </tr>
 <% time_entries.each do |time_entry| %>
