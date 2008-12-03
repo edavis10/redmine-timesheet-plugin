@@ -187,7 +187,7 @@ describe Timesheet,'.fetch_time_entries' do
     
   end
 
-  it 'should add a time_entry array for each project' do
+  it 'should add a time_entry Hash for each project' do
     timesheet = timesheet_factory
 
     project1 = project_factory(1)
@@ -195,13 +195,13 @@ describe Timesheet,'.fetch_time_entries' do
 
     stub_admin_user
     timesheet.projects = [project1, project2]
-    
+
     timesheet.fetch_time_entries
     timesheet.time_entries.should_not be_empty
     timesheet.time_entries.should have(2).things
   end
   
-  it 'should use the project name for each time_entry array' do 
+  it 'should use the project name for each time_entry key' do 
     
     timesheet = timesheet_factory
 
@@ -214,8 +214,8 @@ describe Timesheet,'.fetch_time_entries' do
     timesheet.projects = [project1, project2]
     
     timesheet.fetch_time_entries
-    timesheet.time_entries.should include("Project 1")
-    timesheet.time_entries.should include("Project 2")
+    timesheet.time_entries.keys.should include("Project 1")
+    timesheet.time_entries.keys.should include("Project 2")
   end
 
   it 'should add the parent project name for each time_entry array for sub-projects' do
@@ -230,8 +230,8 @@ describe Timesheet,'.fetch_time_entries' do
     timesheet.projects = [project1, project2]
     
     timesheet.fetch_time_entries
-    timesheet.time_entries.should include("Project 1")
-    timesheet.time_entries.should include("Project 1 / Project 2")
+    timesheet.time_entries.keys.should include("Project 1")
+    timesheet.time_entries.keys.should include("Project 1 / Project 2")
   end
 
   it 'should fetch all the time entries on a project in the date range'
@@ -287,7 +287,7 @@ describe Timesheet,'.fetch_time_entries with user sorting' do
     User.stub!(:find_by_id).and_return(User.current)
     
     timesheet.fetch_time_entries
-    timesheet.time_entries.should include("Administrator Bob")
+    timesheet.time_entries.keys.should include("Administrator Bob")
   end
 end
 
@@ -369,7 +369,7 @@ describe Timesheet,'.fetch_time_entries with issue sorting' do
     timesheet.should_receive(:issue_time_entries_for_all_users).with(@issue3).and_return([time_entry5])
     
     timesheet.fetch_time_entries
-    timesheet.time_entries.should include(project1)
+    timesheet.time_entries.keys.should include(project1)
   end
 end
 
