@@ -4,8 +4,7 @@
   <tr class="<%= cycle("odd", "even") %>">
     <td align="center"></td>
     <td align="center">
-      <%= link_to image_tag('arrow.png'), {}, :onclick => "toggleTimeEntries('#{issue.id}'); return false;",
-                                                           :title => "Display / Hide all" %>
+      <%= toggle_issue_arrows(issue.id) %>
     </td>
     <td align="center"></td>
     <td align="center"></td>
