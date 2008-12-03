@@ -53,19 +53,20 @@ class TimesheetController < ApplicationController
     @total = { }
     unless @timesheet.sort == :issue
       @timesheet.time_entries.each do |project,logs|
-        project_total = 0
-        unless logs[:logs].nil?
+        @total[project] = 0
+        if logs[:logs]
           logs[:logs].each do |log|
-            project_total += log.hours
+            @total[project] += log.hours
           end
-          @total[project] = project_total
         end
       end
     else
       @timesheet.time_entries.each do |project, project_data|
         @total[project] = 0
-        project_data[:issues].each do |issue, issue_data|
-          @total[project] += issue_data.collect(&:hours).sum
+        if project_data[:issues]
+          project_data[:issues].each do |issue, issue_data|
+            @total[project] += issue_data.collect(&:hours).sum
+          end
         end
       end
     end
