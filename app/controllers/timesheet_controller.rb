@@ -50,18 +50,24 @@ class TimesheetController < ApplicationController
     @timesheet.fetch_time_entries
 
     # Sums
-    # TODO: issue
     @total = { }
     unless @timesheet.sort == :issue
-    @timesheet.time_entries.each do |project,logs|
-      project_total = 0
-      unless logs[:logs].nil?
-        logs[:logs].each do |log|
-          project_total += log.hours
+      @timesheet.time_entries.each do |project,logs|
+        project_total = 0
+        unless logs[:logs].nil?
+          logs[:logs].each do |log|
+            project_total += log.hours
+          end
+          @total[project] = project_total
         end
-        @total[project] = project_total
       end
-    end
+    else
+      @timesheet.time_entries.each do |project, project_data|
+        @total[project] = 0
+        project_data[:issues].each do |issue, issue_data|
+          @total[project] += issue_data.collect(&:hours).sum
+        end
+      end
     end
     
     @grand_total = @total.collect{|k,v| v}.inject{|sum,n| sum + n}
