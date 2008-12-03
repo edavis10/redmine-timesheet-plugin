@@ -7,7 +7,10 @@
   <%= f.text_field "date_from", :size => 10, :value => @from %><%= calendar_for('timesheet_date_from') %><br /><br />
 
   <label for="timesheet_date_to"><%= l(:timesheet_date_to_label)%>:</label><br />
-  <%= f.text_field "date_to", :size => 10, :value => @to %><%= calendar_for('timesheet_date_to') %>
+  <%= f.text_field "date_to", :size => 10, :value => @to %><%= calendar_for('timesheet_date_to') %><br /><br />
+
+  <label for="timesheet_sort"><%= l(:timesheet_group_by) %>:</label><br />
+  <%= select_tag("timesheet[sort]", options_for_select(Timesheet::ValidSortOptions.invert, @timesheet.sort)) %>
 </p>
 
 <p>

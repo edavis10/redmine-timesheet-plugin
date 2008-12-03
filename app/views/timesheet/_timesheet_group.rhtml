@@ -1,0 +1,19 @@
+<table class="list issues">
+  <thead>
+    <th width="2%">
+      <%= link_to image_tag('toggle_check.png'), {}, :onclick => 'toggleIssuesSelection(Element.up(this, "table")); return false;',
+                                                           :title => "#{l(:button_check_all)}/#{l(:button_uncheck_all)}", :class => 'toggle-all' %>
+    </th>
+    <th width="8%"><%= l(:label_date) %></th>
+    <th width="10%"><%= l(:label_member) %></th>
+    <th width="15%"><%= l(:label_activity) %></th>
+    <th width="10%"><%= l(:label_issue) %></th>
+    <th width="25%"><%= l(:field_comments) %></th>
+    <th width="10%"><%= l(:field_hours) %>
+    <th width="4%"></th>
+  </thead>
+  <tbody>
+    <%= render :partial => "time_entry", :collection => entry[:logs] %>
+  </tbody>
+</table>
+<br />

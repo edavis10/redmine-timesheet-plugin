@@ -1,0 +1,28 @@
+    <tr class="<%= cycle("odd", "even") %> hascontextmenu">
+    <td align="center"><%= check_box_tag 'ids[]', time_entry.id, false, { :class => 'checkbox' } %></td>
+    <td align="center"><%= format_date(time_entry.spent_on) %></td>
+    <td align="center"><%= time_entry.user.name %></td>
+    <td align="center"><%= time_entry.activity.name %></td>
+    <td align="center">
+      <% if time_entry.issue %>
+      <div class="tooltip">
+        <%= link_to_issue time_entry.issue %>
+        <span class="tip">
+          <%= render_issue_tooltip time_entry.issue %>
+        </span>
+      </div>
+      <% end %>
+    </td>
+    <td><%=h time_entry.comments %></td>
+    <td align="center"><strong><%= number_with_precision(time_entry.hours, @precision) %></strong></td>
+    <td align="center">
+      <% if time_entry.editable_by?(User.current) -%>
+        <%= link_to image_tag('edit.png'), {:controller => 'timelog', :action => 'edit', :id => time_entry},
+                                         :title => l(:button_edit) %>
+        <%= link_to image_tag('delete.png'), {:controller => 'timelog', :action => 'destroy', :id => time_entry},
+                                           :confirm => l(:text_are_you_sure),
+                                           :method => :post,
+                                           :title => l(:button_delete) %>
+     <% end -%>
+    </td>
+  </tr>

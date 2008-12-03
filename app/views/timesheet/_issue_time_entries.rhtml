@@ -1,0 +1,29 @@
+<% issue = issue_time_entries[0] %>
+<% time_entries = issue_time_entries[1] %>
+<% unless issue.nil? %>
+  <tr class="<%= cycle("odd", "even") %>">
+    <td align="center">
+      <%= link_to image_tag('toggle_check.png'), {}, :onclick => "toggleTimeEntriesSelection('#{issue.id}'); return false;",
+      :title => "#{l(:button_check_all)}/#{l(:button_uncheck_all)}", :class => 'toggle-all' %>
+    </td>
+    <td align="center">
+      <%= toggle_issue_arrows(issue.id) %>
+    </td>
+    <td align="center"></td>
+    <td align="center"><%= issue.assigned_to.to_s %></td>
+    <td><%= link_to("##{issue.id}", :controller => 'issues', :action => 'show', :id => issue.id) %>: <%= h issue.subject %></td>
+    <td align="center"><strong><%= number_with_precision(displayed_time_entries_for_issue(time_entries), @precision) %></strong></td>
+  </tr>
+<% time_entries.each do |time_entry| %>
+  <tr class="<%= cycle("odd", "even") %> issue-time-entry-<%= issue.id -%> hascontextmenu" style="display:none;">
+    <td align="center">
+      <%= check_box_tag 'ids[]', time_entry.id, false, { :class => 'checkbox' } %>
+    </td>
+    <td align="center"></td>
+    <td align="center"><%= format_date(time_entry.spent_on) %></td>
+    <td align="center"><%= time_entry.user.name %></td>
+    <td><%= h time_entry.comments %></td>
+    <td align="center"><strong><%= number_with_precision(time_entry.hours, @precision) %></strong></td>
+  </tr>
+<% end %>
+<% end %>

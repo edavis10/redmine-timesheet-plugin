@@ -3,6 +3,7 @@ class TimesheetController < ApplicationController
 
   layout 'base'
   before_filter :get_list_size
+  before_filter :get_precision
   before_filter :get_activities
 
   helper :sort
@@ -50,13 +51,23 @@ class TimesheetController < ApplicationController
 
     # Sums
     @total = { }
-    @timesheet.time_entries.each do |project,logs|
-      project_total = 0
-      unless logs[:logs].nil?
-        logs[:logs].each do |log|
-          project_total += log.hours
+    unless @timesheet.sort == :issue
+      @timesheet.time_entries.each do |project,logs|
+        @total[project] = 0
+        if logs[:logs]
+          logs[:logs].each do |log|
+            @total[project] += log.hours
+          end
         end
-        @total[project] = project_total
+      end
+    else
+      @timesheet.time_entries.each do |project, project_data|
+        @total[project] = 0
+        if project_data[:issues]
+          project_data[:issues].each do |issue, issue_data|
+            @total[project] += issue_data.collect(&:hours).sum
+          end
+        end
       end
     end
     
@@ -75,7 +86,18 @@ class TimesheetController < ApplicationController
   def get_list_size
     @list_size = Setting.plugin_timesheet_plugin['list_size'].to_i
   end
-  
+
+  def get_precision
+    precision = Setting.plugin_timesheet_plugin['precision']
+    
+    if precision.blank?
+      # Set precision to a high number
+      @precision = 10
+    else
+      @precision = precision.to_i
+    end
+  end
+
   def get_activities
     @activities = Enumeration::get_values('ACTI')
   end

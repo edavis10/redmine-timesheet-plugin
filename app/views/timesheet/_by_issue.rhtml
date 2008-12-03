@@ -1,0 +1,33 @@
+<table class="list issues">
+  <thead>
+    <th width="2%">
+      <%= link_to image_tag('toggle_check.png'), {}, :onclick => 'toggleIssuesSelection(Element.up(this, "table")); return false;',
+                                                           :title => "#{l(:button_check_all)}/#{l(:button_uncheck_all)}", :class => 'toggle-all' %>
+    </th>
+    <th width="2%">&nbsp;</th>
+    <th width="8%"><%= l(:label_date) %></th>
+    <th width="10%"><%= l(:label_member) %></th>
+    <th width="60%"><%= l(:label_issue) %> / <%= l(:field_comments) %></th>
+    <th width="10%"><%= l(:field_hours) %>
+  </thead>
+  <tbody>
+    <%= render :partial => "issue_time_entries", :collection => entry[:issues] %>
+  </tbody>
+</table>
+<br />
+<script type="text/javascript">
+function toggleTimeEntries(id) {
+$$('.issue-time-entry-' + id).each(function(ele) { ele.toggle();} )
+$$('.toggle-' + id).each(function(ele) { ele.toggle();} )
+}
+
+/*
+ * Checks all the Time Entries under issue_id
+ */
+function toggleTimeEntriesSelection(issue_id) {
+    $$('.issue-time-entry-' + issue_id).each(function(ele) {
+        toggleIssuesSelection(ele);
+    });
+}
+
+</script>

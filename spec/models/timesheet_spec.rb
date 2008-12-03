@@ -26,6 +26,18 @@ module TimesheetSpecHelper
     
     return project
   end
+  
+  def time_entry_factory(id, options = { })
+    object_options = {
+      :id => id,
+      :to_param => id.to_s,
+      :spent_on => Date.today,
+    }.merge(options)
+    
+    time_entry = mock_model(TimeEntry, object_options)
+    time_entry.stub!(:issue).and_return(options[:issue]) unless options[:issue].nil?
+    return time_entry
+  end
 
   def stub_non_member_user(projects)
     @current_user = mock_model(User)
@@ -61,6 +73,7 @@ module TimesheetSpecHelper
     @current_user = mock_model(User)
     @current_user.stub!(:admin?).and_return(true)
     @current_user.stub!(:allowed_to?).and_return(true)
+    @current_user.stub!(:name).and_return("Administrator Bob")
     User.stub!(:current).and_return(@current_user)    
   end
 end
@@ -100,6 +113,11 @@ describe Timesheet, 'initializing' do
     timesheet.users.should be_a_kind_of(Array)
   end
 
+  it 'should initialize sort to :project' do 
+    timesheet = Timesheet.new
+    timesheet.sort.should eql(:project)
+  end
+
   it 'should initialize time_entries to the passed in options' do 
     data = { :test => true }
     timesheet = Timesheet.new({ :time_entries => data })
@@ -135,6 +153,26 @@ describe Timesheet, 'initializing' do
     timesheet.users.should_not be_empty
     timesheet.users.should eql([100, 101])
   end
+
+  it 'should initialize sort to the :user option when passed :user' do 
+    timesheet = Timesheet.new({ :sort => :user })
+    timesheet.sort.should eql(:user)
+  end
+
+  it 'should initialize sort to the :project option when passed :project' do 
+    timesheet = Timesheet.new({ :sort => :project })
+    timesheet.sort.should eql(:project)
+  end
+
+  it 'should initialize sort to the :issue option when passed :issue' do 
+    timesheet = Timesheet.new({ :sort => :issue })
+    timesheet.sort.should eql(:issue)
+  end
+
+  it 'should initialize sort to the :project option when passed an invalid sort' do 
+    timesheet = Timesheet.new({ :sort => :invalid })
+    timesheet.sort.should eql(:project)
+  end
 end
 
 describe Timesheet,'.fetch_time_entries' do
@@ -149,7 +187,7 @@ describe Timesheet,'.fetch_time_entries' do
     
   end
 
-  it 'should add a time_entry array for each project' do
+  it 'should add a time_entry Hash for each project' do
     timesheet = timesheet_factory
 
     project1 = project_factory(1)
@@ -157,13 +195,13 @@ describe Timesheet,'.fetch_time_entries' do
 
     stub_admin_user
     timesheet.projects = [project1, project2]
-    
+
     timesheet.fetch_time_entries
     timesheet.time_entries.should_not be_empty
     timesheet.time_entries.should have(2).things
   end
   
-  it 'should use the project name for each time_entry array' do 
+  it 'should use the project name for each time_entry key' do 
     
     timesheet = timesheet_factory
 
@@ -176,8 +214,8 @@ describe Timesheet,'.fetch_time_entries' do
     timesheet.projects = [project1, project2]
     
     timesheet.fetch_time_entries
-    timesheet.time_entries.should include("Project 1")
-    timesheet.time_entries.should include("Project 2")
+    timesheet.time_entries.keys.should include("Project 1")
+    timesheet.time_entries.keys.should include("Project 2")
   end
 
   it 'should add the parent project name for each time_entry array for sub-projects' do
@@ -192,13 +230,147 @@ describe Timesheet,'.fetch_time_entries' do
     timesheet.projects = [project1, project2]
     
     timesheet.fetch_time_entries
-    timesheet.time_entries.should include("Project 1")
-    timesheet.time_entries.should include("Project 1 / Project 2")
+    timesheet.time_entries.keys.should include("Project 1")
+    timesheet.time_entries.keys.should include("Project 1 / Project 2")
   end
 
   it 'should fetch all the time entries on a project in the date range'
   it 'should fetch all the time entries on a project matching the activities'
   it 'should fetch all the time entries on a project matching the users'
+end
+
+describe Timesheet,'.fetch_time_entries with user sorting' do
+  include TimesheetSpecHelper
+  
+  it 'should clear .time_entries' do
+    timesheet = Timesheet.new({ :sort => :user })
+    timesheet.time_entries = { :filled => 'data' }
+    proc { 
+      timesheet.fetch_time_entries
+    }.should change(timesheet, :time_entries)
+    
+  end
+
+  it 'should add a time_entry array for each user' do
+    stub_admin_user
+    timesheet = timesheet_factory(:sort => :user, :users => [User.current.id])
+
+    time_entries = [
+                    time_entry_factory(1, { :user => User.current }),
+                    time_entry_factory(2, { :user => User.current }),
+                    time_entry_factory(3, { :user => User.current }),
+                    time_entry_factory(4, { :user => User.current }),
+                    time_entry_factory(5, { :user => User.current })
+                   ]
+    
+    TimeEntry.stub!(:find).and_return(time_entries)
+    User.stub!(:find_by_id).and_return(User.current)
+
+    timesheet.fetch_time_entries
+    timesheet.time_entries.should_not be_empty
+    timesheet.time_entries.should have(1).thing # One user
+  end
+  
+  it 'should use the user name for each time_entry array' do 
+    stub_admin_user
+    timesheet = timesheet_factory(:sort => :user, :users => [User.current.id])
+
+    time_entries = [
+                    time_entry_factory(1, { :user => User.current }),
+                    time_entry_factory(2, { :user => User.current }),
+                    time_entry_factory(3, { :user => User.current }),
+                    time_entry_factory(4, { :user => User.current }),
+                    time_entry_factory(5, { :user => User.current })
+                   ]
+
+    TimeEntry.stub!(:find).and_return(time_entries)
+    User.stub!(:find_by_id).and_return(User.current)
+    
+    timesheet.fetch_time_entries
+    timesheet.time_entries.keys.should include("Administrator Bob")
+  end
+end
+
+describe Timesheet,'.fetch_time_entries with issue sorting' do
+  include TimesheetSpecHelper
+
+  it 'should clear .time_entries' do
+    timesheet = Timesheet.new({ :sort => :issue })
+    timesheet.time_entries = { :filled => 'data' }
+    proc { 
+      timesheet.fetch_time_entries
+    }.should change(timesheet, :time_entries)
+    
+  end
+
+  it 'should add a time_entry array for each project' do
+    stub_admin_user
+    project1 = project_factory(1)
+    timesheet = timesheet_factory(:sort => :issue, :users => [User.current.id])
+    timesheet.projects = [project1]
+
+    @issue1 = mock_model(Issue, :id => 1, :to_param => '1', :project => project1)
+    @issue2 = mock_model(Issue, :id => 1, :to_param => '1', :project => project1)
+    @issue3 = mock_model(Issue, :id => 1, :to_param => '1', :project => project1)
+    
+    time_entry1 = time_entry_factory(1, { :user => User.current, :issue => @issue1 })
+    time_entry2 = time_entry_factory(2, { :user => User.current, :issue => @issue1 })
+    time_entry3 = time_entry_factory(3, { :user => User.current, :issue => @issue2 })
+    time_entry4 = time_entry_factory(4, { :user => User.current, :issue => @issue2 })
+    time_entry5 = time_entry_factory(5, { :user => User.current, :issue => @issue3 })
+
+    project1.should_receive(:issues).and_return([@issue1, @issue2, @issue3])
+    
+    time_entries = [
+                    time_entry1,
+                    time_entry2,
+                    time_entry3,
+                    time_entry4,
+                    time_entry5
+                   ]
+    
+    timesheet.should_receive(:issue_time_entries_for_all_users).with(@issue1).and_return([time_entry1, time_entry2])
+    timesheet.should_receive(:issue_time_entries_for_all_users).with(@issue2).and_return([time_entry3, time_entry4])
+    timesheet.should_receive(:issue_time_entries_for_all_users).with(@issue3).and_return([time_entry5])
+    
+    timesheet.fetch_time_entries
+    timesheet.time_entries.should_not be_empty
+    timesheet.time_entries.should have(1).thing
+  end
+  
+  it 'should use the project for each time_entry array' do 
+    stub_admin_user
+    project1 = project_factory(1)
+    timesheet = timesheet_factory(:sort => :issue, :users => [User.current.id])
+    timesheet.projects = [project1]
+
+    @issue1 = mock_model(Issue, :id => 1, :to_param => '1', :project => project1)
+    @issue2 = mock_model(Issue, :id => 1, :to_param => '1', :project => project1)
+    @issue3 = mock_model(Issue, :id => 1, :to_param => '1', :project => project1)
+    
+    time_entry1 = time_entry_factory(1, { :user => User.current, :issue => @issue1 })
+    time_entry2 = time_entry_factory(2, { :user => User.current, :issue => @issue1 })
+    time_entry3 = time_entry_factory(3, { :user => User.current, :issue => @issue2 })
+    time_entry4 = time_entry_factory(4, { :user => User.current, :issue => @issue2 })
+    time_entry5 = time_entry_factory(5, { :user => User.current, :issue => @issue3 })
+
+    project1.should_receive(:issues).and_return([@issue1, @issue2, @issue3])
+    
+    time_entries = [
+                    time_entry1,
+                    time_entry2,
+                    time_entry3,
+                    time_entry4,
+                    time_entry5
+                   ]
+    
+    timesheet.should_receive(:issue_time_entries_for_all_users).with(@issue1).and_return([time_entry1, time_entry2])
+    timesheet.should_receive(:issue_time_entries_for_all_users).with(@issue2).and_return([time_entry3, time_entry4])
+    timesheet.should_receive(:issue_time_entries_for_all_users).with(@issue3).and_return([time_entry5])
+    
+    timesheet.fetch_time_entries
+    timesheet.time_entries.keys.should include(project1)
+  end
 end
 
 describe Timesheet,'.fetch_time_entries as an administrator' do

@@ -31,6 +31,8 @@ module TimesheetControllerHelper
     @timesheet.stub!(:users=)
     @timesheet.stub!(:fetch_time_entries)
     @timesheet.stub!(:time_entries).and_return([ ])
+    @timesheet.stub!(:sort)
+    @timesheet.stub!(:sort=)
     stub_timesheet
   end
   
@@ -84,12 +86,20 @@ describe 'TimesheetControllerShared', :shared => true do
     assigns[:timesheet].allowed_projects.should eql(projects)
   end
 
-    it 'should get the list size from the settings' do
-    settings = { 'list_size' => 10 }
-    Setting.should_receive(:plugin_timesheet_plugin).and_return(settings)
+  it 'should get the list size from the settings' do
+    settings = { 'list_size' => 10, 'precision' => '2' }
+    Setting.should_receive(:plugin_timesheet_plugin).twice.and_return(settings)
     
     send_request
     assigns[:list_size].should eql(10)
+  end
+
+  it 'should get the precision from the settings' do
+    settings = { 'list_size' => 10, 'precision' => '2' }
+    Setting.should_receive(:plugin_timesheet_plugin).twice.and_return(settings)
+    
+    send_request
+    assigns[:precision].should eql(2)
   end
 
   it 'should create a new @timesheet' do
