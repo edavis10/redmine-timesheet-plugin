@@ -164,9 +164,10 @@ end
 describe TimesheetController,"#report with GET request from an Anonymous user" do
   include TimesheetControllerHelper
 
-  it 'should render the no_projects template' do
+  it 'should redirect to the index' do
     get 'report'
-    response.should render_template('no_projects')
+    response.should be_redirect
+    response.should redirect_to(:action => 'index')
   end
 
 end
@@ -174,9 +175,10 @@ end
 describe TimesheetController,"#report with POST request from an Anonymous user" do
   include TimesheetControllerHelper
 
-  it 'should render the no_projects template' do
+  it 'should redirect to the index' do
     get 'report'
-    response.should render_template('no_projects')
+    response.should be_redirect
+    response.should redirect_to(:action => 'index')
   end
 
 end
@@ -216,3 +218,24 @@ describe TimesheetController,"#report with POST request" do
   end
 end
 
+describe TimesheetController,"#report with request with no data" do
+  include TimesheetControllerHelper
+  
+  before(:each) do
+    default_mocks
+  end
+
+  describe 'should redirect to the index' do
+    it 'from a GET request' do
+      post 'report', { }
+      response.should be_redirect
+      response.should redirect_to(:action => 'index')
+    end
+
+    it 'from a POST request' do
+      post 'report', { }
+      response.should be_redirect
+      response.should redirect_to(:action => 'index')
+    end
+  end
+end

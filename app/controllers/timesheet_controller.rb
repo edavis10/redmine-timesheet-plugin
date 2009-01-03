@@ -27,7 +27,8 @@ class TimesheetController < ApplicationController
     if params && params[:timesheet]
       @timesheet = Timesheet.new( params[:timesheet] )
     else
-      @timesheet = Timesheet.new
+      redirect_to :action => 'index'
+      return
     end
     
     @timesheet.allowed_projects = allowed_projects
