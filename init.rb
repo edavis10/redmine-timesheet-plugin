@@ -7,7 +7,7 @@ Redmine::Plugin.register :timesheet_plugin do
   url 'https://projects.littlestreamsoftware.com/projects/show/redmine-timesheet'
   author_url 'http://www.littlestreamsoftware.com'
 
-  version '0.3.0'
+  version '0.4.0'
   requires_redmine :version_or_higher => '0.8.0'
   
   settings :default => {'list_size' => '5', 'precision' => '2'}, :partial => 'settings/timesheet_settings'
