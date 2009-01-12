@@ -9,8 +9,15 @@ A plugin to show and filter timelogs across all projects in Redmine.
   * Projects
   * Activities
   * Users
-* Subtotals by project
-* "Run Timesheet" permission to restrict feature to specific users
+* Grouping of timelogs by:
+  * Project
+  * Issue
+  * User
+* Access control based on the user's Projects and Roles
+* "Project Timesheet" permission to allow a user to see all timelogs on a project
+* Permalinks to reports
+* Plugin hook support for changing the behavior of the plugin
+* User configurable precision for hours
 
 ## Installation and Setup
 
