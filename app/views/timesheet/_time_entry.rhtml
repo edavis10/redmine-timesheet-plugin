@@ -1,4 +1,4 @@
-    <tr class="<%= cycle("odd", "even") %> hascontextmenu">
+    <tr id="time_entry_<%= time_entry.id %>" class="time_entry <%= cycle("odd", "even") %> hascontextmenu <%= call_hook(:plugin_timesheet_view_timesheets_time_entry_row_class, {:time_entry => time_entry }) %>">
     <td align="center"><%= check_box_tag 'ids[]', time_entry.id, false, { :class => 'checkbox' } %></td>
     <td align="center"><%= format_date(time_entry.spent_on) %></td>
     <td align="center"><%= time_entry.user.name %></td>

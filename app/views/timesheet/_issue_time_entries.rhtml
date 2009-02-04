@@ -15,7 +15,7 @@
     <td align="center"><strong><%= number_with_precision(displayed_time_entries_for_issue(time_entries), @precision) %></strong></td>
   </tr>
 <% time_entries.each do |time_entry| %>
-  <tr class="<%= cycle("odd", "even") %> issue-time-entry-<%= issue.id -%> hascontextmenu" style="display:none;">
+  <tr class="<%= cycle("odd", "even") %> issue-time-entry-<%= issue.id -%> hascontextmenu <%= call_hook(:plugin_timesheet_view_timesheets_time_entry_row_class, {:time_entry => time_entry }) %>" style="display:none;">
     <td align="center">
       <%= check_box_tag 'ids[]', time_entry.id, false, { :class => 'checkbox' } %>
     </td>
