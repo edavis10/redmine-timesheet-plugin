@@ -6,6 +6,9 @@ class Timesheet
   #   project.name => {:logs => [time entries], :users => [users shown in logs] }
   # project.name could be the parent project name also
   attr_accessor :time_entries
+  
+  # Array of TimeEntry ids to fetch
+  attr_accessor :potential_time_entry_ids
 
   # Sort time entries by this field
   attr_accessor :sort
@@ -18,6 +21,7 @@ class Timesheet
   def initialize(options = { })
     self.projects = [ ]
     self.time_entries = options[:time_entries] || { }
+    self.potential_time_entry_ids = options[:potential_time_entry_ids] || [ ]
     self.allowed_projects = options[:allowed_projects] || [ ]
 
     unless options[:activities].nil?
@@ -60,9 +64,14 @@ class Timesheet
   protected
 
   def conditions(users)
-    conditions = ['spent_on >= (?) AND spent_on <= (?) AND activity_id IN (?) AND user_id IN (?)',
-                  self.date_from, self.date_to, self.activities, users ]
-
+    if self.potential_time_entry_ids.empty?
+      conditions = ['spent_on >= (?) AND spent_on <= (?) AND activity_id IN (?) AND user_id IN (?)',
+                    self.date_from, self.date_to, self.activities, users ]
+    else
+      conditions = ["user_id IN (?) AND #{TimeEntry.table_name}.id IN (?)",
+                    users, self.potential_time_entry_ids ]
+    end
+      
     Redmine::Hook.call_hook(:plugin_timesheet_model_timesheet_conditions, { :timesheet => self, :conditions => conditions})
     return conditions
   end
