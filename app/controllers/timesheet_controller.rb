@@ -100,7 +100,7 @@ class TimesheetController < ApplicationController
   end
 
   def get_activities
-    @activities = Enumeration::get_values('ACTI')
+    @activities = RedmineCompatibility::Enumeration::activities
   end
   
   def allowed_projects
