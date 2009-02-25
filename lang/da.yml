@@ -1,0 +1,9 @@
+timesheet_title: Timeseddel
+timesheet_date_from_label: Fra
+timesheet_date_to_label: Til
+timesheet_project_label: Projekt
+timesheet_activities_label: Aktivitet
+timesheet_users_label: Brugere
+timesheet_showing_users: 'viser tidsregistreringer for: '
+timesheet_permalink: '(Permanent link til denne timeseddel)'
+timesheet_group_by: Grupp&eacute;r efter
