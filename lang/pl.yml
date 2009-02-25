@@ -1,0 +1,9 @@
+timesheet_title: Czas Pracy
+timesheet_date_from_label: Od
+timesheet_date_to_label: Do
+timesheet_project_label: Projekt
+timesheet_activities_label: Aktywności
+timesheet_users_label: Użytkownicy
+timesheet_showing_users: 'czas pracy użytkownika: '
+timesheet_permalink: '(Permalink do tego czasu pracy)'
+timesheet_group_by: Grupuj
