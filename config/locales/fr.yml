@@ -1,0 +1,10 @@
+fr:
+  timesheet_title: Feuille de temps
+  timesheet_date_from_label: De
+  timesheet_date_to_label: A
+  timesheet_project_label: Projet
+  timesheet_activities_label: Activite
+  timesheet_users_label: Utilisateurs
+  timesheet_showing_users: 'showing time for: '
+  timesheet_permalink: '(Permalink to this timesheet)'
+  timesheet_group_by: Group by

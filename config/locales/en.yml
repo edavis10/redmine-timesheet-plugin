@@ -1,0 +1,10 @@
+en:
+  timesheet_title: Timesheet
+  timesheet_date_from_label: From
+  timesheet_date_to_label: To
+  timesheet_project_label: Project
+  timesheet_activities_label: Activity
+  timesheet_users_label: Users
+  timesheet_showing_users: 'showing time for: '
+  timesheet_permalink: '(Permalink to this timesheet)'
+  timesheet_group_by: Group by

@@ -1,0 +1,9 @@
+ru:
+  timesheet_title: Сводная таблица затраченного времени
+  timesheet_date_from_label: Начиная с
+  timesheet_date_to_label: по
+  timesheet_project_label: Проект
+  timesheet_activities_label: Активность
+  timesheet_users_label: Пользователи
+  timesheet_permalink: '(Постоянная ссылка на эту таблицу)'
+  timesheet_group_by: Группировать по

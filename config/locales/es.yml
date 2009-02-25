@@ -1,0 +1,9 @@
+es:
+  timesheet_title: Hoja de tiempos
+  timesheet_date_from_label: De
+  timesheet_date_to_label: A
+  timesheet_project_label: Proyecto
+  timesheet_activities_label: Actividad
+  timesheet_users_label: Usuarios
+  timesheet_showing_users: 'mostrando tiempos para: '
+  timesheet_permalink: '(Permalink a esta hoja de tiempos)'
