@@ -1,0 +1,9 @@
+timesheet_title: Stundenzettel
+timesheet_date_from_label: Von
+timesheet_date_to_label: Bis
+timesheet_project_label: Projekt
+timesheet_activities_label: Aktivität
+timesheet_users_label: Benutzer
+timesheet_showing_users: 'zeige Zeit für: '
+timesheet_permalink: '(Permalink zu diesem Stundenzettel)'
+timesheet_group_by: Gruppiere nach
