@@ -65,8 +65,8 @@ class Timesheet
 
   def conditions(users)
     if self.potential_time_entry_ids.empty?
-      conditions = ['spent_on >= (?) AND spent_on <= (?) AND activity_id IN (?) AND user_id IN (?)',
-                    self.date_from, self.date_to, self.activities, users ]
+      conditions = ['spent_on >= (?) AND spent_on <= (?) AND project_id IN (?) AND activity_id IN (?) AND user_id IN (?)',
+                    self.date_from, self.date_to, self.projects, self.activities, users ]
     else
       conditions = ["user_id IN (?) AND #{TimeEntry.table_name}.id IN (?)",
                     users, self.potential_time_entry_ids ]
