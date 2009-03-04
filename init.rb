@@ -14,5 +14,6 @@ Redmine::Plugin.register :timesheet_plugin do
 
   permission :see_project_timesheets, { }, :require => :member
 
-  menu :top_menu, :timesheet, {:controller => 'timesheet', :action => 'index'}, :caption => :timesheet_title
+  menu :top_menu, :timesheet, {:controller => 'timesheet', :action => 'index'}, :caption => :timesheet_title, :if => Proc.new{User.current.allowed_to?(:see_project_timesheets, nil, :global => true) || User.current.admin?}
+
 end
