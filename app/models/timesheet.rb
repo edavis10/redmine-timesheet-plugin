@@ -23,7 +23,6 @@ class Timesheet
     self.time_entries = options[:time_entries] || { }
     self.potential_time_entry_ids = options[:potential_time_entry_ids] || [ ]
     self.allowed_projects = options[:allowed_projects] || [ ]
-    self.period = options[:period] || nil
 
     unless options[:activities].nil?
       self.activities = options[:activities].collect { |a| a.to_i }
@@ -45,6 +44,7 @@ class Timesheet
     
     self.date_from = options[:date_from] || Date.today.to_s
     self.date_to = options[:date_to] || Date.today.to_s
+    self.period = options[:period] || nil
   end
 
   # Gets all the time_entries for all the projects
@@ -60,6 +60,40 @@ class Timesheet
     else
       fetch_time_entries_by_project
     end
+  end
+
+  def period=(period)
+    # Stolen from the TimelogController
+    case period.to_s
+    when 'today'
+      self.date_from = self.date_to = Date.today
+    when 'yesterday'
+      self.date_from = self.date_to = Date.today - 1
+    when 'current_week' # Mon -> Sun
+      self.date_from = Date.today - (Date.today.cwday - 1)%7
+      self.date_to = self.date_from + 6
+    when 'last_week'
+      self.date_from = Date.today - 7 - (Date.today.cwday - 1)%7
+      self.date_to = self.date_from + 6
+    when '7_days'
+      self.date_from = Date.today - 7
+      self.date_to = Date.today
+    when 'current_month'
+      self.date_from = Date.civil(Date.today.year, Date.today.month, 1)
+      self.date_to = (self.date_from >> 1) - 1
+    when 'last_month'
+      self.date_from = Date.civil(Date.today.year, Date.today.month, 1) << 1
+      self.date_to = (self.date_from >> 1) - 1
+    when '30_days'
+      self.date_from = Date.today - 30
+      self.date_to = Date.today
+    when 'current_year'
+      self.date_from = Date.civil(Date.today.year, 1, 1)
+      self.date_to = Date.civil(Date.today.year, 12, 31)
+    when 'all'
+      self.date_from = self.date_to = nil
+    end
+    self
   end
   
   protected

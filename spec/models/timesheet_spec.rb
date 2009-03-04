@@ -460,3 +460,78 @@ describe Timesheet,'.fetch_time_entries as a non-member of a project' do
     timesheet.fetch_time_entries
   end
 end
+
+describe Timesheet, '#period=' do
+  include TimesheetSpecHelper
+  describe 'should set the date_to and date_from for' do
+    before(:each) do
+      @date = Date.new(2009,2,4)
+      Date.stub!(:today).and_return(@date)
+      @timesheet = Timesheet.new
+    end
+    
+    it 'today' do
+      @timesheet.should_receive(:date_from=).with(@date)
+      @timesheet.should_receive(:date_to=).with(@date)
+      @timesheet.period = 'today'
+    end
+    
+    it 'yesterday' do
+      @timesheet.should_receive(:date_from=).with(@date.yesterday)
+      @timesheet.should_receive(:date_to=).with(@date.yesterday)
+      @timesheet.period = 'yesterday'
+    end
+    
+    it 'current_week' do
+      @timesheet.should_receive(:date_from=).with(Date.new(2009, 2, 2))
+      @timesheet.should_receive(:date_from).and_return(Date.new(2009, 2, 2))
+      @timesheet.should_receive(:date_to=).with(Date.new(2009, 2, 8))
+      @timesheet.period = 'current_week'
+    end
+    
+    it 'last_week' do
+      @timesheet.should_receive(:date_from=).with(Date.new(2009, 1, 26))
+      @timesheet.should_receive(:date_from).and_return(Date.new(2009, 1, 26))
+      @timesheet.should_receive(:date_to=).with(Date.new(2009, 2, 1))
+      @timesheet.period = 'last_week'
+    end
+    
+    it '7_days' do
+      @timesheet.should_receive(:date_from=).with(@date - 7)
+      @timesheet.should_receive(:date_to=).with(@date)
+      @timesheet.period = '7_days'
+    end
+    
+    it 'current_month' do
+      @timesheet.should_receive(:date_from=).with(Date.new(2009, 2, 1))
+      @timesheet.should_receive(:date_from).and_return(Date.new(2009, 2, 1))
+      @timesheet.should_receive(:date_to=).with(Date.new(2009, 2, 28))
+      @timesheet.period = 'current_month'
+    end
+    
+    it 'last_month' do
+      @timesheet.should_receive(:date_from=).with(Date.new(2009, 1, 1))
+      @timesheet.should_receive(:date_from).and_return(Date.new(2009, 1, 1))
+      @timesheet.should_receive(:date_to=).with(Date.new(2009, 1, 31))
+      @timesheet.period = 'last_month'
+    end
+    
+    it '30_days' do
+      @timesheet.should_receive(:date_from=).with(@date - 30)
+      @timesheet.should_receive(:date_to=).with(@date)
+      @timesheet.period = '30_days'
+    end
+    
+    it 'current_year' do
+      @timesheet.should_receive(:date_from=).with(Date.new(2009,1,1))
+      @timesheet.should_receive(:date_to=).with(Date.new(2009,12,31))
+      @timesheet.period = 'current_year'
+    end
+    
+    it 'all' do
+      @timesheet.should_receive(:date_from=).with(nil)
+      @timesheet.should_receive(:date_to=).with(nil)
+      @timesheet.period = 'all'
+    end
+  end
+end
