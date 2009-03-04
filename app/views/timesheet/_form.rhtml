@@ -2,15 +2,27 @@
 <fieldset>
 <% form_for :timesheet, :url =>{:action => 'report'} do |f|  %>
 
+<p id="date-options">
+  <label><%= l(:label_date)%>:</label><br />
+  <%= radio_button_tag 'period_type', '1', !@free_period %>
+  <%= select_tag 'period', options_for_period_select(params[:period]),
+                           :onfocus => '$("period_type_1").checked = true;' %>
+  <br /><br />
+
+  <%= radio_button_tag 'period_type', '2', @free_period %>
+  <span onclick="$('period_type_2').checked = true;">
+    <label for="timesheet_date_from"><%= l(:timesheet_date_from_label)%>:</label><br />
+    <%= f.text_field "date_from", :size => 10, :value => @from %><%= calendar_for('timesheet_date_from') %><br />
+
+    <label for="timesheet_date_to"><%= l(:timesheet_date_to_label)%>:</label><br />
+    <%= f.text_field "date_to", :size => 10, :value => @to %><%= calendar_for('timesheet_date_to') %><br /><br />
+  </span>
+</p>
+
 <p>
-  <label for="timesheet_date_from"><%= l(:timesheet_date_from_label)%>:</label><br />
-  <%= f.text_field "date_from", :size => 10, :value => @from %><%= calendar_for('timesheet_date_from') %><br /><br />
-
-  <label for="timesheet_date_to"><%= l(:timesheet_date_to_label)%>:</label><br />
-  <%= f.text_field "date_to", :size => 10, :value => @to %><%= calendar_for('timesheet_date_to') %><br /><br />
-
   <label for="timesheet_sort"><%= l(:timesheet_group_by) %>:</label><br />
   <%= select_tag("timesheet[sort]", options_for_select(Timesheet::ValidSortOptions.invert, @timesheet.sort)) %>
+
 </p>
 
 <p>
@@ -45,3 +57,10 @@
 <% end %>
 </fieldset>
 </div>
+
+<% content_for(:header_tags) do %>
+<style type="text/css">
+#date-options { margin-left: 10px; }
+#date-options input[type='radio'] { margin-left: -20px; }
+</style>
+<% end %>

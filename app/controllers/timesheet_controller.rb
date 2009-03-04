@@ -10,6 +10,7 @@ class TimesheetController < ApplicationController
   include SortHelper
   helper :issues
   include ApplicationHelper
+  helper :timelog
 
   def index
     @from = Date.today.to_s
