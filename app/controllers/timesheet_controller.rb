@@ -12,12 +12,13 @@ class TimesheetController < ApplicationController
   include ApplicationHelper
   helper :timelog
 
+  SessionKey = 'timesheet_filter'
+
   def index
-    @from = Date.today.to_s
-    @to = Date.today.to_s
-    @timesheet = Timesheet.new
+    load_filters_from_session
+    @timesheet ||= Timesheet.new
     @timesheet.allowed_projects = allowed_projects
-    
+
     if @timesheet.allowed_projects.empty?
       render :action => 'no_projects'
       return
@@ -48,6 +49,8 @@ class TimesheetController < ApplicationController
     end
 
     call_hook(:plugin_timesheet_controller_report_pre_fetch_time_entries, { :timesheet => @timesheet, :params => params })
+
+    save_filters_to_session(@timesheet)
 
     @timesheet.fetch_time_entries
 
@@ -109,6 +112,31 @@ class TimesheetController < ApplicationController
       return Project.find(:all, :order => 'name ASC')
     else
       return User.current.projects.find(:all, :order => 'name ASC')
+    end
+  end
+
+  def load_filters_from_session
+    if session[SessionKey]
+      @timesheet = Timesheet.new(session[SessionKey])
+      # Default to free period
+      @timesheet.period_type = Timesheet::ValidPeriodType[:free_period]
+    end
+
+    if session[SessionKey] && session[SessionKey]['projects']
+      @timesheet.projects = allowed_projects.find_all { |project| 
+        session[SessionKey]['projects'].include?(project.id.to_s)
+      }
+    end
+  end
+
+  def save_filters_to_session(timesheet)
+    if params[:timesheet]
+      session[SessionKey] = params[:timesheet]
+    end
+
+    if timesheet
+      session[SessionKey]['date_from'] = timesheet.date_from
+      session[SessionKey]['date_to'] = timesheet.date_to
     end
   end
 end

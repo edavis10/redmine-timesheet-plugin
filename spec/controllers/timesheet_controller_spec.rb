@@ -2,7 +2,7 @@ require File.dirname(__FILE__) + '/../spec_helper'
 
 module TimesheetControllerHelper
   # Sets up the default mocks
-  def default_mocks
+  def default_mocks(options = {})
     # User
     @current_user = mock_model(User)
     @current_user.stub!(:admin?).and_return(false)
@@ -33,7 +33,8 @@ module TimesheetControllerHelper
     @timesheet.stub!(:time_entries).and_return([ ])
     @timesheet.stub!(:sort)
     @timesheet.stub!(:sort=)
-    stub_timesheet
+    @timesheet.stub!(:period_type=)
+    stub_timesheet unless options[:skip_timesheet_stub]
   end
   
   # Converts current user to admin
@@ -139,15 +140,29 @@ describe TimesheetController,"#index with GET request" do
     get 'index'
     response.should render_template('index')
   end
-  
-    it 'should set the from date to today' do
-    send_request
-    assigns[:from].should eql(Date.today.to_s)
-  end
+end
 
-  it 'should set the to date to today' do
-    send_request
-    assigns[:to].should eql(Date.today.to_s)
+describe TimesheetController,"#index with GET request and a session" do
+  include TimesheetControllerHelper
+  it 'should read the session data' do
+    default_mocks(:skip_timesheet_stub => true)
+
+    projects = []
+    4.times do |i|
+      projects << mock_model(Project, :id => i + 1)
+    end
+    
+    controller.stub!(:allowed_projects).and_return(projects)
+    session[TimesheetController::SessionKey] = HashWithIndifferentAccess.new(
+      :projects => projects.collect(&:id).collect(&:to_s),
+      :date_to => '2009-01-01',
+      :date_from => '2009-01-01'
+    )
+
+    get :index
+    assigns[:timesheet].date_from.should eql('2009-01-01')
+    assigns[:timesheet].date_to.should eql('2009-01-01')
+    assigns[:timesheet].projects.should eql(projects)
   end
 end
 
@@ -215,6 +230,13 @@ describe TimesheetController,"#report with POST request" do
     stub_timesheet
 
     post_report({ :timesheet => { :projects => ['1'] } })
+  end
+
+  it 'should save the session data' do
+    post_report({ :timesheet => { :projects => ['1'] } })
+    session[TimesheetController::SessionKey].should_not be_nil
+    session[TimesheetController::SessionKey].keys.should include('projects')
+    session[TimesheetController::SessionKey]['projects'].should eql(['1'])
   end
 end
 
