@@ -467,7 +467,7 @@ describe Timesheet, '#period=' do
     before(:each) do
       @date = Date.new(2009,2,4)
       Date.stub!(:today).and_return(@date)
-      @timesheet = Timesheet.new
+      @timesheet = Timesheet.new(:period_type => Timesheet::ValidPeriodType[:default])
     end
     
     it 'today' do
