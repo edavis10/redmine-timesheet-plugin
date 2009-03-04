@@ -1,3 +1,2 @@
-<ul>
-<%= call_hook(:plugin_timesheet_view_timesheets_context_menu, { :time_entries => @time_entries }) %>
-</ul>
+<% entries = call_hook(:plugin_timesheet_view_timesheets_context_menu, { :time_entries => @time_entries }) %>
+<%= context_tag(:ul, entries) unless entries.empty? %>
