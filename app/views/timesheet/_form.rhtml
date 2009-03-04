@@ -4,13 +4,13 @@
 
 <p id="date-options">
   <label><%= l(:label_date)%>:</label><br />
-  <%= radio_button_tag 'period_type', '1', !@free_period %>
+  <%= radio_button_tag 'timesheet[period_type]', '1', @timesheet.period_type == Timesheet::ValidPeriodType[:default] %>
   <%= select_tag 'timesheet[period]', options_for_period_select((params[:timesheet].nil? ? nil : params[:timesheet][:period])),
-                           :onfocus => '$("period_type_1").checked = true;' %>
+                           :onfocus => '$("timesheet_period_type_1").checked = true;' %>
   <br /><br />
 
-  <%= radio_button_tag 'period_type', '2', @free_period %>
-  <span onclick="$('period_type_2').checked = true;">
+  <%= radio_button_tag 'timesheet[period_type]', '2', @timesheet.period_type  == Timesheet::ValidPeriodType[:free_period] %>
+  <span onclick="$('timesheet_period_type_2').checked = true;">
     <label for="timesheet_date_from"><%= l(:timesheet_date_from_label)%>:</label><br />
     <%= f.text_field "date_from", :size => 10, :value => @from %><%= calendar_for('timesheet_date_from') %><br />
 

@@ -1,5 +1,5 @@
 class Timesheet
-  attr_accessor :date_from, :date_to, :projects, :activities, :users, :allowed_projects, :period
+  attr_accessor :date_from, :date_to, :projects, :activities, :users, :allowed_projects, :period, :period_type
 
   # Time entries on the Timesheet in the form of:
   #   project.name => {:logs => [time entries], :users => [users shown in logs] }
@@ -16,6 +16,11 @@ class Timesheet
     :project => 'Project',
     :user => 'User',
     :issue => 'Issue'
+  }
+
+  ValidPeriodType = {
+    :free_period => 0,
+    :default => 1
   }
   
   def initialize(options = { })
@@ -44,6 +49,12 @@ class Timesheet
     
     self.date_from = options[:date_from] || Date.today.to_s
     self.date_to = options[:date_to] || Date.today.to_s
+
+    if options[:period_type] && ValidPeriodType.values.include?(options[:period_type].to_i)
+      self.period_type = options[:period_type].to_i
+    else
+      self.period_type = ValidPeriodType[:free_period]
+    end
     self.period = options[:period] || nil
   end
 
@@ -63,6 +74,7 @@ class Timesheet
   end
 
   def period=(period)
+    return if self.period_type == Timesheet::ValidPeriodType[:free_period]
     # Stolen from the TimelogController
     case period.to_s
     when 'today'
