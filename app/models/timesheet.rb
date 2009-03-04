@@ -1,5 +1,5 @@
 class Timesheet
-  attr_accessor :date_from, :date_to, :projects, :activities, :users, :allowed_projects
+  attr_accessor :date_from, :date_to, :projects, :activities, :users, :allowed_projects, :period
 
   # Time entries on the Timesheet in the form of:
   #   project.name => {:logs => [time entries], :users => [users shown in logs] }
@@ -23,6 +23,7 @@ class Timesheet
     self.time_entries = options[:time_entries] || { }
     self.potential_time_entry_ids = options[:potential_time_entry_ids] || [ ]
     self.allowed_projects = options[:allowed_projects] || [ ]
+    self.period = options[:period] || nil
 
     unless options[:activities].nil?
       self.activities = options[:activities].collect { |a| a.to_i }

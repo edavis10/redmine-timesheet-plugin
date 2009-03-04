@@ -5,6 +5,7 @@ class TimesheetController < ApplicationController
   before_filter :get_list_size
   before_filter :get_precision
   before_filter :get_activities
+  before_filter :set_free_period
 
   helper :sort
   include SortHelper
@@ -109,6 +110,14 @@ class TimesheetController < ApplicationController
       return Project.find(:all, :order => 'name ASC')
     else
       return User.current.projects.find(:all, :order => 'name ASC')
+    end
+  end
+
+  def set_free_period
+    if params && params[:period_type] == '1'
+      @free_period = false
+    else
+      @free_period = true
     end
   end
 end
