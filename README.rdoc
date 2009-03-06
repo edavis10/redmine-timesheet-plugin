@@ -21,7 +21,7 @@ A plugin to show and filter timelogs across all projects in Redmine.
 
 == Getting the plugin
 
-A copy of the released version can be downloaded from {Little Stream Software}[https://projects.littlestreamsoftware.com/projects/list_files/redmine-timesheet].  A development copy can be gotton from {GitHub}[http://github.com/edavis10/redmine-timesheet-plugin/tree/master]
+A copy of the released version can be downloaded from {Little Stream Software}[https://projects.littlestreamsoftware.com/projects/redmine-timesheet/files].  A development copy can be gotton from {GitHub}[http://github.com/edavis10/redmine-timesheet-plugin/tree/master]
 
 == Installation and Setup
 
@@ -53,4 +53,4 @@ If you need help you can contact the maintainer at his email address (See CREDIT
 
 === Bug tracker
 
-If you would like to report a bug or request a new feature the bug tracker is located at: https://projects.littlestreamsoftware.com/projects/show/redmine-timesheet
+If you would like to report a bug or request a new feature the bug tracker is located at: https://projects.littlestreamsoftware.com/projects/redmine-timesheet
