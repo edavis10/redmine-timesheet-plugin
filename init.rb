@@ -4,7 +4,7 @@ Redmine::Plugin.register :timesheet_plugin do
   name 'Timesheet Plugin'
   author 'Eric Davis of Little Stream Software'
   description 'This is a Timesheet plugin for Redmine to show timelogs for all projects'
-  url 'https://projects.littlestreamsoftware.com/projects/show/redmine-timesheet'
+  url 'https://projects.littlestreamsoftware.com/projects/redmine-timesheet'
   author_url 'http://www.littlestreamsoftware.com'
 
   version '0.4.0'
