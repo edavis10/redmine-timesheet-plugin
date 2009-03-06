@@ -1,20 +1,21 @@
 Thanks go to the following people for patches and contributions:
 
-Eric Davis <edavis[AT]littlestreamsoftware[DOT]com>
-- Project Maintainer
+Maintainers
 
-Michael Pirogov
-- added Russian and Czech translation
+* Eric Davis
 
-Michele Franzin
-- added Italian translation
-- fixed menu highlight
+Contributors
 
-Pau Garcia i Quiles
-- Catalan translation
-
-Peter Chester of Shane and Peter, Inc
-- Feature sponsership
-
-Shane Pearlman of Shane and Peter, Inc
-- Feature sponsership
+* Morten Krogh Andersen
+* Peter Chester of Shane and Peter, Inc - Feature sponsorship
+* Anton Dollmaier
+* Mischa The Evil
+* Michele Franzin
+* Fabrice HELMBACHER
+* Sergej Jegorov
+* Gergő Jónás
+* Vladimir Oleynik
+* Shane Pearlman of Shane and Peter, Inc - Feature sponsorship
+* Michael Pirogov
+* Krzysztof Podejma
+* Pau Garcia i Quiles
