@@ -13,6 +13,8 @@
     <td align="center"><%= issue.assigned_to.to_s %></td>
     <td><%= link_to("##{issue.id}", :controller => 'issues', :action => 'show', :id => issue.id) %>: <%= h issue.subject %></td>
     <td align="center"><strong><%= number_with_precision(displayed_time_entries_for_issue(time_entries), @precision) %></strong></td>
+    <%= Redmine::Hook.call_hook(:plugin_timesheet_views_timesheet_time_entry_sum, {:time_entries => time_entries, :precision => @precision }) %>
+    <td align="center"></td>
   </tr>
 <% time_entries.each do |time_entry| %>
   <tr class="<%= cycle("odd", "even") %> issue-time-entry-<%= issue.id -%> hascontextmenu <%= call_hook(:plugin_timesheet_view_timesheets_time_entry_row_class, {:time_entry => time_entry }) %>" style="display:none;">
@@ -24,6 +26,17 @@
     <td align="center"><%= time_entry.user.name %></td>
     <td><%= h time_entry.comments %></td>
     <td align="center"><strong><%= number_with_precision(time_entry.hours, @precision) %></strong></td>
+    <%= Redmine::Hook.call_hook(:plugin_timesheet_views_timesheet_time_entry, {:time_entry => time_entry, :precision => @precision }) %>
+    <td align="center">
+      <% if time_entry.editable_by?(User.current) -%>
+        <%= link_to image_tag('edit.png'), {:controller => 'timelog', :action => 'edit', :id => time_entry},
+                                         :title => l(:button_edit) %>
+        <%= link_to image_tag('delete.png'), {:controller => 'timelog', :action => 'destroy', :id => time_entry},
+                                           :confirm => l(:text_are_you_sure),
+                                           :method => :post,
+                                           :title => l(:button_delete) %>
+     <% end -%>
+    </td>
   </tr>
 <% end %>
 <% end %>

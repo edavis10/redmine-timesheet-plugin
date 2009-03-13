@@ -15,6 +15,7 @@
     </td>
     <td><%=h time_entry.comments %></td>
     <td align="center"><strong><%= number_with_precision(time_entry.hours, @precision) %></strong></td>
+    <%= Redmine::Hook.call_hook(:plugin_timesheet_views_timesheet_time_entry, {:time_entry => time_entry, :precision => @precision }) %>
     <td align="center">
       <% if time_entry.editable_by?(User.current) -%>
         <%= link_to image_tag('edit.png'), {:controller => 'timelog', :action => 'edit', :id => time_entry},
