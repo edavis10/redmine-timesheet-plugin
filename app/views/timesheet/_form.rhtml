@@ -26,7 +26,7 @@
 </p>
 
 <p>
-  <label for="timesheet[projects][]"><%= l(:timesheet_project_label)%>:</label><br />
+  <label for="timesheet[projects][]" class="select_all"><%= l(:timesheet_project_label)%>:</label><br />
   <%= select_tag 'timesheet[projects][]',
     options_from_collection_for_select(@timesheet.allowed_projects, :id, :name, @timesheet.projects.collect(&:id)),
     { :multiple => true, :size => @list_size}
@@ -35,7 +35,7 @@
 
 
 <p>
-  <label for="timesheet[activities][]"><%= l(:timesheet_activities_label)%>:</label><br />
+  <label for="timesheet[activities][]" class="select_all"><%= l(:timesheet_activities_label)%>:</label><br />
   <%= select_tag 'timesheet[activities][]',
     options_from_collection_for_select(@activities, :id, :name, @timesheet.activities),
     { :multiple => true, :size => @list_size}
@@ -43,7 +43,7 @@
 </p>
 
 <p>
-  <label for="timesheet[users][]"><%= l(:timesheet_users_label)%>:</label><br />
+  <label for="timesheet[users][]" class="select_all"><%= l(:timesheet_users_label)%>:</label><br />
   <%= select_tag 'timesheet[users][]',
     options_from_collection_for_select(User.find(:all, :conditions => ['status = ?', User::STATUS_ACTIVE]).sort { |a,b| a.to_s.downcase <=> b.to_s.downcase }, :id, :name, @timesheet.users),
     { :multiple => true, :size => @list_size}
@@ -65,4 +65,24 @@
 #date-options { margin-left: 10px; }
 #date-options input[type='radio'] { margin-left: -20px; }
 </style>
+<script type="text/javascript">
+
+function targetField(label_element) {
+  return  $(label_element.attributes.for.value);
+}
+
+function selectAllOptions(element) {
+  for (var i = 0; i < element.options.length; i++) {
+    element.options[i].selected = true;
+  }
+}
+
+Event.observe(window, 'load',
+  function() { 
+    $$('label.select_all').each(function(element) {
+      Event.observe(element, 'click', function (e) { selectAllOptions(targetField(this)); });
+    });
+  }
+);
+</script>
 <% end %>
