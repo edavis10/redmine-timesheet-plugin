@@ -51,6 +51,8 @@
            %>
 </p>
 
+<%= call_hook(:plugin_timesheet_view_timesheet_form, { :timesheet => @timesheet, :params => params, :list_size => @list_size }) %>
+
 <div class="clear"></div>
 <%= submit_tag l(:button_apply),:class => 'button-small' -%>
 

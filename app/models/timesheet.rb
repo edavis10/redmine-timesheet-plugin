@@ -113,10 +113,10 @@ class Timesheet
   def conditions(users)
     if self.potential_time_entry_ids.empty?
       if self.date_from && self.date_to
-        conditions = ['spent_on >= (?) AND spent_on <= (?) AND project_id IN (?) AND activity_id IN (?) AND user_id IN (?)',
+        conditions = ["spent_on >= (?) AND spent_on <= (?) AND #{TimeEntry.table_name}.project_id IN (?) AND activity_id IN (?) AND user_id IN (?)",
                       self.date_from, self.date_to, self.projects, self.activities, users ]
       else # All time
-        conditions = ['project_id IN (?) AND activity_id IN (?) AND user_id IN (?)',
+        conditions = ["#{TimeEntry.table_name}.project_id IN (?) AND activity_id IN (?) AND user_id IN (?)",
                       self.projects, self.activities, users ]
       end
     else
@@ -128,19 +128,26 @@ class Timesheet
     return conditions
   end
 
+  def includes
+    includes = [:activity, :user, {:issue => [:tracker, :assigned_to, :priority]}]
+    Redmine::Hook.call_hook(:plugin_timesheet_model_timesheet_includes, { :timesheet => self, :includes => includes})
+    return includes
+  end
+
   private
 
   
   def time_entries_for_all_users(project)
     return project.time_entries.find(:all,
                                      :conditions => self.conditions(self.users),
-                                     :include => [:activity, :user, {:issue => [:tracker, :assigned_to, :priority]}],
+                                     :include => self.includes,
                                      :order => "spent_on ASC")
   end
   
   def time_entries_for_current_user(project)
     return project.time_entries.find(:all,
                                      :conditions => self.conditions(User.current.id),
+                                     :include => self.includes,
                                      :include => [:activity, :user, {:issue => [:tracker, :assigned_to, :priority]}],
                                      :order => "spent_on ASC")
   end
@@ -148,6 +155,7 @@ class Timesheet
   def issue_time_entries_for_all_users(issue)
     return issue.time_entries.find(:all,
                                    :conditions => self.conditions(self.users),
+                                   :include => self.includes,
                                    :include => [:activity, :user],
                                    :order => "spent_on ASC")
   end
@@ -155,6 +163,7 @@ class Timesheet
   def issue_time_entries_for_current_user(issue)
     return issue.time_entries.find(:all,
                                    :conditions => self.conditions(User.current.id),
+                                   :include => self.includes,
                                    :include => [:activity, :user],
                                    :order => "spent_on ASC")
   end
@@ -162,7 +171,7 @@ class Timesheet
   def time_entries_for_user(user)
     return TimeEntry.find(:all,
                           :conditions => self.conditions([user]),
-                          :include => [:activity, :user, {:issue => [:tracker, :assigned_to, :priority]}],
+                          :include => self.includes,
                           :order => "spent_on ASC"
                           )
   end
