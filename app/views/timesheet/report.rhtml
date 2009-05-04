@@ -6,6 +6,8 @@
 
 <%= render :partial => 'form' %>
 
+<%= call_hook(:plugin_timesheet_views_timesheets_report_before_time_entries, { :timesheet => @timesheet }) %>
+
 <% form_tag({}, { :id => 'time_entries'}) do -%>
 <% if @timesheet.time_entries.length > 0 %>
 <h2><%= l(:label_spent_time) %> (<%= h(number_with_precision(@grand_total, @precision)) -%> <%= h(l(:field_hours)) -%>)</h2>
