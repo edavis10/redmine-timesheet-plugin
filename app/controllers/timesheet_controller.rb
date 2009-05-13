@@ -16,7 +16,10 @@ class TimesheetController < ApplicationController
 
   def index
     load_filters_from_session
-    @timesheet ||= Timesheet.new
+    unless @timesheet
+      @timesheet ||= Timesheet.new
+      @timesheet.users = [] # Clear users so they aren't selected
+    end
     @timesheet.allowed_projects = allowed_projects
 
     if @timesheet.allowed_projects.empty?
