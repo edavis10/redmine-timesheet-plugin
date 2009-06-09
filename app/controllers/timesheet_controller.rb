@@ -107,7 +107,7 @@ class TimesheetController < ApplicationController
   end
 
   def get_activities
-    @activities = RedmineCompatibility::Enumeration::activities
+    @activities = TimesheetCompatibility::Enumeration::activities
   end
   
   def allowed_projects

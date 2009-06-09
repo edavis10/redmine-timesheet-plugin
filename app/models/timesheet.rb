@@ -32,7 +32,7 @@ class Timesheet
     unless options[:activities].nil?
       self.activities = options[:activities].collect { |a| a.to_i }
     else
-      self.activities =  RedmineCompatibility::Enumeration::activities.collect { |a| a.id.to_i }
+      self.activities =  TimesheetCompatibility::Enumeration::activities.collect { |a| a.id.to_i }
     end
     
     unless options[:users].nil?
