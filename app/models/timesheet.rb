@@ -129,7 +129,7 @@ class Timesheet
   end
 
   def includes
-    includes = [:activity, :user, {:issue => [:tracker, :assigned_to, :priority]}]
+    includes = [:activity, :user, :project, {:issue => [:tracker, :assigned_to, :priority]}]
     Redmine::Hook.call_hook(:plugin_timesheet_model_timesheet_includes, { :timesheet => self, :includes => includes})
     return includes
   end
