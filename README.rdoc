@@ -29,6 +29,8 @@ A copy of the released version can be downloaded from {Little Stream Software}[h
 2. Restart your Redmine web servers (e.g. mongrel, thin, mod_rails)
 3. Login and click the Timesheet Link in the top left menu
 
+TODO: gem installation: config.gem 'timesheet_plugin', :lib => false
+
 == Upgrade
 
 === Zip or tar files
