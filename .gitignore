@@ -1,4 +1,8 @@
+*.tar.gz
+*.zip
+.DS_Store
+coverage
 coverage
 doc
-*.zip
-*.tar.gz
+pkg
+rdoc
