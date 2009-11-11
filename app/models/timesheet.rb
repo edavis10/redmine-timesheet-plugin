@@ -113,7 +113,7 @@ class Timesheet
   def conditions(users)
     if self.potential_time_entry_ids.empty?
       if self.date_from && self.date_to
-        conditions = ["spent_on >= (:from) AND spent_on <= (:to) AND #{TimeEntry.table_name}.project_id IN (:projects) AND activity_id IN (:activities) AND user_id IN (:users)",
+        conditions = ["spent_on >= (:from) AND spent_on <= (:to) AND #{TimeEntry.table_name}.project_id IN (:projects) AND user_id IN (:users) AND (activity_id IN (:activities) OR (#{Enumeration.table_name}.parent_id IN (:activities) AND #{Enumeration.table_name}.project_id IN (:projects)))",
                       {
                         :from => self.date_from,
                         :to => self.date_to,
@@ -122,11 +122,11 @@ class Timesheet
                         :users => users
                       }]
       else # All time
-        conditions = ["#{TimeEntry.table_name}.project_id IN (:projects) AND activity_id IN (:activities) AND user_id IN (:users)",
+        conditions = ["#{TimeEntry.table_name}.project_id IN (:projects) AND user_id IN (:users) AND (activity_id IN (:activities) OR (#{Enumeration.table_name}.parent_id IN (:activities) AND #{Enumeration.table_name}.project_id IN (:projects)))",
                       {
                         :projects => self.projects,
                         :activities => self.activities,
-                        :users => user
+                        :users => users
                       }]
       end
     else
