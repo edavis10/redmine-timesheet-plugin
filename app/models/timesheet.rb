@@ -113,15 +113,28 @@ class Timesheet
   def conditions(users)
     if self.potential_time_entry_ids.empty?
       if self.date_from && self.date_to
-        conditions = ["spent_on >= (?) AND spent_on <= (?) AND #{TimeEntry.table_name}.project_id IN (?) AND activity_id IN (?) AND user_id IN (?)",
-                      self.date_from, self.date_to, self.projects, self.activities, users ]
+        conditions = ["spent_on >= (:from) AND spent_on <= (:to) AND #{TimeEntry.table_name}.project_id IN (:projects) AND activity_id IN (:activities) AND user_id IN (:users)",
+                      {
+                        :from => self.date_from,
+                        :to => self.date_to,
+                        :projects => self.projects,
+                        :activities => self.activities,
+                        :users => users
+                      }]
       else # All time
-        conditions = ["#{TimeEntry.table_name}.project_id IN (?) AND activity_id IN (?) AND user_id IN (?)",
-                      self.projects, self.activities, users ]
+        conditions = ["#{TimeEntry.table_name}.project_id IN (:projects) AND activity_id IN (:activities) AND user_id IN (:users)",
+                      {
+                        :projects => self.projects,
+                        :activities => self.activities,
+                        :users => user
+                      }]
       end
     else
-      conditions = ["user_id IN (?) AND #{TimeEntry.table_name}.id IN (?)",
-                    users, self.potential_time_entry_ids ]
+      conditions = ["user_id IN (:users) AND #{TimeEntry.table_name}.id IN (:potential_time_entries)",
+                    {
+                      :users => users,
+                      :potential_time_entries => self.potential_time_entry_ids
+                    }]
     end
       
     Redmine::Hook.call_hook(:plugin_timesheet_model_timesheet_conditions, { :timesheet => self, :conditions => conditions})
