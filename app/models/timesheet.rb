@@ -123,19 +123,28 @@ class Timesheet
     returning '' do |out|
       CSV::Writer.generate out do |csv|
         csv << [
-          :label_date, :label_member, :label_activity, :label_issue,
-          :field_comments, :field_hours
-        ].map{|x|I18n.t x}
+                '#',
+                I18n.t(:label_date),
+                I18n.t(:label_member),
+                I18n.t(:label_activity),
+                I18n.t(:label_project),
+                I18n.t(:label_issue),
+                I18n.t(:field_comments),
+                I18n.t(:field_hours)
+               ]
+
         time_entries.each do |entryname, entry|
           entry[:logs].each do |e|
             csv << [
-              e.spent_on,
-              e.user.name,
-              e.activity.name,
-              ("#{e.issue.tracker.name} ##{e.issue.id}" if e.issue),
-              e.comments,
-              e.hours
-            ]
+                    e.id,
+                    e.spent_on,
+                    e.user.name,
+                    e.activity.name,
+                    e.project.name,
+                    ("#{e.issue.tracker.name} ##{e.issue.id}" if e.issue),
+                    e.comments,
+                    e.hours
+                   ]
           end
         end
       end

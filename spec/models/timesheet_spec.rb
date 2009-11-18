@@ -36,6 +36,7 @@ module TimesheetSpecHelper
     
     time_entry = mock_model(TimeEntry, object_options)
     time_entry.stub!(:issue).and_return(options[:issue]) unless options[:issue].nil?
+    time_entry.stub!(:project).and_return(options[:project]) unless options[:project].nil?
     return time_entry
   end
 
@@ -543,7 +544,7 @@ describe Timesheet, '#to_csv' do
     stub_admin_user
     timesheet = timesheet_factory(:sort => :user, :users => [User.current.id])
 
-    common_stubs = {:user => User.current, :activity => stub('Activity', :name => 'activity'), :issue => mock_model(Issue, :tracker => mock_model(Tracker, :name => 'Tracker'), :id => 1),:spent_on => '2009-04-05' }
+    common_stubs = {:user => User.current, :activity => stub('Activity', :name => 'activity'), :issue => mock_model(Issue, :tracker => mock_model(Tracker, :name => 'Tracker'), :id => 1),:spent_on => '2009-04-05', :project => mock_model(Project, :name => 'Project Name') }
     time_entries = [
                     time_entry_factory(1, common_stubs.merge({ :comments => 'comments', :hours => 10.0})),
                     time_entry_factory(2, common_stubs.merge({ :comments => 'comments', :hours => 10.0})),
@@ -557,12 +558,12 @@ describe Timesheet, '#to_csv' do
 
     timesheet.fetch_time_entries
     timesheet.to_csv.should == [
-                                "Date,Member,Activity,Issue,Comment,Hours",
-                                "2009-04-05,Administrator Bob,activity,Tracker #1,comments,10.0",
-                                "2009-04-05,Administrator Bob,activity,Tracker #1,comments,10.0",
-                                "2009-04-05,Administrator Bob,activity,Tracker #1,comments,10.0",
-                                "2009-04-05,Administrator Bob,activity,Tracker #1,comments,10.0",
-                                "2009-04-05,Administrator Bob,activity,,comments,10.0"
+                                "#,Date,Member,Activity,Project,Issue,Comment,Hours",
+                                "1,2009-04-05,Administrator Bob,activity,Project Name,Tracker #1,comments,10.0",
+                                "2,2009-04-05,Administrator Bob,activity,Project Name,Tracker #1,comments,10.0",
+                                "3,2009-04-05,Administrator Bob,activity,Project Name,Tracker #1,comments,10.0",
+                                "4,2009-04-05,Administrator Bob,activity,Project Name,Tracker #1,comments,10.0",
+                                "5,2009-04-05,Administrator Bob,activity,Project Name,,comments,10.0",
                                ].join("\n") + "\n" # trailing newline
   end
 end
