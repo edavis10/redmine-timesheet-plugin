@@ -555,27 +555,34 @@ describe Timesheet, '#to_csv' do
   describe "sorted by :user" do
     it "should return a csv grouped by user" do
       stub_admin_user
-      timesheet = timesheet_factory(:sort => :user, :users => [User.current.id])
+      @another_user = mock_model(User, :admin? => true, :allowed_to? => true, :name => "Another user")
+      timesheet = timesheet_factory(:sort => :user, :users => [User.current.id, @another_user.id])
 
       time_entries = [
                       time_entry_factory(1, stub_common_csv_records.merge({})),
-                      time_entry_factory(2, stub_common_csv_records.merge({})),
                       time_entry_factory(3, stub_common_csv_records.merge({})),
                       time_entry_factory(4, stub_common_csv_records.merge({})),
                       time_entry_factory(5, stub_common_csv_records.merge({:issue => nil}))
                      ]
 
-      TimeEntry.stub!(:find).and_return(time_entries)
-      User.stub!(:find_by_id).and_return(User.current)
+      time_entries_another_user = [
+                                   time_entry_factory(2, stub_common_csv_records.merge({:user => @another_user }))
+                                   ]
+
+
+      timesheet.stub!(:time_entries_for_user).with(User.current.id).and_return(time_entries)
+      timesheet.stub!(:time_entries_for_user).with(@another_user.id).and_return(time_entries_another_user)
+      User.stub!(:find_by_id).with(User.current.id).and_return(User.current)
+      User.stub!(:find_by_id).with(@another_user.id).and_return(@another_user)
 
       timesheet.fetch_time_entries
       timesheet.to_csv.should == [
                                   "#,Date,Member,Activity,Project,Issue,Comment,Hours",
                                   "1,2009-04-05,Administrator Bob,activity,Project Name,Tracker #1,comments,10.0",
-                                  "2,2009-04-05,Administrator Bob,activity,Project Name,Tracker #1,comments,10.0",
                                   "3,2009-04-05,Administrator Bob,activity,Project Name,Tracker #1,comments,10.0",
                                   "4,2009-04-05,Administrator Bob,activity,Project Name,Tracker #1,comments,10.0",
                                   "5,2009-04-05,Administrator Bob,activity,Project Name,,comments,10.0",
+                                  "2,2009-04-05,Another user,activity,Project Name,Tracker #1,comments,10.0",
                                  ].join("\n") + "\n" # trailing newline
     end
   end

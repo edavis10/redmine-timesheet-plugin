@@ -133,18 +133,13 @@ class Timesheet
                 I18n.t(:field_hours)
                ]
 
-        time_entries.each do |entryname, entry|
-          entry[:logs].each do |e|
-            csv << [
-                    e.id,
-                    e.spent_on,
-                    e.user.name,
-                    e.activity.name,
-                    e.project.name,
-                    ("#{e.issue.tracker.name} ##{e.issue.id}" if e.issue),
-                    e.comments,
-                    e.hours
-                   ]
+        # Write the CSV based on the group/sort
+        case sort
+        when :user
+          time_entries.sort.each do |entryname, entry|
+            entry[:logs].each do |e|
+              csv << time_entry_to_csv(e)
+            end
           end
         end
       end
@@ -152,6 +147,19 @@ class Timesheet
   end
   
   protected
+
+  def time_entry_to_csv(time_entry)
+    [
+     time_entry.id,
+     time_entry.spent_on,
+     time_entry.user.name,
+     time_entry.activity.name,
+     time_entry.project.name,
+     ("#{time_entry.issue.tracker.name} ##{time_entry.issue.id}" if time_entry.issue),
+     time_entry.comments,
+     time_entry.hours
+    ]
+  end
 
   def conditions(users)
     if self.potential_time_entry_ids.empty?
