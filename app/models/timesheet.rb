@@ -135,7 +135,7 @@ class Timesheet
 
         # Write the CSV based on the group/sort
         case sort
-        when :user
+        when :user, :project
           time_entries.sort.each do |entryname, entry|
             entry[:logs].each do |e|
               csv << time_entry_to_csv(e)

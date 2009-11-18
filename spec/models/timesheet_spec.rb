@@ -552,10 +552,14 @@ end
 describe Timesheet, '#to_csv' do
   include TimesheetSpecHelper
 
+  before(:each) do
+    stub_admin_user
+    @another_user = mock_model(User, :admin? => true, :allowed_to? => true, :name => "Another user")
+    @another_user.stub!(:<=>).with(User.current).and_return(-1)
+  end
+
   describe "sorted by :user" do
     it "should return a csv grouped by user" do
-      stub_admin_user
-      @another_user = mock_model(User, :admin? => true, :allowed_to? => true, :name => "Another user")
       timesheet = timesheet_factory(:sort => :user, :users => [User.current.id, @another_user.id])
 
       time_entries = [
@@ -588,7 +592,49 @@ describe Timesheet, '#to_csv' do
   end
 
   describe "sorted by :project" do
-    it "should return a csv grouped by project"
+    it "should return a csv grouped by project" do
+      project_a = mock_model(Project, :name => 'Project Name', :parent => nil)
+      another_project = mock_model(Project, :name => 'Another Project', :parent => nil)
+      timesheet = timesheet_factory(:sort => :project, :users => [User.current.id, @another_user.id])
+      timesheet.projects = [project_a, another_project]
+      
+      project_a_time_entries = [
+                      time_entry_factory(1, stub_common_csv_records.merge({:project => project_a})),
+                      time_entry_factory(3, stub_common_csv_records.merge({:project => project_a})),
+                      time_entry_factory(5, stub_common_csv_records.merge({:issue => nil}))
+                     ]
+
+      another_project_time_entries = [
+                                      time_entry_factory(2, stub_common_csv_records.merge({:user => @another_user, :project => another_project })),
+                                      time_entry_factory(4, stub_common_csv_records.merge({:project => another_project})),
+
+                                   ]
+
+      project_a.stub!(:time_entries).and_return do
+        te = mock('TimeEntryProxy')
+        te.stub!(:find).and_return(project_a_time_entries)
+        te
+      end
+
+      another_project.stub!(:time_entries).and_return do
+        te = mock('TimeEntryProxy')
+        te.stub!(:find).and_return(another_project_time_entries)
+        te
+      end
+
+      User.stub!(:find_by_id).with(User.current.id).and_return(User.current)
+      User.stub!(:find_by_id).with(@another_user.id).and_return(@another_user)
+
+      timesheet.fetch_time_entries
+      timesheet.to_csv.should == [
+                                  "#,Date,Member,Activity,Project,Issue,Comment,Hours",
+                                  "2,2009-04-05,Another user,activity,Another Project,Tracker #1,comments,10.0",
+                                  "4,2009-04-05,Administrator Bob,activity,Another Project,Tracker #1,comments,10.0",
+                                  "1,2009-04-05,Administrator Bob,activity,Project Name,Tracker #1,comments,10.0",
+                                  "3,2009-04-05,Administrator Bob,activity,Project Name,Tracker #1,comments,10.0",
+                                  "5,2009-04-05,Administrator Bob,activity,Project Name,,comments,10.0",
+                                 ].join("\n") + "\n" # trailing newline
+    end
   end
 
   describe "sorted by :issue" do
