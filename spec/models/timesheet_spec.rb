@@ -543,18 +543,26 @@ describe Timesheet, '#to_csv' do
     stub_admin_user
     timesheet = timesheet_factory(:sort => :user, :users => [User.current.id])
 
+    common_stubs = {:user => User.current, :activity => stub('Activity', :name => 'activity'), :issue => mock_model(Issue, :tracker => mock_model(Tracker, :name => 'Tracker'), :id => 1),:spent_on => '2009-04-05' }
     time_entries = [
-                    time_entry_factory(1, { :user => User.current, :activity => stub('Activity', :name => 'activity'), :issue => mock_model(Issue, :tracker => mock_model(Tracker, :name => 'Tracker'), :id => 1), :comments => 'comments', :hours => 10.0}),
-                    time_entry_factory(2, { :user => User.current, :activity => stub('Activity', :name => 'activity'), :issue => mock_model(Issue, :tracker => mock_model(Tracker, :name => 'Tracker'), :id => 1), :comments => 'comments', :hours => 10.0}),
-                    time_entry_factory(3, { :user => User.current, :activity => stub('Activity', :name => 'activity'), :issue => mock_model(Issue, :tracker => mock_model(Tracker, :name => 'Tracker'), :id => 1), :comments => 'comments', :hours => 10.0}),
-                    time_entry_factory(4, { :user => User.current, :activity => stub('Activity', :name => 'activity'), :issue => mock_model(Issue, :tracker => mock_model(Tracker, :name => 'Tracker'), :id => 1), :comments => 'comments', :hours => 10.0}),
-                    time_entry_factory(5, { :user => User.current, :activity => stub('Activity', :name => 'activity'), :issue => nil, :comments => 'comments', :hours => 10.0})
-                   ]
+                    time_entry_factory(1, common_stubs.merge({ :comments => 'comments', :hours => 10.0})),
+                    time_entry_factory(2, common_stubs.merge({ :comments => 'comments', :hours => 10.0})),
+                    time_entry_factory(3, common_stubs.merge({ :comments => 'comments', :hours => 10.0})),
+                    time_entry_factory(4, common_stubs.merge({ :comments => 'comments', :hours => 10.0})),
+                    time_entry_factory(5, common_stubs.merge({ :issue => nil, :comments => 'comments', :hours => 10.0}))
+                    ]
 
     TimeEntry.stub!(:find).and_return(time_entries)
     User.stub!(:find_by_id).and_return(User.current)
 
     timesheet.fetch_time_entries
-    timesheet.to_csv.should == "Date,Member,Activity,Issue,Comment,Hours\n2009-04-05,Administrator Bob,activity,Tracker #1,comments,10.0\n2009-04-05,Administrator Bob,activity,Tracker #1,comments,10.0\n2009-04-05,Administrator Bob,activity,Tracker #1,comments,10.0\n2009-04-05,Administrator Bob,activity,Tracker #1,comments,10.0\n2009-04-05,Administrator Bob,activity,,comments,10.0\n"
+    timesheet.to_csv.should == [
+                                "Date,Member,Activity,Issue,Comment,Hours",
+                                "2009-04-05,Administrator Bob,activity,Tracker #1,comments,10.0",
+                                "2009-04-05,Administrator Bob,activity,Tracker #1,comments,10.0",
+                                "2009-04-05,Administrator Bob,activity,Tracker #1,comments,10.0",
+                                "2009-04-05,Administrator Bob,activity,Tracker #1,comments,10.0",
+                                "2009-04-05,Administrator Bob,activity,,comments,10.0"
+                               ].join("\n") + "\n" # trailing newline
   end
 end
