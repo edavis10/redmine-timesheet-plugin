@@ -84,6 +84,8 @@ module TimesheetSpecHelper
       :activity => stub('Activity', :name => 'activity'),
       :spent_on => '2009-04-05',
       :project => mock_model(Project, :name => 'Project Name'),
+      :comments => 'comments',
+      :hours => 10.0,
       :issue => mock_model(Issue, :id => 1, :tracker => mock_model(Tracker, :name => 'Tracker'))
     }
   end
@@ -556,11 +558,11 @@ describe Timesheet, '#to_csv' do
       timesheet = timesheet_factory(:sort => :user, :users => [User.current.id])
 
       time_entries = [
-                      time_entry_factory(1, stub_common_csv_records.merge({ :comments => 'comments', :hours => 10.0})),
-                      time_entry_factory(2, stub_common_csv_records.merge({ :comments => 'comments', :hours => 10.0})),
-                      time_entry_factory(3, stub_common_csv_records.merge({ :comments => 'comments', :hours => 10.0})),
-                      time_entry_factory(4, stub_common_csv_records.merge({ :comments => 'comments', :hours => 10.0})),
-                      time_entry_factory(5, stub_common_csv_records.merge({ :issue => nil, :comments => 'comments', :hours => 10.0}))
+                      time_entry_factory(1, stub_common_csv_records.merge({})),
+                      time_entry_factory(2, stub_common_csv_records.merge({})),
+                      time_entry_factory(3, stub_common_csv_records.merge({})),
+                      time_entry_factory(4, stub_common_csv_records.merge({})),
+                      time_entry_factory(5, stub_common_csv_records.merge({:issue => nil}))
                      ]
 
       TimeEntry.stub!(:find).and_return(time_entries)
