@@ -34,11 +34,7 @@ end # form_tag
 <% content_for(:header_tags) do %>
 <%= javascript_include_tag 'context_menu' %>
 <%= stylesheet_link_tag 'context_menu' %>
-<style type="text/css">
-
-div#timesheet-form p { padding:0px 10px; float:left; }
-
-</style>
+<%= stylesheet_link_tag "timesheet.css", :plugin => "timesheet_plugin", :media => 'all' %>
 <%# TODO: Typo on hook %>
 <%= call_hook(:plugin_timesheet_view_timesheets_report_header_tags, { :timesheet => @timesheet }) %>
 <%= call_hook(:plugin_timesheet_views_timesheets_report_header_tags, { :timesheet => @timesheet }) %>
