@@ -77,6 +77,16 @@ module TimesheetSpecHelper
     @current_user.stub!(:name).and_return("Administrator Bob")
     User.stub!(:current).and_return(@current_user)    
   end
+
+  def stub_common_csv_records
+    {
+      :user => User.current,
+      :activity => stub('Activity', :name => 'activity'),
+      :spent_on => '2009-04-05',
+      :project => mock_model(Project, :name => 'Project Name'),
+      :issue => mock_model(Issue, :id => 1, :tracker => mock_model(Tracker, :name => 'Tracker'))
+    }
+  end
 end
 
 describe Timesheet do
@@ -545,13 +555,12 @@ describe Timesheet, '#to_csv' do
       stub_admin_user
       timesheet = timesheet_factory(:sort => :user, :users => [User.current.id])
 
-      common_stubs = {:user => User.current, :activity => stub('Activity', :name => 'activity'), :issue => mock_model(Issue, :tracker => mock_model(Tracker, :name => 'Tracker'), :id => 1),:spent_on => '2009-04-05', :project => mock_model(Project, :name => 'Project Name') }
       time_entries = [
-                      time_entry_factory(1, common_stubs.merge({ :comments => 'comments', :hours => 10.0})),
-                      time_entry_factory(2, common_stubs.merge({ :comments => 'comments', :hours => 10.0})),
-                      time_entry_factory(3, common_stubs.merge({ :comments => 'comments', :hours => 10.0})),
-                      time_entry_factory(4, common_stubs.merge({ :comments => 'comments', :hours => 10.0})),
-                      time_entry_factory(5, common_stubs.merge({ :issue => nil, :comments => 'comments', :hours => 10.0}))
+                      time_entry_factory(1, stub_common_csv_records.merge({ :comments => 'comments', :hours => 10.0})),
+                      time_entry_factory(2, stub_common_csv_records.merge({ :comments => 'comments', :hours => 10.0})),
+                      time_entry_factory(3, stub_common_csv_records.merge({ :comments => 'comments', :hours => 10.0})),
+                      time_entry_factory(4, stub_common_csv_records.merge({ :comments => 'comments', :hours => 10.0})),
+                      time_entry_factory(5, stub_common_csv_records.merge({ :issue => nil, :comments => 'comments', :hours => 10.0}))
                      ]
 
       TimeEntry.stub!(:find).and_return(time_entries)
