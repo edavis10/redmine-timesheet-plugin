@@ -10,7 +10,7 @@ module TimesheetHelper
             :timesheet => timesheet.to_param)
   end
 
-  def link_csv_export(timesheet)
+  def link_to_csv_export(timesheet)
     link_to('CSV',
             {
               :controller => 'timesheet',
