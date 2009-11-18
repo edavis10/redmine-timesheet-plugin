@@ -7,14 +7,19 @@ module TimesheetHelper
     link_to(l(:timesheet_permalink),
             :controller => 'timesheet',
             :action => 'report',
-            :timesheet => { 
-              :projects => timesheet.projects.collect(&:id),
-              :date_from => timesheet.date_from,
-              :date_to => timesheet.date_to,
-              :activities => timesheet.activities,
-              :users => timesheet.users,
-              :sort => timesheet.sort
-            })
+            :timesheet => timesheet.to_param)
+  end
+
+  def link_csv_export(timesheet)
+    link_to('CSV',
+            {
+              :controller => 'timesheet',
+              :action => 'report',
+              :format => 'csv',
+              :timesheet => timesheet.to_param
+            },
+            :method => 'post',
+            :class => 'icon icon-timesheet')
   end
   
   def toggle_issue_arrows(issue_id)

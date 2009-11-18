@@ -238,6 +238,15 @@ describe TimesheetController,"#report with POST request" do
     session[TimesheetController::SessionKey].keys.should include('projects')
     session[TimesheetController::SessionKey]['projects'].should eql(['1'])
   end
+
+  context ":csv format" do
+    it 'should return the timesheet data as csv' do
+      @timesheet.should_receive(:to_csv).and_return('csv content')
+      post_report({:timesheet => {:projects => ['1']}, :format => 'csv'})
+      response.body.should == 'csv content'
+      response.content_type.should == 'text/csv'
+    end
+  end
 end
 
 describe TimesheetController,"#report with request with no data" do

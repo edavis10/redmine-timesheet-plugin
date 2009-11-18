@@ -81,8 +81,10 @@ class TimesheetController < ApplicationController
     
     @grand_total = @total.collect{|k,v| v}.inject{|sum,n| sum + n}
 
-    send_csv and return if 'csv' == params[:export]
-    render :action => 'details', :layout => false if request.xhr?
+    respond_to do |format|
+      format.html { render :action => 'details', :layout => false if request.xhr? }
+      format.csv  { send_data @timesheet.to_csv, :filename => 'timesheet.csv', :type => "text/csv" }
+    end
   end
   
   def context_menu

@@ -107,6 +107,40 @@ class Timesheet
     end
     self
   end
+
+  def to_param
+    {
+      :projects => projects.collect(&:id),
+      :date_from => date_from,
+      :date_to => date_to,
+      :activities => activities,
+      :users => users,
+      :sort => sort
+    }
+  end
+
+  def to_csv
+    returning '' do |out|
+      CSV::Writer.generate out do |csv|
+        csv << [
+          :label_date, :label_member, :label_activity, :label_issue,
+          :field_comments, :field_hours
+        ].map{|x|I18n.t x}
+        time_entries.each do |entryname, entry|
+          entry[:logs].each do |e|
+            csv << [
+              e.spent_on,
+              e.user.name,
+              e.activity.name,
+              ("#{e.issue.tracker.name} ##{e.issue.id}" if e.issue),
+              e.comments,
+              e.hours
+            ]
+          end
+        end
+      end
+    end
+  end
   
   protected
 
