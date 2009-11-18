@@ -540,30 +540,40 @@ end
 describe Timesheet, '#to_csv' do
   include TimesheetSpecHelper
 
-  it "should return a csv with headers" do
-    stub_admin_user
-    timesheet = timesheet_factory(:sort => :user, :users => [User.current.id])
+  describe "sorted by :user" do
+    it "should return a csv grouped by user" do
+      stub_admin_user
+      timesheet = timesheet_factory(:sort => :user, :users => [User.current.id])
 
-    common_stubs = {:user => User.current, :activity => stub('Activity', :name => 'activity'), :issue => mock_model(Issue, :tracker => mock_model(Tracker, :name => 'Tracker'), :id => 1),:spent_on => '2009-04-05', :project => mock_model(Project, :name => 'Project Name') }
-    time_entries = [
-                    time_entry_factory(1, common_stubs.merge({ :comments => 'comments', :hours => 10.0})),
-                    time_entry_factory(2, common_stubs.merge({ :comments => 'comments', :hours => 10.0})),
-                    time_entry_factory(3, common_stubs.merge({ :comments => 'comments', :hours => 10.0})),
-                    time_entry_factory(4, common_stubs.merge({ :comments => 'comments', :hours => 10.0})),
-                    time_entry_factory(5, common_stubs.merge({ :issue => nil, :comments => 'comments', :hours => 10.0}))
-                    ]
+      common_stubs = {:user => User.current, :activity => stub('Activity', :name => 'activity'), :issue => mock_model(Issue, :tracker => mock_model(Tracker, :name => 'Tracker'), :id => 1),:spent_on => '2009-04-05', :project => mock_model(Project, :name => 'Project Name') }
+      time_entries = [
+                      time_entry_factory(1, common_stubs.merge({ :comments => 'comments', :hours => 10.0})),
+                      time_entry_factory(2, common_stubs.merge({ :comments => 'comments', :hours => 10.0})),
+                      time_entry_factory(3, common_stubs.merge({ :comments => 'comments', :hours => 10.0})),
+                      time_entry_factory(4, common_stubs.merge({ :comments => 'comments', :hours => 10.0})),
+                      time_entry_factory(5, common_stubs.merge({ :issue => nil, :comments => 'comments', :hours => 10.0}))
+                     ]
 
-    TimeEntry.stub!(:find).and_return(time_entries)
-    User.stub!(:find_by_id).and_return(User.current)
+      TimeEntry.stub!(:find).and_return(time_entries)
+      User.stub!(:find_by_id).and_return(User.current)
 
-    timesheet.fetch_time_entries
-    timesheet.to_csv.should == [
-                                "#,Date,Member,Activity,Project,Issue,Comment,Hours",
-                                "1,2009-04-05,Administrator Bob,activity,Project Name,Tracker #1,comments,10.0",
-                                "2,2009-04-05,Administrator Bob,activity,Project Name,Tracker #1,comments,10.0",
-                                "3,2009-04-05,Administrator Bob,activity,Project Name,Tracker #1,comments,10.0",
-                                "4,2009-04-05,Administrator Bob,activity,Project Name,Tracker #1,comments,10.0",
-                                "5,2009-04-05,Administrator Bob,activity,Project Name,,comments,10.0",
-                               ].join("\n") + "\n" # trailing newline
+      timesheet.fetch_time_entries
+      timesheet.to_csv.should == [
+                                  "#,Date,Member,Activity,Project,Issue,Comment,Hours",
+                                  "1,2009-04-05,Administrator Bob,activity,Project Name,Tracker #1,comments,10.0",
+                                  "2,2009-04-05,Administrator Bob,activity,Project Name,Tracker #1,comments,10.0",
+                                  "3,2009-04-05,Administrator Bob,activity,Project Name,Tracker #1,comments,10.0",
+                                  "4,2009-04-05,Administrator Bob,activity,Project Name,Tracker #1,comments,10.0",
+                                  "5,2009-04-05,Administrator Bob,activity,Project Name,,comments,10.0",
+                                 ].join("\n") + "\n" # trailing newline
+    end
+  end
+
+  describe "sorted by :project" do
+    it "should return a csv grouped by project"
+  end
+
+  describe "sorted by :issue" do
+    it "should return a csv grouped by issue"
   end
 end
