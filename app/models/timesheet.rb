@@ -122,16 +122,7 @@ class Timesheet
   def to_csv
     returning '' do |out|
       CSV::Writer.generate out do |csv|
-        csv << [
-                '#',
-                I18n.t(:label_date),
-                I18n.t(:label_member),
-                I18n.t(:label_activity),
-                I18n.t(:label_project),
-                I18n.t(:label_issue),
-                I18n.t(:field_comments),
-                I18n.t(:field_hours)
-               ]
+        csv << csv_header
 
         # Write the CSV based on the group/sort
         case sort
@@ -156,17 +147,34 @@ class Timesheet
   
   protected
 
+  def csv_header
+    csv_data = [
+                '#',
+                I18n.t(:label_date),
+                I18n.t(:label_member),
+                I18n.t(:label_activity),
+                I18n.t(:label_project),
+                I18n.t(:label_issue),
+                I18n.t(:field_comments),
+                I18n.t(:field_hours)
+               ]
+    Redmine::Hook.call_hook(:plugin_timesheet_model_timesheet_csv_header, { :timesheet => self, :csv_data => csv_data})
+    return csv_data
+  end
+
   def time_entry_to_csv(time_entry)
-    [
-     time_entry.id,
-     time_entry.spent_on,
-     time_entry.user.name,
-     time_entry.activity.name,
-     time_entry.project.name,
-     ("#{time_entry.issue.tracker.name} ##{time_entry.issue.id}" if time_entry.issue),
-     time_entry.comments,
-     time_entry.hours
-    ]
+    csv_data = [
+                time_entry.id,
+                time_entry.spent_on,
+                time_entry.user.name,
+                time_entry.activity.name,
+                time_entry.project.name,
+                ("#{time_entry.issue.tracker.name} ##{time_entry.issue.id}" if time_entry.issue),
+                time_entry.comments,
+                time_entry.hours
+               ]
+    Redmine::Hook.call_hook(:plugin_timesheet_model_timesheet_time_entry_to_csv, { :timesheet => self, :time_entry => time_entry, :csv_data => csv_data})
+    return csv_data
   end
 
   def conditions(users)
