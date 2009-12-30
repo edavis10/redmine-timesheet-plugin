@@ -1,5 +1,16 @@
 require 'redmine'
 
+require 'dispatcher'
+Dispatcher.to_prepare :timesheet_plugin do
+  # Needed for the compatibility check
+  begin
+    require_dependency 'time_entry_activity'
+  rescue LoadError
+    # TimeEntryActivity is not available
+  end
+end
+
+
 unless Redmine::Plugin.registered_plugins.keys.include?(:timesheet_plugin)
   Redmine::Plugin.register :timesheet_plugin do
     name 'Timesheet Plugin'
