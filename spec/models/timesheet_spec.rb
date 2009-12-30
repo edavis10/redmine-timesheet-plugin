@@ -256,6 +256,7 @@ describe Timesheet,'.fetch_time_entries with user sorting' do
   include TimesheetSpecHelper
   
   it 'should clear .time_entries' do
+    stub_admin_user
     timesheet = Timesheet.new({ :sort => :user })
     timesheet.time_entries = { :filled => 'data' }
     proc { 
