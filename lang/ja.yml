@@ -1,0 +1,9 @@
+timesheet_title: 記録時間表
+timesheet_date_from_label: 期間
+timesheet_date_to_label: から
+timesheet_project_label: プロジェクト
+timesheet_activities_label: 活動
+timesheet_users_label: ユーザ
+timesheet_showing_users: 'ユーザ: '
+timesheet_permalink: '(この記録時間表へ直接リンク)'
+timesheet_group_by: グループ化
