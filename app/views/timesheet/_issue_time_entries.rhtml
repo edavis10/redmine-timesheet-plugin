@@ -10,7 +10,7 @@
       <%= toggle_issue_arrows(issue.id) %>
     </td>
     <td align="center"></td>
-    <td align="center"><%= issue.assigned_to.to_s %></td>
+    <td align="center"><%= l(:field_assigned_to) %>:<br /><%= issue.assigned_to.to_s %></td>
     <td><%= link_to("##{issue.id}", :controller => 'issues', :action => 'show', :id => issue.id) %>: <%= h issue.subject %></td>
     <td align="center"><strong><%= number_with_precision(displayed_time_entries_for_issue(time_entries), @precision) %></strong></td>
     <%= Redmine::Hook.call_hook(:plugin_timesheet_views_timesheet_time_entry_sum, {:time_entries => time_entries, :precision => @precision }) %>
