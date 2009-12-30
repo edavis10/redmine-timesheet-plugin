@@ -1,0 +1,9 @@
+timesheet_title: Satnica
+timesheet_date_from_label: Od
+timesheet_date_to_label: Do
+timesheet_project_label: Projekat
+timesheet_activities_label: Aktivnost
+timesheet_users_label: Korisnici
+timesheet_showing_users: 'pokazujem vreme za: '
+timesheet_permalink: '(Stalni link za ovu satnicu)'
+timesheet_group_by: Grupiši po
