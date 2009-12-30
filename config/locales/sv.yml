@@ -1,0 +1,10 @@
+"sv":
+  timesheet_title: Tidkort
+  timesheet_date_from_label: Från
+  timesheet_date_to_label: Till
+  timesheet_project_label: Projekt
+  timesheet_activities_label: Aktivitet
+  timesheet_users_label: Användare
+  timesheet_showing_users: 'visar tid för: '
+  timesheet_permalink: '(Permalänk till detta tidkort)'
+  timesheet_group_by: Gruppera efter
