@@ -35,33 +35,24 @@ module TimesheetSpecHelper
   end
 
   def stub_non_member_user(projects)
-    @current_user = mock_model(User)
-    @current_user.stub!(:admin?).and_return(false)
-    projects.each do |project|
-      @current_user.stub!(:allowed_to?).with(:view_time_entries, project).and_return(false)
-      @current_user.stub!(:allowed_to?).with(:see_project_timesheets, project).and_return(false)
-    end
-    User.stub!(:current).and_return(@current_user)
+    @current_user = User.generate_with_protected!(:admin => false, :firstname => "Non", :lastname => "Member")
+    User.current = @current_user
   end
   
   def stub_normal_user(projects)
-    @current_user = mock_model(User)
-    @current_user.stub!(:admin?).and_return(false)
+    @current_user = User.generate_with_protected!(:admin => false, :firstname => "Non", :lastname => "Member")
     projects.each do |project|
-      @current_user.stub!(:allowed_to?).with(:view_time_entries, project).and_return(true)
-      @current_user.stub!(:allowed_to?).with(:see_project_timesheets, project).and_return(false)
+      Member.generate!(:principal => @current_user, :project => project)
     end
-    User.stub!(:current).and_return(@current_user)
+    User.current = @current_user
   end
   
   def stub_manager_user(projects)
-    @current_user = mock_model(User)
-    @current_user.stub!(:admin?).and_return(false)
+    @current_user = User.generate_with_protected!(:admin => false, :firstname => "Non", :lastname => "Member")
     projects.each do |project|
-      @current_user.stub!(:allowed_to?).with(:view_time_entries, project).and_return(true)
-      @current_user.stub!(:allowed_to?).with(:see_project_timesheets, project).and_return(true)
+      Member.generate!(:principal => @current_user, :project => project)
     end
-    User.stub!(:current).and_return(@current_user)
+    User.current = @current_user
   end
   
   def stub_admin_user
@@ -196,9 +187,11 @@ class TimesheetTest < ActiveSupport::TestCase
       timesheet = Timesheet.new
       timesheet.time_entries = { :filled => 'data' }
 
-      assert_difference('timesheet.time_entries') do
-        timesheet.fetch_time_entries
-      end
+      previous = timesheet.time_entries
+
+      timesheet.fetch_time_entries
+      
+      assert_not_same previous, timesheet.time_entries
     end
 
     should 'should add a time_entry Hash for each project' do
@@ -232,10 +225,9 @@ class TimesheetTest < ActiveSupport::TestCase
     should 'should add the parent project name for each time_entry array for sub-projects' do
       timesheet = timesheet_factory
 
-      project1 = project_factory(1)
-      project1.should_receive(:name).twice.and_return('Project 1')
-      project2 = project_factory(2, :parent => project1 )
-      project2.should_receive(:name).and_return('Project 2')
+      project1 = project_factory(1, :name => 'Project 1')
+      project2 = project_factory(2, :name => 'Project 2')
+      project2.set_parent!(project1)
 
       stub_admin_user
       timesheet.projects = [project1, project2]
@@ -358,17 +350,14 @@ class TimesheetTest < ActiveSupport::TestCase
     should 'should collect time entries for all users on each project' do
       timesheet = timesheet_factory
 
-      project1 = project_factory(1)
-      project1.stub!(:name).and_return('Project 1')
-      project2 = project_factory(2)
-      project2.stub!(:name).and_return('Project 2')
+      project1 = project_factory(1, :name => "Project 1")
+      project2 = project_factory(2, :name => "Project 2")
 
       stub_admin_user
       timesheet.projects = [project1, project2] 
 
-      timesheet.should_receive(:time_entries_for_all_users).with(project1).and_return([ ])
-      timesheet.should_receive(:time_entries_for_all_users).with(project2).and_return([ ])
       timesheet.fetch_time_entries
+      flunk # Need to check responses
     end
   end
 
@@ -377,25 +366,16 @@ class TimesheetTest < ActiveSupport::TestCase
     should 'should collect time entries for all users' do
       timesheet = timesheet_factory
 
-      project1 = project_factory(1)
-      project1.stub!(:name).and_return('Project 1')
-      project2 = project_factory(2)
-      project2.stub!(:name).and_return('Project 2')
-      project3 = project_factory(3)
-      project3.stub!(:name).and_return('Project 3')
+      project1 = project_factory(1, :name => "Project 1")
+      project2 = project_factory(2, :name => "Project 2")
+      project3 = project_factory(3, :name => "Project 3")
 
       stub_manager_user([project1, project2])
       # Make user a 'non-manager' on project3 
-      @current_user.stub!(:allowed_to?).with(:view_time_entries, project3).and_return(true)
-      @current_user.stub!(:allowed_to?).with(:see_project_timesheets, project3).and_return(false)
-      User.stub!(:current).and_return(@current_user)
-
       timesheet.projects = [project1, project2, project3]
 
-      timesheet.should_receive(:time_entries_for_all_users).with(project1).and_return([ ])
-      timesheet.should_receive(:time_entries_for_all_users).with(project2).and_return([ ])
-      timesheet.should_receive(:time_entries_for_current_user).with(project3).and_return([ ])
       timesheet.fetch_time_entries
+      flunk # Need to check responses
     end
   end
 
@@ -404,17 +384,14 @@ class TimesheetTest < ActiveSupport::TestCase
     should 'should collect time entries for only themself' do
       timesheet = timesheet_factory
 
-      project1 = project_factory(1)
-      project1.stub!(:name).and_return('Project 1')
-      project2 = project_factory(2)
-      project2.stub!(:name).and_return('Project 2')
+      project1 = project_factory(1, :name => 'Project 1')
+      project2 = project_factory(2, :name => 'Project 2')
 
       stub_normal_user([project1, project2])
       timesheet.projects = [project1, project2]
 
-      timesheet.should_receive(:time_entries_for_current_user).with(project1).and_return([ ])
-      timesheet.should_receive(:time_entries_for_current_user).with(project2).and_return([ ])
       timesheet.fetch_time_entries
+      flunk # Need to check response
     end
   end
 
@@ -423,17 +400,14 @@ class TimesheetTest < ActiveSupport::TestCase
     should 'should get no time entries' do
       timesheet = timesheet_factory
 
-      project1 = project_factory(1)
-      project1.stub!(:name).and_return('Project 1')
-      project2 = project_factory(2)
-      project2.stub!(:name).and_return('Project 2')
+      project1 = project_factory(1, :name => 'Proejct 1')
+      project2 = project_factory(2, :name => 'Project 2')
 
       stub_non_member_user([project1, project2])
       timesheet.projects = [project1, project2]
 
-      timesheet.should_not_receive(:time_entries_for_current_user).with(project1).and_return([ ])
-      timesheet.should_not_receive(:time_entries_for_current_user).with(project2).and_return([ ])
       timesheet.fetch_time_entries
+      assert timesheet.time_entries.empty?
     end
   end
 
