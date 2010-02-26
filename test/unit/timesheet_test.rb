@@ -30,13 +30,10 @@ module TimesheetSpecHelper
   def time_entry_factory(id, options = { })
     object_options = {
       :id => id,
-      :to_param => id.to_s,
       :spent_on => Date.today,
     }.merge(options)
-    
-    time_entry = mock_model(TimeEntry, object_options)
-    time_entry.stub!(:issue).and_return(options[:issue]) unless options[:issue].nil?
-    time_entry.stub!(:project).and_return(options[:project]) unless options[:project].nil?
+
+    time_entry = TimeEntry.generate!(object_options)
     return time_entry
   end
 
@@ -71,11 +68,9 @@ module TimesheetSpecHelper
   end
   
   def stub_admin_user
-    @current_user = mock_model(User)
-    @current_user.stub!(:admin?).and_return(true)
-    @current_user.stub!(:allowed_to?).and_return(true)
-    @current_user.stub!(:name).and_return("Administrator Bob")
-    User.stub!(:current).and_return(@current_user)    
+    @current_user = User.generate_with_protected!(:admin => true, :firstname => "Administrator", :lastname => "Bob")
+    assert @current_user.admin?
+    User.current = @current_user
   end
 
   def stub_common_csv_records
@@ -284,21 +279,24 @@ class TimesheetTest < ActiveSupport::TestCase
     
     should 'should use the user name for each time_entry array' do 
       stub_admin_user
+      activity = TimeEntryActivity.generate!
       timesheet = timesheet_factory(:sort => :user, :users => [User.current.id])
 
+      project = Project.generate!
+      
       time_entries = [
-                      time_entry_factory(1, { :user => User.current }),
-                      time_entry_factory(2, { :user => User.current }),
-                      time_entry_factory(3, { :user => User.current }),
-                      time_entry_factory(4, { :user => User.current }),
-                      time_entry_factory(5, { :user => User.current })
+                      time_entry_factory(1, { :user => User.current, :activity => activity, :project => project }),
+                      time_entry_factory(2, { :user => User.current, :activity => activity, :project => project }),
+                      time_entry_factory(3, { :user => User.current, :activity => activity, :project => project }),
+                      time_entry_factory(4, { :user => User.current, :activity => activity, :project => project }),
+                      time_entry_factory(5, { :user => User.current, :activity => activity, :project => project })
                      ]
 
-      TimeEntry.stub!(:find).and_return(time_entries)
-      User.stub!(:find_by_id).and_return(User.current)
+      timesheet.allowed_projects << project.id
+      timesheet.projects << project.id
       
       timesheet.fetch_time_entries
-      timesheet.time_entries.keys.should include("Administrator Bob")
+      assert_contains timesheet.time_entries.keys, "Administrator Bob"
     end
   end
 
