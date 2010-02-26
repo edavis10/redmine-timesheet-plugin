@@ -6,7 +6,7 @@ Dir[File.expand_path(File.dirname(__FILE__)) + "/lib/tasks/**/*.rake"].sort.each
 RedminePluginSupport::Base.setup do |plugin|
   plugin.project_name = 'timesheet_plugin'
   plugin.default_task = [:spec]
-  plugin.tasks = [:doc, :release, :clean, :spec, :stats]
+  plugin.tasks = [:doc, :release, :clean, :spec, :stats, :test, :db]
   # TODO: gem not getting this automaticly
   plugin.redmine_root = File.expand_path(File.dirname(__FILE__) + '/../../../')
 end
