@@ -5,6 +5,8 @@ module TimesheetSpecHelper
     timesheet = Timesheet.new(options)
     timesheet.date_from ||= Date.today.to_s
     timesheet.date_to ||= Date.today.to_s
+    timesheet.allowed_projects = options[:projects] if options[:projects]
+    timesheet.projects = options[:projects] if options[:projects]
     
     return timesheet
   end
@@ -73,21 +75,30 @@ module TimesheetSpecHelper
     User.current = @current_user
   end
 
-  def stub_common_csv_records
+  def stub_common_csv_records(options={})
+    @issue_priority ||= IssuePriority.generate!(:name => 'common_csv_records')
+    @csv_tracker = @tracker
+    @csv_project ||= options[:project] || Project.generate!(:name => 'Project Name', :trackers => [@csv_tracker])
+    @csv_issue ||= options[:issue] || Issue.generate_for_project!(@csv_project, :id => 1, :tracker => @csv_tracker, :priority => @issue_priority)
+    @csv_activity ||= options[:activity] || TimeEntryActivity.generate!(:name => 'activity')
     {
       :user => User.current,
-      :activity => stub('Activity', :name => 'activity'),
+      :activity => @csv_activity,
       :spent_on => '2009-04-05',
-      :project => mock_model(Project, :name => 'Project Name'),
+      :project => @csv_project,
       :comments => 'comments',
       :hours => 10.0,
-      :issue => mock_model(Issue, :id => 1, :tracker => mock_model(Tracker, :name => 'Tracker'))
+      :issue => @csv_issue
     }
   end
 end
 
 class TimesheetTest < ActiveSupport::TestCase
   include TimesheetSpecHelper
+
+  def setup
+    @tracker = Tracker.generate!(:name => 'Tracker')
+  end
   
   should 'not be an ActiveRecord class' do
     assert !Timesheet.new.is_a?(ActiveRecord::Base)
@@ -279,22 +290,19 @@ class TimesheetTest < ActiveSupport::TestCase
     
     should 'should use the user name for each time_entry array' do 
       stub_admin_user
-      activity = TimeEntryActivity.generate!
-      timesheet = timesheet_factory(:sort => :user, :users => [User.current.id])
+      @activity = TimeEntryActivity.generate!
+      @project = Project.generate!
+      timesheet = timesheet_factory(:sort => :user, :users => [User.current.id], :projects => [@project.id], :activities => [@activity.id])
 
-      project = Project.generate!
       
       time_entries = [
-                      time_entry_factory(1, { :user => User.current, :activity => activity, :project => project }),
-                      time_entry_factory(2, { :user => User.current, :activity => activity, :project => project }),
-                      time_entry_factory(3, { :user => User.current, :activity => activity, :project => project }),
-                      time_entry_factory(4, { :user => User.current, :activity => activity, :project => project }),
-                      time_entry_factory(5, { :user => User.current, :activity => activity, :project => project })
+                      time_entry_factory(1, { :user => User.current, :activity => @activity, :project => @project }),
+                      time_entry_factory(2, { :user => User.current, :activity => @activity, :project => @project }),
+                      time_entry_factory(3, { :user => User.current, :activity => @activity, :project => @project }),
+                      time_entry_factory(4, { :user => User.current, :activity => @activity, :project => @project }),
+                      time_entry_factory(5, { :user => User.current, :activity => @activity, :project => @project })
                      ]
 
-      timesheet.allowed_projects << project.id
-      timesheet.projects << project.id
-      
       timesheet.fetch_time_entries
       assert_contains timesheet.time_entries.keys, "Administrator Bob"
     end
@@ -541,44 +549,39 @@ class TimesheetTest < ActiveSupport::TestCase
   end
 
   context '#to_csv' do
-    
-
     setup do
       stub_admin_user
-      @another_user = mock_model(User, :admin? => true, :allowed_to? => true, :name => "Another user")
-      @another_user.stub!(:<=>).with(User.current).and_return(-1)
+      @another_user = User.generate_with_protected!(:admin => true, :firstname => 'Another', :lastname => 'user')
     end
 
     context "sorted by :user" do
       should "should return a csv grouped by user" do
-        timesheet = timesheet_factory(:sort => :user, :users => [User.current.id, @another_user.id])
+        @activity = TimeEntryActivity.generate!(:name => 'activity')
+        @project = Project.generate!(:trackers => [@tracker], :name => 'Project Name')
+        timesheet = timesheet_factory(:sort => :user, :users => [User.current.id, @another_user.id], :projects => [@project.id], :activities => [@activity.id], :date_from => '2009-04-05', :date_to => '2009-04-05')
 
         time_entries = [
-                        time_entry_factory(1, stub_common_csv_records.merge({})),
-                        time_entry_factory(3, stub_common_csv_records.merge({})),
-                        time_entry_factory(4, stub_common_csv_records.merge({})),
-                        time_entry_factory(5, stub_common_csv_records.merge({:issue => nil}))
+                        time_entry_factory(1, stub_common_csv_records(:activity => @activity, :project => @project).merge({})),
+                        time_entry_factory(3, stub_common_csv_records(:activity => @activity, :project => @project).merge({})),
+                        time_entry_factory(4, stub_common_csv_records(:activity => @activity, :project => @project).merge({})),
+                        time_entry_factory(5, stub_common_csv_records(:activity => @activity, :project => @project).merge({:issue => nil}))
                        ]
 
         time_entries_another_user = [
                                      time_entry_factory(2, stub_common_csv_records.merge({:user => @another_user }))
                                     ]
 
-
-        timesheet.stub!(:time_entries_for_user).with(User.current.id).and_return(time_entries)
-        timesheet.stub!(:time_entries_for_user).with(@another_user.id).and_return(time_entries_another_user)
-        User.stub!(:find_by_id).with(User.current.id).and_return(User.current)
-        User.stub!(:find_by_id).with(@another_user.id).and_return(@another_user)
-
         timesheet.fetch_time_entries
-        timesheet.to_csv.should == [
-                                    "#,Date,Member,Activity,Project,Issue,Comment,Hours",
-                                    "1,2009-04-05,Administrator Bob,activity,Project Name,Tracker #1,comments,10.0",
-                                    "3,2009-04-05,Administrator Bob,activity,Project Name,Tracker #1,comments,10.0",
-                                    "4,2009-04-05,Administrator Bob,activity,Project Name,Tracker #1,comments,10.0",
-                                    "5,2009-04-05,Administrator Bob,activity,Project Name,,comments,10.0",
-                                    "2,2009-04-05,Another user,activity,Project Name,Tracker #1,comments,10.0",
-                                   ].join("\n") + "\n" # trailing newline
+        # trailing newline
+        assert_equal [
+                      "#,Date,Member,Activity,Project,Issue,Comment,Hours",
+                      "1,2009-04-05,Administrator Bob,activity,Project Name,Tracker #1,comments,10.0",
+                      "3,2009-04-05,Administrator Bob,activity,Project Name,Tracker #1,comments,10.0",
+                      "4,2009-04-05,Administrator Bob,activity,Project Name,Tracker #1,comments,10.0",
+                      "5,2009-04-05,Administrator Bob,activity,Project Name,,comments,10.0",
+                      "2,2009-04-05,Another user,activity,Project Name,Tracker #1,comments,10.0",
+                     ].join("\n") + "\n", timesheet.to_csv
+        
       end
     end
 
