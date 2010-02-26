@@ -76,13 +76,13 @@ module TimesheetSpecHelper
   end
 
   def stub_common_csv_records(options={})
-    @issue_priority ||= IssuePriority.generate!(:name => 'common_csv_records')
     @csv_tracker = @tracker
-    @csv_project ||= options[:project] || Project.generate!(:name => 'Project Name', :trackers => [@csv_tracker])
-    @csv_issue ||= options[:issue] || Issue.generate_for_project!(@csv_project, :id => 1, :tracker => @csv_tracker, :priority => @issue_priority)
+    @csv_project = options[:project] || Project.generate!(:name => 'Project Name', :trackers => [@csv_tracker])
+    @csv_issue = options[:issue] # || Issue.generate_for_project!(@csv_project, :tracker => @csv_tracker, :priority => @issue_priority)
     @csv_activity ||= options[:activity] || TimeEntryActivity.generate!(:name => 'activity')
+    @csv_user = options[:user] || User.current
     {
-      :user => User.current,
+      :user => @csv_user,
       :activity => @csv_activity,
       :spent_on => '2009-04-05',
       :project => @csv_project,
@@ -97,6 +97,7 @@ class TimesheetTest < ActiveSupport::TestCase
   include TimesheetSpecHelper
 
   def setup
+    @issue_priority = IssuePriority.generate!(:name => 'common_csv_records')
     @tracker = Tracker.generate!(:name => 'Tracker')
   end
   
@@ -552,12 +553,12 @@ class TimesheetTest < ActiveSupport::TestCase
     setup do
       stub_admin_user
       @another_user = User.generate_with_protected!(:admin => true, :firstname => 'Another', :lastname => 'user')
+      @activity = TimeEntryActivity.generate!(:name => 'activity')
+      @project = Project.generate!(:trackers => [@tracker], :name => 'Project Name')
     end
 
     context "sorted by :user" do
       should "should return a csv grouped by user" do
-        @activity = TimeEntryActivity.generate!(:name => 'activity')
-        @project = Project.generate!(:trackers => [@tracker], :name => 'Project Name')
         timesheet = timesheet_factory(:sort => :user, :users => [User.current.id, @another_user.id], :projects => [@project.id], :activities => [@activity.id], :date_from => '2009-04-05', :date_to => '2009-04-05')
 
         time_entries = [
@@ -587,47 +588,34 @@ class TimesheetTest < ActiveSupport::TestCase
 
     context "sorted by :project" do
       should "should return a csv grouped by project" do
-        project_a = mock_model(Project, :name => 'Project Name', :parent => nil)
-        another_project = mock_model(Project, :name => 'Another Project', :parent => nil)
-        timesheet = timesheet_factory(:sort => :project, :users => [User.current.id, @another_user.id])
-        timesheet.projects = [project_a, another_project]
+
+        another_project = Project.generate!(:trackers => [@tracker], :name => 'Another Project')
+        timesheet = timesheet_factory(:sort => :project, :users => [User.current.id, @another_user.id], :projects => [@project, another_project], :activities => [@activity.id], :date_from => '2009-04-05', :date_to => '2009-04-05')
+        issue = Issue.generate_for_project!(@project, :tracker => @tracker, :priority => @issue_priority)
+        another_issue = Issue.generate_for_project!(another_project, :tracker => @tracker, :priority => @issue_priority)
         
         project_a_time_entries = [
-                                  time_entry_factory(1, stub_common_csv_records.merge({:project => project_a})),
-                                  time_entry_factory(3, stub_common_csv_records.merge({:project => project_a})),
-                                  time_entry_factory(5, stub_common_csv_records.merge({:issue => nil}))
+                                  time_entry_factory(1, stub_common_csv_records({:activity => @activity, :project => @project,:issue => issue})),
+                                  time_entry_factory(3, stub_common_csv_records({:activity => @activity, :project => @project,:issue => issue})),
+                                  time_entry_factory(5, stub_common_csv_records({:activity => @activity, :project => @project,:issue => nil}))
                                  ]
 
         another_project_time_entries = [
-                                        time_entry_factory(2, stub_common_csv_records.merge({:user => @another_user, :project => another_project })),
-                                        time_entry_factory(4, stub_common_csv_records.merge({:project => another_project})),
+                                        time_entry_factory(2, stub_common_csv_records({:activity => @activity,:user => @another_user, :project => another_project,:issue => another_issue })),
+                                        time_entry_factory(4, stub_common_csv_records({:activity => @activity, :project => another_project,:issue => another_issue}))
 
                                        ]
 
-        project_a.stub!(:time_entries).and_return do
-          te = mock('TimeEntryProxy')
-          te.stub!(:find).and_return(project_a_time_entries)
-          te
-        end
-
-        another_project.stub!(:time_entries).and_return do
-          te = mock('TimeEntryProxy')
-          te.stub!(:find).and_return(another_project_time_entries)
-          te
-        end
-
-        User.stub!(:find_by_id).with(User.current.id).and_return(User.current)
-        User.stub!(:find_by_id).with(@another_user.id).and_return(@another_user)
-
         timesheet.fetch_time_entries
-        timesheet.to_csv.should == [
-                                    "#,Date,Member,Activity,Project,Issue,Comment,Hours",
-                                    "2,2009-04-05,Another user,activity,Another Project,Tracker #1,comments,10.0",
-                                    "4,2009-04-05,Administrator Bob,activity,Another Project,Tracker #1,comments,10.0",
-                                    "1,2009-04-05,Administrator Bob,activity,Project Name,Tracker #1,comments,10.0",
-                                    "3,2009-04-05,Administrator Bob,activity,Project Name,Tracker #1,comments,10.0",
-                                    "5,2009-04-05,Administrator Bob,activity,Project Name,,comments,10.0",
-                                   ].join("\n") + "\n" # trailing newline
+        # trailing newline
+        assert_equal [
+                      "#,Date,Member,Activity,Project,Issue,Comment,Hours",
+                      "2,2009-04-05,Another user,activity,Another Project,Tracker #2,comments,10.0",
+                      "4,2009-04-05,Administrator Bob,activity,Another Project,Tracker #2,comments,10.0",
+                      "1,2009-04-05,Administrator Bob,activity,Project Name,Tracker #1,comments,10.0",
+                      "3,2009-04-05,Administrator Bob,activity,Project Name,Tracker #1,comments,10.0",
+                      "5,2009-04-05,Administrator Bob,activity,Project Name,,comments,10.0",
+                     ].join("\n") + "\n", timesheet.to_csv
       end
     end
 
