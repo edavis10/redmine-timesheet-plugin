@@ -90,7 +90,7 @@ class TimesheetTest < ActiveSupport::TestCase
   include TimesheetSpecHelper
   
   should 'not be an ActiveRecord class' do
-    assert_kind_of !ActionRecord::Base, Timesheet
+    assert !Timesheet.new.is_a?(ActiveRecord::Base)
   end
   
   context "initializing" do
