@@ -213,24 +213,20 @@ class TimesheetTest < ActiveSupport::TestCase
       project1 = project_factory(1, :name => 'Project 1')
       project2 = project_factory(2, :name => 'Project 2')
       
-      timesheet = timesheet_factory(:users => [User.current.id], :activities => [@activity.id], :projects => [project1, project2])
-
-
-      
+      timesheet = timesheet_factory(:activities => [@activity.id], :projects => [project1, project2])
+            
       timesheet.fetch_time_entries
       assert_contains timesheet.time_entries.keys, "Project 1"
       assert_contains timesheet.time_entries.keys, "Project 2"
     end
 
     should 'should add the parent project name for each time_entry array for sub-projects' do
-      timesheet = timesheet_factory
-
       project1 = project_factory(1, :name => 'Project 1')
       project2 = project_factory(2, :name => 'Project 2')
       project2.set_parent!(project1)
+      timesheet = timesheet_factory(:activities => [@activity.id], :projects => [project1, project2])
 
       stub_admin_user
-      timesheet.projects = [project1, project2]
       
       timesheet.fetch_time_entries
       assert_contains timesheet.time_entries.keys, "Project 1"
