@@ -94,6 +94,7 @@ class TimesheetTest < ActiveSupport::TestCase
   def setup
     @issue_priority = IssuePriority.generate!(:name => 'common_csv_records')
     @tracker = Tracker.generate!(:name => 'Tracker')
+    @activity = TimeEntryActivity.generate!(:name => 'activity')
   end
   
   should 'not be an ActiveRecord class' do
@@ -190,9 +191,6 @@ class TimesheetTest < ActiveSupport::TestCase
   end
 
   context "#fetch_time_entries" do
-    setup do
-      @activity = TimeEntryActivity.generate!
-    end
 
     should 'should clear .time_entries' do
       timesheet = Timesheet.new
@@ -255,7 +253,6 @@ class TimesheetTest < ActiveSupport::TestCase
   context "#fetch_time_entries with user sorting" do
     setup do
       @project = Project.generate!(:trackers => [@tracker], :name => 'Project Name')
-      @activity = TimeEntryActivity.generate!
     end
     
     should 'should clear .time_entries' do
@@ -285,7 +282,6 @@ class TimesheetTest < ActiveSupport::TestCase
     
     should 'should use the user name for each time_entry array' do 
       stub_admin_user
-      @activity = TimeEntryActivity.generate!
       @project = Project.generate!
       timesheet = timesheet_factory(:sort => :user, :users => [User.current.id], :projects => [@project.id], :activities => [@activity.id])
 
@@ -304,10 +300,6 @@ class TimesheetTest < ActiveSupport::TestCase
   end
 
   context '#fetch_time_entries with issue sorting' do
-    setup do
-      @activity = TimeEntryActivity.generate!
-    end
-
     should 'should clear .time_entries' do
       timesheet = Timesheet.new({ :sort => :issue })
       timesheet.time_entries = { :filled => 'data' }
@@ -520,7 +512,6 @@ class TimesheetTest < ActiveSupport::TestCase
     setup do
       stub_admin_user
       @another_user = User.generate_with_protected!(:admin => true, :firstname => 'Another', :lastname => 'user')
-      @activity = TimeEntryActivity.generate!(:name => 'activity')
       @project = Project.generate!(:trackers => [@tracker], :name => 'Project Name')
     end
 
