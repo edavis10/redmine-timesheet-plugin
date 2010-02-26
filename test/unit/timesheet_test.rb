@@ -479,72 +479,68 @@ class TimesheetTest < ActiveSupport::TestCase
     context 'should set the date_to and date_from for' do
       setup do
         @date = Date.new(2009,2,4)
-        Date.stub!(:today).and_return(@date)
+        Date.stubs(:today).returns(@date)
         @timesheet = Timesheet.new(:period_type => Timesheet::ValidPeriodType[:default])
       end
       
       should 'today' do
-        @timesheet.should_receive(:date_from=).with(@date)
-        @timesheet.should_receive(:date_to=).with(@date)
         @timesheet.period = 'today'
+        assert_equal @date, @timesheet.date_from
+        assert_equal @date, @timesheet.date_to
       end
       
       should 'yesterday' do
-        @timesheet.should_receive(:date_from=).with(@date.yesterday)
-        @timesheet.should_receive(:date_to=).with(@date.yesterday)
         @timesheet.period = 'yesterday'
+        assert_equal @date.yesterday, @timesheet.date_from
+        assert_equal @date.yesterday, @timesheet.date_to
       end
       
       should 'current_week' do
-        @timesheet.should_receive(:date_from=).with(Date.new(2009, 2, 2))
-        @timesheet.should_receive(:date_from).and_return(Date.new(2009, 2, 2))
-        @timesheet.should_receive(:date_to=).with(Date.new(2009, 2, 8))
         @timesheet.period = 'current_week'
+        assert_equal Date.new(2009,2,2), @timesheet.date_from
+        assert_equal Date.new(2009,2,8), @timesheet.date_to
       end
       
       should 'last_week' do
-        @timesheet.should_receive(:date_from=).with(Date.new(2009, 1, 26))
-        @timesheet.should_receive(:date_from).and_return(Date.new(2009, 1, 26))
-        @timesheet.should_receive(:date_to=).with(Date.new(2009, 2, 1))
         @timesheet.period = 'last_week'
+        assert_equal Date.new(2009,1,26), @timesheet.date_from
+        assert_equal Date.new(2009,2,1), @timesheet.date_to
       end
       
       should '7_days' do
-        @timesheet.should_receive(:date_from=).with(@date - 7)
-        @timesheet.should_receive(:date_to=).with(@date)
         @timesheet.period = '7_days'
+        assert_equal @date - 7, @timesheet.date_from
+        assert_equal @date, @timesheet.date_to
       end
       
       should 'current_month' do
-        @timesheet.should_receive(:date_from=).with(Date.new(2009, 2, 1))
-        @timesheet.should_receive(:date_from).and_return(Date.new(2009, 2, 1))
-        @timesheet.should_receive(:date_to=).with(Date.new(2009, 2, 28))
         @timesheet.period = 'current_month'
+        assert_equal Date.new(2009,2,1), @timesheet.date_from
+        assert_equal Date.new(2009,2,28), @timesheet.date_to
       end
       
       should 'last_month' do
-        @timesheet.should_receive(:date_from=).with(Date.new(2009, 1, 1))
-        @timesheet.should_receive(:date_from).and_return(Date.new(2009, 1, 1))
-        @timesheet.should_receive(:date_to=).with(Date.new(2009, 1, 31))
         @timesheet.period = 'last_month'
+        assert_equal Date.new(2009,1,1), @timesheet.date_from
+        assert_equal Date.new(2009,1,31), @timesheet.date_to
       end
       
       should '30_days' do
-        @timesheet.should_receive(:date_from=).with(@date - 30)
-        @timesheet.should_receive(:date_to=).with(@date)
         @timesheet.period = '30_days'
+        assert_equal @date - 30, @timesheet.date_from
+        assert_equal @date, @timesheet.date_to
       end
       
       should 'current_year' do
-        @timesheet.should_receive(:date_from=).with(Date.new(2009,1,1))
-        @timesheet.should_receive(:date_to=).with(Date.new(2009,12,31))
         @timesheet.period = 'current_year'
+        assert_equal Date.new(2009,1,1), @timesheet.date_from
+        assert_equal Date.new(2009,12,31), @timesheet.date_to
       end
       
       should 'all' do
-        @timesheet.should_receive(:date_from=).with(nil)
-        @timesheet.should_receive(:date_to=).with(nil)
         @timesheet.period = 'all'
+        assert_equal nil, @timesheet.date_from
+        assert_equal nil, @timesheet.date_to
       end
     end
   end
