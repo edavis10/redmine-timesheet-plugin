@@ -121,7 +121,7 @@ class Timesheet
 
   def to_csv
     returning '' do |out|
-      CSV::Writer.generate out do |csv|
+      FCSV.generate out do |csv|
         csv << csv_header
 
         # Write the CSV based on the group/sort
