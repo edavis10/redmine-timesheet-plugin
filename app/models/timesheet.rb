@@ -38,7 +38,7 @@ class Timesheet
     unless options[:users].nil?
       self.users = options[:users].collect { |u| u.to_i }
     else
-      self.users = User.find(:all).collect(&:id)
+      self.users = Timesheet.viewable_users.collect {|user| user.id.to_i }
     end
 
     if !options[:sort].nil? && options[:sort].respond_to?(:to_sym) && ValidSortOptions.keys.include?(options[:sort].to_sym)
@@ -143,6 +143,12 @@ class Timesheet
         end
       end
     end
+  end
+
+  def self.viewable_users
+    User.active.select {|user|
+      user.allowed_to?(:log_time, nil, :global => true)
+    }
   end
   
   protected

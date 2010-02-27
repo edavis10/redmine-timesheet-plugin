@@ -18,8 +18,8 @@ module TimesheetSpecHelper
     }.merge(options)
 
     project = Project.generate!(object_options)
-    project_te1 = TimeEntry.generate!(:project => project, :hours => '5', :activity => @activity, :spent_on => Date.today, :user_id => 1)
-    project_te2 = TimeEntry.generate!(:project => project, :hours => '10', :activity => @activity, :spent_on => Date.today, :user_id => 1)
+    project_te1 = TimeEntry.generate!(:project => project, :hours => '5', :activity => @activity, :spent_on => Date.today)
+    project_te2 = TimeEntry.generate!(:project => project, :hours => '10', :activity => @activity, :spent_on => Date.today)
     
     return project
   end
@@ -86,7 +86,7 @@ class TimesheetTest < ActiveSupport::TestCase
     @issue_priority = IssuePriority.generate!(:name => 'common_csv_records')
     @tracker = Tracker.generate!(:name => 'Tracker')
     @activity = TimeEntryActivity.generate!(:name => 'activity')
-    @normal_role = Role.generate!(:name => 'Normal User', :permissions => [:view_time_entries])
+    @normal_role = Role.generate!(:name => 'Normal User', :permissions => [:view_time_entries, :log_time])
     @manager_role = Role.generate!(:permissions => [:view_time_entries, :see_project_timesheets])
   end
   
@@ -118,9 +118,28 @@ class TimesheetTest < ActiveSupport::TestCase
       assert_kind_of Array, timesheet.activities
     end
 
-    should 'should initialize users to an Array' do 
-      timesheet = Timesheet.new
-      assert_kind_of Array, timesheet.users
+    context "users" do
+      setup do
+        project = Project.generate!
+        @user_with_permission1 = User.generate_with_protected!
+        @user_with_permission2 = User.generate_with_protected!
+        @user_without_permission = User.generate_with_protected!
+
+        Member.generate!(:principal => @user_with_permission1, :project => project, :roles => [@normal_role])
+        Member.generate!(:principal => @user_with_permission2, :project => project, :roles => [@normal_role])
+
+        @timesheet = Timesheet.new
+      end
+
+      should 'initialize users to an Array' do
+        assert_kind_of Array, @timesheet.users      
+      end
+
+      should 'only include users who have the "log time" permission' do
+        assert_contains @timesheet.users, @user_with_permission1.id
+        assert_contains @timesheet.users, @user_with_permission2.id
+      end
+      
     end
 
     should 'should initialize sort to :project' do 
@@ -184,6 +203,16 @@ class TimesheetTest < ActiveSupport::TestCase
   end
 
   context "#fetch_time_entries" do
+    setup do
+      stub_admin_user
+      @project1 = Project.generate!(:name => 'Project 1')
+      @te1 = TimeEntry.generate!(:project => @project1, :activity => @activity, :spent_on => Date.today, :user => @current_user)
+
+      @project2 = Project.generate!(:name => 'Project 2')
+      @te2 = TimeEntry.generate!(:project => @project2, :activity => @activity, :spent_on => Date.today, :user => @current_user)
+      
+      @timesheet = timesheet_factory(:activities => [@activity.id], :projects => [@project1, @project2])
+    end
 
     should 'should clear .time_entries' do
       timesheet = Timesheet.new
@@ -197,41 +226,26 @@ class TimesheetTest < ActiveSupport::TestCase
     end
 
     should 'should add a time_entry Hash for each project' do
-      project1 = project_factory(1, :name => 'Project 1')
-      project2 = project_factory(2, :name => 'Project 2')
-
-      timesheet = timesheet_factory(:activities => [@activity.id], :projects => [project1, project2])
-
-      stub_admin_user
-
-      timesheet.fetch_time_entries
-      assert !timesheet.time_entries.empty?
-      assert_equal 2, timesheet.time_entries.size
+      @timesheet.fetch_time_entries
+      
+      assert !@timesheet.time_entries.empty?
+      assert_equal 2, @timesheet.time_entries.size
     end
     
     should 'should use the project name for each time_entry key' do 
-      stub_admin_user
-      project1 = project_factory(1, :name => 'Project 1')
-      project2 = project_factory(2, :name => 'Project 2')
-      
-      timesheet = timesheet_factory(:activities => [@activity.id], :projects => [project1, project2])
-            
-      timesheet.fetch_time_entries
-      assert_contains timesheet.time_entries.keys, "Project 1"
-      assert_contains timesheet.time_entries.keys, "Project 2"
+      @timesheet.fetch_time_entries
+
+      assert_contains @timesheet.time_entries.keys, "Project 1"
+      assert_contains @timesheet.time_entries.keys, "Project 2"
     end
 
     should 'should add the parent project name for each time_entry array for sub-projects' do
-      project1 = project_factory(1, :name => 'Project 1')
-      project2 = project_factory(2, :name => 'Project 2')
-      project2.set_parent!(project1)
-      timesheet = timesheet_factory(:activities => [@activity.id], :projects => [project1, project2])
+      @project2.set_parent!(@project1)
 
-      stub_admin_user
-      
-      timesheet.fetch_time_entries
-      assert_contains timesheet.time_entries.keys, "Project 1"
-      assert_contains timesheet.time_entries.keys, "Project 1 / Project 2"
+      @timesheet.fetch_time_entries
+
+      assert_contains @timesheet.time_entries.keys, "Project 1"
+      assert_contains @timesheet.time_entries.keys, "Project 1 / Project 2"
     end
 
     should 'should fetch all the time entries on a project in the date range'
