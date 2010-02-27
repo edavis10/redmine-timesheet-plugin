@@ -185,7 +185,7 @@ class Timesheet
 
   def conditions(users)
     if self.potential_time_entry_ids.empty?
-      if self.date_from && self.date_to
+      if self.date_from.present? && self.date_to.present?
         conditions = ["spent_on >= (:from) AND spent_on <= (:to) AND #{TimeEntry.table_name}.project_id IN (:projects) AND user_id IN (:users) AND (activity_id IN (:activities) OR (#{Enumeration.table_name}.parent_id IN (:activities) AND #{Enumeration.table_name}.project_id IN (:projects)))",
                       {
                         :from => self.date_from,
