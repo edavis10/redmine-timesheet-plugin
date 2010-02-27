@@ -303,56 +303,44 @@ class TimesheetTest < ActiveSupport::TestCase
   end
 
   context '#fetch_time_entries with issue sorting' do
-    should 'should clear .time_entries' do
-      timesheet = Timesheet.new({ :sort => :issue })
-      timesheet.time_entries = { :filled => 'data' }
+    setup do
+      stub_admin_user
+      @project = project_factory(1)
+      @timesheet = timesheet_factory(:sort => :issue, :users => [User.current.id])
+      @timesheet.projects = [@project]
 
-      previous = timesheet.time_entries
-
-      timesheet.fetch_time_entries
+      @issue1 = Issue.generate_for_project!(@project, :priority => @issue_priority)
+      @issue2 = Issue.generate_for_project!(@project, :priority => @issue_priority)
+      @issue3 = Issue.generate_for_project!(@project, :priority => @issue_priority)
       
-      assert_not_same previous, timesheet.time_entries
+      TimeEntry.generate!(:user => User.current, :project => @project, :activity => @activity, :issue => @issue1)
+      TimeEntry.generate!(:user => User.current, :project => @project, :activity => @activity, :issue => @issue1)
+      TimeEntry.generate!(:user => User.current, :project => @project, :activity => @activity, :issue => @issue2)
+      TimeEntry.generate!(:user => User.current, :project => @project, :activity => @activity, :issue => @issue2)
+      TimeEntry.generate!(:user => User.current, :project => @project, :activity => @activity, :issue => @issue3)
+
+    end
+    
+    should 'should clear .time_entries' do
+      @timesheet.time_entries = { :filled => 'data' }
+
+      previous = @timesheet.time_entries
+
+      @timesheet.fetch_time_entries
+      
+      assert_not_same previous, @timesheet.time_entries
     end
 
     should 'should add a time_entry array for each project' do
-      stub_admin_user
-      project1 = project_factory(1)
-      timesheet = timesheet_factory(:sort => :issue, :users => [User.current.id])
-      timesheet.projects = [project1]
+      @timesheet.fetch_time_entries
 
-      @issue1 = Issue.generate_for_project!(project1, :priority => @issue_priority)
-      @issue2 = Issue.generate_for_project!(project1, :priority => @issue_priority)
-      @issue3 = Issue.generate_for_project!(project1, :priority => @issue_priority)
-
-      TimeEntry.generate!(:user => User.current, :project => @project, :activity => @activity, :issue => @issue1)
-      TimeEntry.generate!(:user => User.current, :project => @project, :activity => @activity, :issue => @issue1)
-      TimeEntry.generate!(:user => User.current, :project => @project, :activity => @activity, :issue => @issue2)
-      TimeEntry.generate!(:user => User.current, :project => @project, :activity => @activity, :issue => @issue2)
-      TimeEntry.generate!(:user => User.current, :project => @project, :activity => @activity, :issue => @issue3)
-
-      timesheet.fetch_time_entries
-      assert !timesheet.time_entries.empty?
-      assert_equal 1, timesheet.time_entries.size
+      assert !@timesheet.time_entries.empty?
+      assert_equal 1, @timesheet.time_entries.size
     end
     
     should 'should use the project for each time_entry array' do 
-      stub_admin_user
-      project1 = project_factory(1)
-      timesheet = timesheet_factory(:sort => :issue, :users => [User.current.id])
-      timesheet.projects = [project1]
-
-      @issue1 = Issue.generate_for_project!(project1, :priority => @issue_priority)
-      @issue2 = Issue.generate_for_project!(project1, :priority => @issue_priority)
-      @issue3 = Issue.generate_for_project!(project1, :priority => @issue_priority)
-      
-      TimeEntry.generate!(:user => User.current, :project => @project, :activity => @activity, :issue => @issue1)
-      TimeEntry.generate!(:user => User.current, :project => @project, :activity => @activity, :issue => @issue1)
-      TimeEntry.generate!(:user => User.current, :project => @project, :activity => @activity, :issue => @issue2)
-      TimeEntry.generate!(:user => User.current, :project => @project, :activity => @activity, :issue => @issue2)
-      TimeEntry.generate!(:user => User.current, :project => @project, :activity => @activity, :issue => @issue3)
-
-      timesheet.fetch_time_entries
-      assert_contains timesheet.time_entries.keys, project1
+      @timesheet.fetch_time_entries
+      assert_contains @timesheet.time_entries.keys, @project
     end
   end
 
