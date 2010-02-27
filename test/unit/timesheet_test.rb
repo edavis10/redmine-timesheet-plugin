@@ -405,6 +405,38 @@ class TimesheetTest < ActiveSupport::TestCase
       assert_equal 1, users2.size
       assert_same_elements users2, [@other_user]
     end
+
+    context "with the 'see project timesheet' permission" do
+      should 'xxx return the time entries for all users on that project' do
+        manager_project = Project.generate!(:name => "Manager Project", :trackers => [@tracker])
+        user_project = Project.generate!(:name => "User Project", :trackers => [@tracker])
+
+        stub_manager_user([manager_project])
+        Member.generate!(:principal => @current_user, :project => user_project, :roles => [@normal_role])
+
+        other_user = User.generate_with_protected!(:admin => false, :firstname => "Other", :lastname => "Member")
+
+        @timesheet = timesheet_factory(:sort => :user, :activities => [@activity.id], :projects => [manager_project, user_project], :users => [User.current.id, other_user.id])
+
+        @te1 = TimeEntry.generate!(:project => manager_project, :hours => 5, :activity => @activity, :spent_on => Date.today, :user => @current_user)
+        @te2 = TimeEntry.generate!(:project => manager_project, :hours => 5, :activity => @activity, :spent_on => Date.today, :user => other_user)
+        @te3 = TimeEntry.generate!(:project => user_project, :hours => 5, :activity => @activity, :spent_on => Date.today, :user => other_user)
+
+        @timesheet.fetch_time_entries
+
+        assert @timesheet.time_entries.present?
+        assert_same_elements @timesheet.time_entries.keys, [@current_user.name, other_user.name]
+
+        current_user_logs = @timesheet.time_entries[@current_user.name][:logs]
+        assert_equal 1, current_user_logs.size
+        assert_same_elements current_user_logs, [@te1]
+
+        other_user_logs = @timesheet.time_entries[other_user.name][:logs]
+        assert_equal 1, other_user_logs.size
+        assert_same_elements other_user_logs, [@te2]
+        assert !other_user_logs.include?(@te3), "Showing other user logs for project which the user doesn't have permission to see"
+      end
+    end
   end
 
   context '#fetch_time_entries as a user with view_time_entries permission on a project' do

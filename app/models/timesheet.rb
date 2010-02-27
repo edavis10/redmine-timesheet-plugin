@@ -183,7 +183,9 @@ class Timesheet
     return csv_data
   end
 
-  def conditions(users)
+  # Array of users to find
+  # String of extra conditions to add onto the query (AND)
+  def conditions(users, extra_conditions=nil)
     if self.potential_time_entry_ids.empty?
       if self.date_from.present? && self.date_to.present?
         conditions = ["spent_on >= (:from) AND spent_on <= (:to) AND #{TimeEntry.table_name}.project_id IN (:projects) AND user_id IN (:users) AND (activity_id IN (:activities) OR (#{Enumeration.table_name}.parent_id IN (:activities) AND #{Enumeration.table_name}.project_id IN (:projects)))",
@@ -208,6 +210,10 @@ class Timesheet
                       :users => users,
                       :potential_time_entries => self.potential_time_entry_ids
                     }]
+    end
+
+    if extra_conditions.present?
+      conditions[0] = conditions.first + ' AND ' + extra_conditions
     end
       
     Redmine::Hook.call_hook(:plugin_timesheet_model_timesheet_conditions, { :timesheet => self, :conditions => conditions})
@@ -254,9 +260,11 @@ class Timesheet
                                    :order => "spent_on ASC")
   end
   
-  def time_entries_for_user(user)
+  def time_entries_for_user(user, options={})
+    extra_conditions = options.delete(:conditions)
+    
     return TimeEntry.find(:all,
-                          :conditions => self.conditions([user]),
+                          :conditions => self.conditions([user], extra_conditions),
                           :include => self.includes,
                           :order => "spent_on ASC"
                           )
@@ -304,6 +312,10 @@ class Timesheet
       elsif User.current.id == user_id
         # Users can see their own their time entries
         logs = time_entries_for_user(user_id)
+      elsif User.current.allowed_to?(:see_project_timesheets, nil, :global => true)
+        # User can see project timesheets in at least once place, so
+        # fetch the user timelogs for those projects
+        logs = time_entries_for_user(user_id, :conditions => Project.allowed_to_condition(User.current, :see_project_timesheets))
       else
         # Rest can see nothing
       end
