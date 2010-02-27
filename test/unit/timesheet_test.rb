@@ -256,49 +256,34 @@ class TimesheetTest < ActiveSupport::TestCase
   context "#fetch_time_entries with user sorting" do
     setup do
       @project = Project.generate!(:trackers => [@tracker], :name => 'Project Name')
+      stub_admin_user
+      @timesheet = timesheet_factory(:sort => :user, :users => [User.current.id], :projects => [@project], :activities => [@activity.id])
+
+      TimeEntry.generate!(:user => User.current, :project => @project, :activity => @activity)
+      TimeEntry.generate!(:user => User.current, :project => @project, :activity => @activity)
+      TimeEntry.generate!(:user => User.current, :project => @project, :activity => @activity)
+
     end
     
     should 'should clear .time_entries' do
-      stub_admin_user
-      timesheet = Timesheet.new({ :sort => :user })
-      timesheet.time_entries = { :filled => 'data' }
+      @timesheet.time_entries = { :filled => 'data' }
 
-      previous = timesheet.time_entries
-
-      timesheet.fetch_time_entries
-      
-      assert_not_same previous, timesheet.time_entries
+      previous = @timesheet.time_entries
+      @timesheet.fetch_time_entries
+      assert_not_same previous, @timesheet.time_entries
     end
 
     should 'should add a time_entry array for each user' do
-      stub_admin_user
-      timesheet = timesheet_factory(:sort => :user, :users => [User.current.id], :projects => [@project], :activities => [@activity.id])
+      @timesheet.fetch_time_entries
 
-      TimeEntry.generate!(:user => User.current, :project => @project, :activity => @activity)
-      TimeEntry.generate!(:user => User.current, :project => @project, :activity => @activity)
-      TimeEntry.generate!(:user => User.current, :project => @project, :activity => @activity)
-      
-      timesheet.fetch_time_entries
-      assert !timesheet.time_entries.empty?
-      assert_equal 1, timesheet.time_entries.size # One user
+      assert !@timesheet.time_entries.empty?
+      assert_equal 1, @timesheet.time_entries.size # One user
     end
     
     should 'should use the user name for each time_entry array' do 
-      stub_admin_user
-      @project = Project.generate!
-      timesheet = timesheet_factory(:sort => :user, :users => [User.current.id], :projects => [@project.id], :activities => [@activity.id])
-
+      @timesheet.fetch_time_entries
       
-      time_entries = [
-                      time_entry_factory(1, { :user => User.current, :activity => @activity, :project => @project }),
-                      time_entry_factory(2, { :user => User.current, :activity => @activity, :project => @project }),
-                      time_entry_factory(3, { :user => User.current, :activity => @activity, :project => @project }),
-                      time_entry_factory(4, { :user => User.current, :activity => @activity, :project => @project }),
-                      time_entry_factory(5, { :user => User.current, :activity => @activity, :project => @project })
-                     ]
-
-      timesheet.fetch_time_entries
-      assert_contains timesheet.time_entries.keys, "Administrator Bob"
+      assert_contains @timesheet.time_entries.keys, "Administrator Bob"
     end
   end
 
