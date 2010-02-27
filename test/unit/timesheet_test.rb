@@ -42,7 +42,7 @@ module TimesheetSpecHelper
   def stub_normal_user(projects)
     @current_user = User.generate_with_protected!(:admin => false, :firstname => "Non", :lastname => "Member")
     projects.each do |project|
-      Member.generate!(:principal => @current_user, :project => project)
+      Member.generate!(:principal => @current_user, :project => project, :roles => [@normal_role])
     end
     User.current = @current_user
   end
@@ -50,7 +50,7 @@ module TimesheetSpecHelper
   def stub_manager_user(projects)
     @current_user = User.generate_with_protected!(:admin => false, :firstname => "Non", :lastname => "Member")
     projects.each do |project|
-      Member.generate!(:principal => @current_user, :project => project)
+      Member.generate!(:principal => @current_user, :project => project, :roles => [@manager_role])
     end
     User.current = @current_user
   end
@@ -86,6 +86,8 @@ class TimesheetTest < ActiveSupport::TestCase
     @issue_priority = IssuePriority.generate!(:name => 'common_csv_records')
     @tracker = Tracker.generate!(:name => 'Tracker')
     @activity = TimeEntryActivity.generate!(:name => 'activity')
+    @normal_role = Role.generate!(:name => 'Normal User', :permissions => [:view_time_entries])
+    @manager_role = Role.generate!(:permissions => [:view_time_entries, :see_project_timesheets])
   end
   
   should 'not be an ActiveRecord class' do
@@ -195,13 +197,12 @@ class TimesheetTest < ActiveSupport::TestCase
     end
 
     should 'should add a time_entry Hash for each project' do
-      timesheet = timesheet_factory
+      project1 = project_factory(1, :name => 'Project 1')
+      project2 = project_factory(2, :name => 'Project 2')
 
-      project1 = project_factory(1)
-      project2 = project_factory(2)
+      timesheet = timesheet_factory(:activities => [@activity.id], :projects => [project1, project2])
 
       stub_admin_user
-      timesheet.projects = [project1, project2]
 
       timesheet.fetch_time_entries
       assert !timesheet.time_entries.empty?
@@ -344,50 +345,101 @@ class TimesheetTest < ActiveSupport::TestCase
   context "#fetch_time_entries as an administrator" do
 
     should 'should collect time entries for all users on each project' do
-      timesheet = timesheet_factory
-
-      project1 = project_factory(1, :name => "Project 1")
-      project2 = project_factory(2, :name => "Project 2")
+      project1 = Project.generate!(:name => "Project 1", :trackers => [@tracker])
+      project2 = Project.generate!(:name => "Project 2", :trackers => [@tracker])
+      project3 = Project.generate!(:name => "Project 3", :trackers => [@tracker])
 
       stub_admin_user
-      timesheet.projects = [project1, project2] 
+      @other_user = User.generate_with_protected!(:admin => false, :firstname => "Non", :lastname => "Member")
+
+      timesheet = timesheet_factory(:activities => [@activity.id], :projects => [project1, project2, project3], :users => [User.current.id, @other_user.id])
+
+      @te1 = TimeEntry.generate!(:project => project1, :hours => 5, :activity => @activity, :spent_on => Date.today, :user => @current_user)
+      @te2 = TimeEntry.generate!(:project => project2, :hours => 5, :activity => @activity, :spent_on => Date.today, :user => @other_user)
+      @te3 = TimeEntry.generate!(:project => project3, :hours => 5, :activity => @activity, :spent_on => Date.today, :user => @other_user)
 
       timesheet.fetch_time_entries
-      flunk # Need to check responses
+
+      assert timesheet.time_entries.present?
+      assert_same_elements timesheet.time_entries.keys,  ["Project 1", "Project 2", "Project 3"]
+      logs1 = timesheet.time_entries["Project 1"][:logs]
+      assert_equal 1, logs1.size
+      assert_same_elements logs1, [@te1]
+      logs2 = timesheet.time_entries["Project 2"][:logs]
+      assert_equal 1, logs2.size
+      assert_same_elements logs2, [@te2]
+      logs3 = timesheet.time_entries["Project 3"][:logs]
+      assert_equal 1, logs3.size
+      assert_same_elements logs3, [@te3]
+      
+      users1 = timesheet.time_entries["Project 1"][:users]
+      assert_equal 1, users1.size
+      assert_same_elements users1, [User.current]
+      users2 = timesheet.time_entries["Project 2"][:users]
+      assert_equal 1, users2.size
+      assert_same_elements users2, [@other_user]
+      users3 = timesheet.time_entries["Project 3"][:users]
+      assert_equal 1, users3.size
+      assert_same_elements users3, [@other_user]
     end
   end
 
   context '#fetch_time_entries as a user with see_project_timesheet permission on a project' do
 
     should 'should collect time entries for all users' do
-      timesheet = timesheet_factory
-
-      project1 = project_factory(1, :name => "Project 1")
-      project2 = project_factory(2, :name => "Project 2")
-      project3 = project_factory(3, :name => "Project 3")
-
+      project1 = Project.generate!(:name => "Project 1", :trackers => [@tracker])
+      project2 = Project.generate!(:name => "Project 2", :trackers => [@tracker])
+      project3 = Project.generate!(:name => "Project 3", :trackers => [@tracker])
+      
       stub_manager_user([project1, project2])
-      # Make user a 'non-manager' on project3 
-      timesheet.projects = [project1, project2, project3]
+      @other_user = User.generate_with_protected!(:admin => false, :firstname => "Non", :lastname => "Member")
+
+      timesheet = timesheet_factory(:activities => [@activity.id], :projects => [project1, project2, project3], :users => [User.current.id, @other_user.id])
+
+      @te1 = TimeEntry.generate!(:project => project1, :hours => 5, :activity => @activity, :spent_on => Date.today, :user => @current_user)
+      @te2 = TimeEntry.generate!(:project => project2, :hours => 5, :activity => @activity, :spent_on => Date.today, :user => @other_user)
+      @te3 = TimeEntry.generate!(:project => project3, :hours => 5, :activity => @activity, :spent_on => Date.today, :user => @other_user)
 
       timesheet.fetch_time_entries
-      flunk # Need to check responses
+
+      assert timesheet.time_entries.present?
+      assert_same_elements timesheet.time_entries.keys,  ["Project 1", "Project 2"]
+      logs1 = timesheet.time_entries["Project 1"][:logs]
+      assert_equal 1, logs1.size
+      assert_same_elements logs1, [@te1]
+      logs2 = timesheet.time_entries["Project 2"][:logs]
+      assert_equal 1, logs2.size
+      assert_same_elements logs2, [@te2]
+      
+      users1 = timesheet.time_entries["Project 1"][:users]
+      assert_equal 1, users1.size
+      assert_same_elements users1, [User.current]
+      users2 = timesheet.time_entries["Project 2"][:users]
+      assert_equal 1, users2.size
+      assert_same_elements users2, [@other_user]
     end
   end
 
   context '#fetch_time_entries as a user with view_time_entries permission on a project' do
 
     should 'should collect time entries for only themself' do
-      timesheet = timesheet_factory
-
       project1 = project_factory(1, :name => 'Project 1')
       project2 = project_factory(2, :name => 'Project 2')
-
+      timesheet = timesheet_factory(:activities => [@activity.id], :projects => [project1, project2])
       stub_normal_user([project1, project2])
-      timesheet.projects = [project1, project2]
+      @te1 = TimeEntry.generate!(:project => project1, :hours => 5, :activity => @activity, :spent_on => Date.today, :user => @current_user)
+      @te2 = TimeEntry.generate!(:project => project1, :hours => 5, :activity => @activity, :spent_on => Date.today, :user => @current_user)
 
       timesheet.fetch_time_entries
-      flunk # Need to check response
+
+      assert timesheet.time_entries.present?
+      assert_equal ["Project 1"], timesheet.time_entries.keys
+      logs = timesheet.time_entries["Project 1"][:logs]
+      assert_equal 2, logs.size
+      assert_same_elements logs, [@te1, @te2]
+      users = timesheet.time_entries["Project 1"][:users]
+      assert_equal 1, users.size
+      assert_same_elements users, [User.current]
     end
   end
 
