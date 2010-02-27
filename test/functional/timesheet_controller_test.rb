@@ -1,52 +1,9 @@
 require File.dirname(__FILE__) + '/../test_helper'
-
-module TimesheetControllerHelper
-  # Sets up the default mocks
-  def default_mocks(options = {})
-    # User
-    @current_user = User.generate_with_protected!(:admin => false)
-    User.current = @current_user
-    
-    # Redmine application controller
-#    controller.stub!(:check_if_login_required).and_return(true)
-#    controller.stub!(:set_localization)
-    
-    # Timesheet
-    @timesheet = Timesheet.new
-    # @timesheet.stub!(:projects).and_return([ ])
-    # @timesheet.stub!(:projects=)
-    # @timesheet.stub!(:allowed_projects).and_return(['not empty'])
-    # @timesheet.stub!(:allowed_projects=)
-    # @timesheet.stub!(:date_from)
-    # @timesheet.stub!(:date_from=)
-    # @timesheet.stub!(:date_to)
-    # @timesheet.stub!(:date_to=)
-    # @timesheet.stub!(:activities)
-    # @timesheet.stub!(:activities=)
-    # @timesheet.stub!(:users)
-    # @timesheet.stub!(:users=)
-    # @timesheet.stub!(:fetch_time_entries)
-    # @timesheet.stub!(:time_entries).and_return([ ])
-    # @timesheet.stub!(:sort)
-    # @timesheet.stub!(:sort=)
-    # @timesheet.stub!(:period_type=)
-    # stub_timesheet unless options[:skip_timesheet_stub]
-  end
-  
-  # Restubs the current user
-  def stub_current_user
-    User.stub!(:current).and_return(@current_user)
-  end
-  
-  # Restubs the new timesheet
-  def stub_timesheet
-    Timesheet.stub!(:new).and_return(@timesheet)
-  end
-end
-
 class ActiveSupport::TestCase
   def self.use_timesheet_controller_shared(&block)
     should 'should set @timesheet.allowed_projects to the list of current projects the user is a member of' do
+      Member.destroy_all # clear any setup memberships
+
       project1 = Project.generate!
       project2 = Project.generate!
       projects = [project1, project2]
@@ -61,9 +18,11 @@ class ActiveSupport::TestCase
     end
 
     should 'should set @timesheet.allowed_projects to all the projects if the user is an admin' do
+      Member.destroy_all # clear any setup memberships
+
       @current_user.admin = true
-      project1 = Project.generate!
-      project2 = Project.generate!
+      project1, _ = *generate_project_membership(@current_user)
+      project2, _ = *generate_project_membership(@current_user)
       projects = [project1, project2]
 
       instance_eval &block
@@ -96,7 +55,16 @@ end
 
 
 class TimesheetControllerTest < ActionController::TestCase
-  include TimesheetControllerHelper
+  def generate_and_login_user(options = {})
+    @current_user = User.generate_with_protected!(:admin => false)
+    @request.session[:user_id] = @current_user.id
+  end
+
+  def generate_project_membership(user)
+    @project = Project.generate!
+    @member = Member.generate!(:principal => user, :project => @project, :roles => [@normal_role])
+    [@project, @member]
+  end
 
   def setup
     @normal_role = Role.generate!(:name => 'Normal User', :permissions => [:view_time_entries])
@@ -104,7 +72,8 @@ class TimesheetControllerTest < ActionController::TestCase
 
   context "#index with GET request" do
     setup do
-      default_mocks
+      generate_and_login_user
+      generate_project_membership(@current_user)
       get 'index'
     end
 
@@ -122,7 +91,9 @@ class TimesheetControllerTest < ActionController::TestCase
   context "#index with GET request and a session" do
   
     should 'should read the session data' do
-      default_mocks(:skip_timesheet_stub => true)
+      generate_and_login_user
+      @current_user.admin = true
+      @current_user.save!
 
       projects = []
       4.times do |i|
@@ -172,7 +143,7 @@ class TimesheetControllerTest < ActionController::TestCase
 
   context "#report with POST request" do
     setup do
-      default_mocks
+      generate_and_login_user
     end
 
     use_timesheet_controller_shared do
@@ -186,19 +157,22 @@ class TimesheetControllerTest < ActionController::TestCase
 
       Member.generate!(:principal => @current_user, :project => project1, :roles => [@normal_role])
 
-      post :report, :timesheet => { :projects => [project1.id, project2.id] }
-      assert_equal [project1.id], assigns['timesheet'].projects
+      post :report, :timesheet => { :projects => [project1.id.to_s, project2.id.to_s] }
+      assert_equal [project1], assigns['timesheet'].projects
     end
 
     should 'should save the session data' do
+      generate_project_membership(@current_user)
       post :report, :timesheet => { :projects => ['1'] }
+
       assert @request.session[TimesheetController::SessionKey]
-      assert session[TimesheetController::SessionKey].keys.include?('projects')
+      assert @request.session[TimesheetController::SessionKey].keys.include?('projects')
       assert_equal ['1'], @request.session[TimesheetController::SessionKey]['projects']
     end
 
     context ":csv format" do
       setup do
+        generate_project_membership(@current_user)
         post :report, :timesheet => {:projects => ['1']}, :format => 'csv'
       end
 
@@ -209,7 +183,7 @@ class TimesheetControllerTest < ActionController::TestCase
 
   context "#report with request with no data" do
     setup do
-      default_mocks
+      generate_and_login_user
     end
 
     context 'should redirect to the index' do
