@@ -229,4 +229,28 @@ class TimesheetControllerTest < ActionController::TestCase
       end
     end
   end
+
+  context "DELETE to :reset" do
+    setup do
+      generate_and_login_user
+      @current_user.admin = true
+      @current_user.save!
+
+      @project = Project.generate!
+      session[TimesheetController::SessionKey] = HashWithIndifferentAccess.new(
+                                                                               :projects => [@project.id.to_s],
+                                                                               :date_to => '2009-01-01',
+                                                                               :date_from => '2009-01-01'
+                                                                               )
+
+      delete :reset
+    end
+    
+    should_respond_with :redirect
+    should_redirect_to('index') {{:action => 'index'}}
+    should 'clear the session' do
+      assert session[TimesheetController::SessionKey].blank?
+    end
+
+  end
 end

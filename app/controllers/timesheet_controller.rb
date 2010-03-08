@@ -14,6 +14,8 @@ class TimesheetController < ApplicationController
 
   SessionKey = 'timesheet_filter'
 
+  verify :method => :delete, :only => :reset, :render => {:nothing => true, :status => :method_not_allowed }
+
   def index
     load_filters_from_session
     unless @timesheet
@@ -92,6 +94,11 @@ class TimesheetController < ApplicationController
     render :layout => false
   end
 
+  def reset
+    clear_filters_from_session
+    redirect_to :action => 'index'
+  end
+
   private
   def get_list_size
     @list_size = Setting.plugin_timesheet_plugin['list_size'].to_i
@@ -118,6 +125,10 @@ class TimesheetController < ApplicationController
     else
       return Project.find(:all, :conditions => Project.visible_by(User.current), :order => 'name ASC')
     end
+  end
+
+  def clear_filters_from_session
+    session[SessionKey] = nil
   end
 
   def load_filters_from_session
