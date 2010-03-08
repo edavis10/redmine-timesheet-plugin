@@ -1,0 +1,10 @@
+uk:
+  timesheet_title: Таблиця витрат часу
+  timesheet_date_from_label: Починаючи з
+  timesheet_date_to_label: до
+  timesheet_project_label: Проект
+  timesheet_activities_label: Активність
+  timesheet_users_label: Користувачі
+  timesheet_showing_users: 'час витрачений користувачем: '
+  timesheet_permalink: '(Постійний лінк на цю таблицю)'
+  timesheet_group_by: Групувати за

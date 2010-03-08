@@ -5,5 +5,6 @@ ru:
   timesheet_project_label: Проект
   timesheet_activities_label: Активность
   timesheet_users_label: Пользователи
+  timesheet_showing_users: 'сводка для пользователя: '
   timesheet_permalink: '(Постоянная ссылка на эту таблицу)'
   timesheet_group_by: Группировать по
