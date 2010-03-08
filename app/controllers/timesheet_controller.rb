@@ -116,7 +116,7 @@ class TimesheetController < ApplicationController
     if User.current.admin?
       return Project.find(:all, :order => 'name ASC')
     else
-      return User.current.projects.find(:all, :order => 'name ASC')
+      return Project.find(:all, :conditions => Project.visible_by(User.current), :order => 'name ASC')
     end
   end
 

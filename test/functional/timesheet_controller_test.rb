@@ -17,6 +17,17 @@ class ActiveSupport::TestCase
       assert_equal projects, assigns['timesheet'].allowed_projects
     end
 
+    should 'include public projects in @timesheet.allowed_projects' do
+      project1 = Project.generate!(:is_public => true)
+      project2 = Project.generate!(:is_public => true)
+      projects = [project1, project2]
+
+      instance_eval &block
+
+      assert_contains assigns['timesheet'].allowed_projects, project1
+      assert_contains assigns['timesheet'].allowed_projects, project2
+    end
+
     should 'should set @timesheet.allowed_projects to all the projects if the user is an admin' do
       Member.destroy_all # clear any setup memberships
 
@@ -61,7 +72,7 @@ class TimesheetControllerTest < ActionController::TestCase
   end
 
   def generate_project_membership(user)
-    @project = Project.generate!
+    @project = Project.generate!(:is_public => false)
     @member = Member.generate!(:principal => user, :project => @project, :roles => [@normal_role])
     [@project, @member]
   end
@@ -151,14 +162,26 @@ class TimesheetControllerTest < ActionController::TestCase
     end
     
     should 'should only allow the allowed projects into @timesheet.projects' do
-      project1 = Project.generate!
-      project2 = Project.generate!
+      project1 = Project.generate!(:is_public => false)
+      project2 = Project.generate!(:is_public => false)
       projects = [project1, project2]
 
       Member.generate!(:principal => @current_user, :project => project1, :roles => [@normal_role])
 
       post :report, :timesheet => { :projects => [project1.id.to_s, project2.id.to_s] }
+
       assert_equal [project1], assigns['timesheet'].projects
+    end
+
+    should 'include public projects' do
+      project1 = Project.generate!(:is_public => true)
+      project2 = Project.generate!(:is_public => true)
+      projects = [project1, project2]
+
+      post :report, :timesheet => { :projects => [project1.id.to_s, project2.id.to_s] }
+
+      assert_contains assigns['timesheet'].allowed_projects, project1
+      assert_contains assigns['timesheet'].allowed_projects, project2
     end
 
     should 'should save the session data' do
