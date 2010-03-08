@@ -1,2 +1,6 @@
 div#timesheet-form p { padding:0px 10px; float:left; }
 .icon-timesheet { background-image: url(../images/csv.png); }
+
+#date-options { margin-left: 10px; }
+#date-options input[type='radio'] { margin-left: -20px; }
+#timesheet-form .button-to div {display:inline; }
