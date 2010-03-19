@@ -156,13 +156,13 @@ class Timesheet
   def csv_header
     csv_data = [
                 '#',
-                I18n.t(:label_date),
-                I18n.t(:label_member),
-                I18n.t(:label_activity),
-                I18n.t(:label_project),
-                I18n.t(:label_issue),
-                I18n.t(:field_comments),
-                I18n.t(:field_hours)
+                l(:label_date),
+                l(:label_member),
+                l(:label_activity),
+                l(:label_project),
+                l(:label_issue),
+                l(:field_comments),
+                l(:field_hours)
                ]
     Redmine::Hook.call_hook(:plugin_timesheet_model_timesheet_csv_header, { :timesheet => self, :csv_data => csv_data})
     return csv_data
@@ -187,8 +187,9 @@ class Timesheet
   # String of extra conditions to add onto the query (AND)
   def conditions(users, extra_conditions=nil)
     if self.potential_time_entry_ids.empty?
-      if self.date_from.present? && self.date_to.present?
-        conditions = ["spent_on >= (:from) AND spent_on <= (:to) AND #{TimeEntry.table_name}.project_id IN (:projects) AND user_id IN (:users) AND (activity_id IN (:activities) OR (#{Enumeration.table_name}.parent_id IN (:activities) AND #{Enumeration.table_name}.project_id IN (:projects)))",
+      # TODO: Rails 2.1.2 doesn't define #present?
+      if !self.date_from.blank? && !self.date_to.blank?
+        conditions = ["spent_on >= (:from) AND spent_on <= (:to) AND #{TimeEntry.table_name}.project_id IN (:projects) AND user_id IN (:users) AND (activity_id IN (:activities) #{TimesheetCompatibility::Enumeration.project_specific_sql})",
                       {
                         :from => self.date_from,
                         :to => self.date_to,
@@ -197,7 +198,7 @@ class Timesheet
                         :users => users
                       }]
       else # All time
-        conditions = ["#{TimeEntry.table_name}.project_id IN (:projects) AND user_id IN (:users) AND (activity_id IN (:activities) OR (#{Enumeration.table_name}.parent_id IN (:activities) AND #{Enumeration.table_name}.project_id IN (:projects)))",
+        conditions = ["#{TimeEntry.table_name}.project_id IN (:projects) AND user_id IN (:users) AND (activity_id IN (:activities) #{TimesheetCompatibility::Enumeration.project_specific_sql})",
                       {
                         :projects => self.projects,
                         :activities => self.activities,
@@ -212,7 +213,7 @@ class Timesheet
                     }]
     end
 
-    if extra_conditions.present?
+    if extra_conditions
       conditions[0] = conditions.first + ' AND ' + extra_conditions
     end
       
@@ -371,5 +372,14 @@ class Timesheet
       end
     end
   end
-  
+
+
+  # TODO: Redmine 0.8 compatibility hack
+  def l(*args)
+    if defined?(GLoc)
+      GLoc.l(*args)
+    else
+      I18n.t(*args)
+    end
+  end
 end
