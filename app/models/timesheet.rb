@@ -32,7 +32,7 @@ class Timesheet
     unless options[:activities].nil?
       self.activities = options[:activities].collect { |a| a.to_i }
     else
-      self.activities =  TimesheetCompatibility::Enumeration::activities.collect { |a| a.id.to_i }
+      self.activities =  TimeEntryActivity.all.collect { |a| a.id.to_i }
     end
     
     unless options[:users].nil?
@@ -187,9 +187,8 @@ class Timesheet
   # String of extra conditions to add onto the query (AND)
   def conditions(users, extra_conditions=nil)
     if self.potential_time_entry_ids.empty?
-      # TODO: Rails 2.1.2 doesn't define #present?
-      if !self.date_from.blank? && !self.date_to.blank?
-        conditions = ["spent_on >= (:from) AND spent_on <= (:to) AND #{TimeEntry.table_name}.project_id IN (:projects) AND user_id IN (:users) AND (activity_id IN (:activities) #{TimesheetCompatibility::Enumeration.project_specific_sql})",
+      if self.date_from.present? && self.date_to.present?
+        conditions = ["spent_on >= (:from) AND spent_on <= (:to) AND #{TimeEntry.table_name}.project_id IN (:projects) AND user_id IN (:users) AND (activity_id IN (:activities) OR (#{::Enumeration.table_name}.parent_id IN (:activities) AND #{::Enumeration.table_name}.project_id IN (:projects)))",
                       {
                         :from => self.date_from,
                         :to => self.date_to,
@@ -198,7 +197,7 @@ class Timesheet
                         :users => users
                       }]
       else # All time
-        conditions = ["#{TimeEntry.table_name}.project_id IN (:projects) AND user_id IN (:users) AND (activity_id IN (:activities) #{TimesheetCompatibility::Enumeration.project_specific_sql})",
+        conditions = ["#{TimeEntry.table_name}.project_id IN (:projects) AND user_id IN (:users) AND (activity_id IN (:activities) OR (#{::Enumeration.table_name}.parent_id IN (:activities) AND #{::Enumeration.table_name}.project_id IN (:projects)))",
                       {
                         :projects => self.projects,
                         :activities => self.activities,
@@ -374,12 +373,7 @@ class Timesheet
   end
 
 
-  # TODO: Redmine 0.8 compatibility hack
   def l(*args)
-    if defined?(GLoc)
-      GLoc.l(*args)
-    else
-      I18n.t(*args)
-    end
+    I18n.t(*args)
   end
 end

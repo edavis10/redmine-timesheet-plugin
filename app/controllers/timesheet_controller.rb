@@ -116,7 +116,7 @@ class TimesheetController < ApplicationController
   end
 
   def get_activities
-    @activities = TimesheetCompatibility::Enumeration::activities
+    @activities = TimeEntryActivity.all
   end
   
   def allowed_projects

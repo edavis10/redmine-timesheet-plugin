@@ -28,7 +28,7 @@ unless Redmine::Plugin.registered_plugins.keys.include?(:timesheet_plugin)
     author_url 'http://www.littlestreamsoftware.com'
 
     version '0.6.0'
-    requires_redmine :version_or_higher => '0.8.7'
+    requires_redmine :version_or_higher => '0.9.0'
     
     settings :default => {'list_size' => '5', 'precision' => '2'}, :partial => 'settings/timesheet_settings'
 
