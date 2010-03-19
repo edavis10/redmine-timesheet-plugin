@@ -18,6 +18,7 @@ A plugin to show and filter timelogs across all projects in Redmine.
 * Permalinks to reports
 * Plugin hook support for changing the behavior of the plugin
 * User configurable precision for hours
+* CSV exports
 
 == Getting the plugin
 
@@ -28,8 +29,6 @@ A copy of the released version can be downloaded from {Little Stream Software}[h
 1. Follow the Redmine plugin installation steps at: http://www.redmine.org/wiki/redmine/Plugins Make sure the plugin is installed to +vendor/plugins/timesheet_plugin+
 2. Restart your Redmine web servers (e.g. mongrel, thin, mod_rails)
 3. Login and click the Timesheet Link in the top left menu
-
-TODO: gem installation: config.gem 'timesheet_plugin', :lib => false
 
 == Upgrade
 
