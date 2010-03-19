@@ -1,9 +1,9 @@
-timesheet_title: Tidkort
-timesheet_date_from_label: FrÂn
-timesheet_date_to_label: Till
-timesheet_project_label: Projekt
-timesheet_activities_label: Aktivitet
-timesheet_users_label: Anv‰ndare
-timesheet_showing_users: 'visar tid fˆr: '
-timesheet_permalink: '(Permal‰nk till detta tidkort)'
-timesheet_group_by: Gruppera efter
+timesheet_title: "Tidkort"
+timesheet_date_from_label: "Fr√•n"
+timesheet_date_to_label: "Till"
+timesheet_project_label: "Projekt"
+timesheet_activities_label: "Aktivitet"
+timesheet_users_label: "Anv√§ndare"
+timesheet_showing_users: 'visar tid f√∂r: '
+timesheet_permalink: '(Permal√§nk till detta tidkort)'
+timesheet_group_by: "Gruppera efter"
