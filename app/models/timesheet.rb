@@ -161,6 +161,7 @@ class Timesheet
                 l(:label_activity),
                 l(:label_project),
                 l(:label_issue),
+                "#{l(:label_issue)} #{l(:field_subject)}",
                 l(:field_comments),
                 l(:field_hours)
                ]
@@ -176,6 +177,7 @@ class Timesheet
                 time_entry.activity.name,
                 time_entry.project.name,
                 ("#{time_entry.issue.tracker.name} ##{time_entry.issue.id}" if time_entry.issue),
+                (time_entry.issue.subject if time_entry.issue),
                 time_entry.comments,
                 time_entry.hours
                ]
