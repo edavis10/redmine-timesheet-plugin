@@ -20,7 +20,6 @@ class TimesheetController < ApplicationController
     load_filters_from_session
     unless @timesheet
       @timesheet ||= Timesheet.new
-      @timesheet.users = [] # Clear users so they aren't selected
     end
     @timesheet.allowed_projects = allowed_projects
 

@@ -46,10 +46,14 @@ module TimesheetHelper
   end
 
   def project_options(timesheet)
-    options_from_collection_for_select(timesheet.allowed_projects,
+    available_projects = timesheet.allowed_projects
+    selected_projects = timesheet.projects.collect(&:id)
+    selected_projects = available_projects.collect(&:id) if selected_projects.blank?
+    
+    options_from_collection_for_select(available_projects,
                                        :id,
                                        :name,
-                                       timesheet.projects.collect(&:id))
+                                       selected_projects)
   end
 
   def activity_options(timesheet, activities)
@@ -57,10 +61,13 @@ module TimesheetHelper
   end
 
   def user_options(timesheet)
-    options_from_collection_for_select(Timesheet.viewable_users.sort { |a,b| a.to_s.downcase <=> b.to_s.downcase },
+    available_users = Timesheet.viewable_users.sort { |a,b| a.to_s.downcase <=> b.to_s.downcase }
+    selected_users = timesheet.users
+
+    options_from_collection_for_select(available_users,
                                        :id,
                                        :name,
-                                       timesheet.users)
+                                       selected_users)
 
   end
 end
