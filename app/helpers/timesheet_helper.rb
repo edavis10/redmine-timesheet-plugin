@@ -44,4 +44,23 @@ module TimesheetHelper
   def displayed_time_entries_for_issue(time_entries)
     time_entries.collect(&:hours).sum
   end
+
+  def project_options(timesheet)
+    options_from_collection_for_select(timesheet.allowed_projects,
+                                       :id,
+                                       :name,
+                                       timesheet.projects.collect(&:id))
+  end
+
+  def activity_options(timesheet, activities)
+    options_from_collection_for_select(activities, :id, :name, timesheet.activities)
+  end
+
+  def user_options(timesheet)
+    options_from_collection_for_select(Timesheet.viewable_users.sort { |a,b| a.to_s.downcase <=> b.to_s.downcase },
+                                       :id,
+                                       :name,
+                                       timesheet.users)
+
+  end
 end

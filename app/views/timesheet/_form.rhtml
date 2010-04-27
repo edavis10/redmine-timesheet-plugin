@@ -27,28 +27,18 @@
 
 <p>
   <label for="timesheet_projects_" class="select_all"><%= l(:timesheet_project_label)%>:</label><br />
-  <%= select_tag 'timesheet[projects][]',
-    options_from_collection_for_select(@timesheet.allowed_projects, :id, :name, @timesheet.projects.collect(&:id)),
-    { :multiple => true, :size => @list_size}
-  %>
+  <%= select_tag 'timesheet[projects][]', project_options(@timesheet), { :multiple => true, :size => @list_size} %>
 </p>
 
 
 <p>
   <label for="timesheet_activities_" class="select_all"><%= l(:timesheet_activities_label)%>:</label><br />
-  <%= select_tag 'timesheet[activities][]',
-    options_from_collection_for_select(@activities, :id, :name, @timesheet.activities),
-    { :multiple => true, :size => @list_size}
-  %>
+  <%= select_tag 'timesheet[activities][]', activity_options(@timesheet, @activities), { :multiple => true, :size => @list_size} %>
 </p>
 
 <p>
   <label for="timesheet_users_" class="select_all"><%= l(:timesheet_users_label)%>:</label><br />
-  <%= select_tag 'timesheet[users][]',
-    options_from_collection_for_select(Timesheet.viewable_users.sort { |a,b| a.to_s.downcase <=> b.to_s.downcase }, :id, :name, @timesheet.users),
-    { :multiple => true, :size => @list_size}
-
-           %>
+  <%= select_tag 'timesheet[users][]', user_options(@timesheet), { :multiple => true, :size => @list_size} %>
 </p>
 
 <%# TODO: Typo on hook %>
