@@ -30,7 +30,7 @@ unless Redmine::Plugin.registered_plugins.keys.include?(:timesheet_plugin)
     version '0.6.0'
     requires_redmine :version_or_higher => '0.9.0'
     
-    settings :default => {'list_size' => '5', 'precision' => '2'}, :partial => 'settings/timesheet_settings'
+    settings :default => {'list_size' => '5', 'precision' => '2', 'project_status' => 'active'}, :partial => 'settings/timesheet_settings'
 
     permission :see_project_timesheets, { }, :require => :member
 

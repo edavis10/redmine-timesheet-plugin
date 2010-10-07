@@ -8,3 +8,7 @@ en:
   timesheet_showing_users: 'showing time for: '
   timesheet_permalink: '(Permalink to this timesheet)'
   timesheet_group_by: Group by
+  label_show_project_status: "Projects with the status:"
+  text_active_projects: "Active"
+  text_all_projects: "All (active and archived)"
+
