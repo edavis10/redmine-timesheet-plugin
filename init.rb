@@ -10,6 +10,9 @@ end
 
 require 'dispatcher'
 Dispatcher.to_prepare :timesheet_plugin do
+
+  require_dependency 'project'
+  Project.send(:include, TimesheetPlugin::Patches::ProjectPatch)
   # Needed for the compatibility check
   begin
     require_dependency 'time_entry_activity'
