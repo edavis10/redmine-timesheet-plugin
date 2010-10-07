@@ -120,19 +120,11 @@ class TimesheetController < ApplicationController
   
   def allowed_projects
     if User.current.admin?
-      return Project.timesheet_order_by_name
-
+      Project.timesheet_order_by_name
     elsif Setting.plugin_timesheet_plugin['project_status'] == 'all'
-      if User.current && User.current.memberships.any?
-        # Similar to Project.visible_by but without the STATUS check
-        Project.timesheet_order_by_name.all(
-                    :conditions => [
-                                    "(#{Project.table_name}.is_public = :true or #{Project.table_name}.id IN (#{User.current.memberships.collect{|m| m.project_id}.join(',')}))", {:true => true}])
-      else
-        Project.all_public.timesheet_order_by_name
-      end
+      Project.timesheet_order_by_name.timesheet_with_membership(User.current)
     else
-      return Project.timesheet_order_by_name.all(:conditions => Project.visible_by(User.current))
+      Project.timesheet_order_by_name.all(:conditions => Project.visible_by(User.current))
     end
   end
 
