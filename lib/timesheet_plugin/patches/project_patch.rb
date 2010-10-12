@@ -13,7 +13,7 @@ module TimesheetPlugin
           named_scope :timesheet_with_membership, lambda {|user|
             # Similar to Project.visible_by but without the STATUS check
             if user && user.memberships.any?
-              project_ids = user.memberships.collect{|m| m.project_id}.join(',')
+              project_ids = user.memberships.collect{|m| m.project_id}
             
               {
                 :conditions => [
