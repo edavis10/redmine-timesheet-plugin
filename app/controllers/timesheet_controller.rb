@@ -121,7 +121,7 @@ class TimesheetController < ApplicationController
   end
 
   def allowed_projects
-    if User.current.admin?
+    if User.current.admin? && Setting.plugin_timesheet_plugin['project_status'] == 'all'
       Project.timesheet_order_by_name
     elsif Setting.plugin_timesheet_plugin['project_status'] == 'all'
       Project.timesheet_order_by_name.timesheet_with_membership(User.current)
