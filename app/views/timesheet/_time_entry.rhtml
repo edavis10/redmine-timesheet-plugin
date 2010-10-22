@@ -16,6 +16,9 @@
       <% end %>
     </td>
     <td><%=h time_entry.comments %></td>
+<% time_entry.custom_field_values.each do |value| %>
+    <td align="center"><%= show_value value %></td>
+<% end %>
     <td align="center"><strong><%= number_with_precision(time_entry.hours, @precision) %></strong></td>
     <%= Redmine::Hook.call_hook(:plugin_timesheet_views_timesheet_time_entry, {:time_entry => time_entry, :precision => @precision }) %>
     <td align="center">

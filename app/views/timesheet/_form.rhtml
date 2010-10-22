@@ -41,6 +41,18 @@
   <%= select_tag 'timesheet[users][]', user_options(@timesheet), { :multiple => true, :size => @list_size} %>
 </p>
 
+
+<% time_entry = TimeEntry.new
+time_entry.custom_field_values = @timesheet.custom_field_values unless @timesheet.custom_field_values.empty?
+time_entry.custom_field_values.each do |value|
+  # Remove required attribute for the search
+    value.custom_field.is_required = false
+    value.custom_field.default_value = ""
+    value.value = "" if @timesheet.custom_field_values.empty?
+    %>
+<p><%= custom_field_tag_with_label :timesheet, value %></p>
+<% end %>
+
 <%# TODO: Typo on hook %>
 <%= call_hook(:plugin_timesheet_view_timesheet_form, { :timesheet => @timesheet, :params => params, :list_size => @list_size }) %>
 <%= call_hook(:plugin_timesheet_views_timesheet_form, { :timesheet => @timesheet, :params => params, :list_size => @list_size }) %>

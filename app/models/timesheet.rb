@@ -1,12 +1,12 @@
 class Timesheet
-  attr_accessor :date_from, :date_to, :projects, :activities, :users, :allowed_projects, :period, :period_type
+  attr_accessor :date_from, :date_to, :projects, :activities, :users, :allowed_projects, :period, :period_type, :custom_field_values
 
   # Time entries on the Timesheet in the form of:
   #   project.name => {:logs => [time entries], :users => [users shown in logs] }
   #   project.name => {:logs => [time entries], :users => [users shown in logs] }
   # project.name could be the parent project name also
   attr_accessor :time_entries
-  
+
   # Array of TimeEntry ids to fetch
   attr_accessor :potential_time_entry_ids
 
@@ -22,19 +22,20 @@ class Timesheet
     :free_period => 0,
     :default => 1
   }
-  
+
   def initialize(options = { })
     self.projects = [ ]
     self.time_entries = options[:time_entries] || { }
     self.potential_time_entry_ids = options[:potential_time_entry_ids] || [ ]
     self.allowed_projects = options[:allowed_projects] || [ ]
+    self.custom_field_values = options[:custom_field_values] || [ ]
 
     unless options[:activities].nil?
       self.activities = options[:activities].collect { |a| a.to_i }
     else
       self.activities =  TimeEntryActivity.all.collect { |a| a.id.to_i }
     end
-    
+
     unless options[:users].nil?
       self.users = options[:users].collect { |u| u.to_i }
     else
@@ -46,7 +47,7 @@ class Timesheet
     else
       self.sort = :project
     end
-    
+
     self.date_from = options[:date_from] || Date.today.to_s
     self.date_to = options[:date_to] || Date.today.to_s
 
@@ -115,6 +116,7 @@ class Timesheet
       :date_to => date_to,
       :activities => activities,
       :users => users,
+      :custom_field_values => custom_field_values,
       :sort => sort
     }
   end
@@ -150,7 +152,7 @@ class Timesheet
       user.allowed_to?(:log_time, nil, :global => true)
     }
   end
-  
+
   protected
 
   def csv_header
@@ -162,9 +164,15 @@ class Timesheet
                 l(:label_project),
                 l(:label_issue),
                 "#{l(:label_issue)} #{l(:field_subject)}",
-                l(:field_comments),
-                l(:field_hours)
+                l(:field_comments)
                ]
+    time_entry_header = TimeEntry.new
+    time_entry_header.custom_field_values.each do |value|
+    csv_data << value.custom_field.name
+    end
+
+    csv_data << l(:field_hours)
+
     Redmine::Hook.call_hook(:plugin_timesheet_model_timesheet_csv_header, { :timesheet => self, :csv_data => csv_data})
     return csv_data
   end
@@ -178,9 +186,15 @@ class Timesheet
                 time_entry.project.name,
                 ("#{time_entry.issue.tracker.name} ##{time_entry.issue.id}" if time_entry.issue),
                 (time_entry.issue.subject if time_entry.issue),
-                time_entry.comments,
-                time_entry.hours
+                time_entry.comments
                ]
+
+    custom_fields_helper = Object.new.extend(CustomFieldsHelper)
+    time_entry.custom_field_values.each do |value|
+    csv_data << custom_fields_helper.show_value(value)
+    end
+
+    csv_data << time_entry.hours
     Redmine::Hook.call_hook(:plugin_timesheet_model_timesheet_time_entry_to_csv, { :timesheet => self, :time_entry => time_entry, :csv_data => csv_data})
     return csv_data
   end
@@ -189,8 +203,15 @@ class Timesheet
   # String of extra conditions to add onto the query (AND)
   def conditions(users, extra_conditions=nil)
     if self.potential_time_entry_ids.empty?
+
+      # @todo: Add multiple custom fields selection
+      custom_field_conditions = ""
+      self.custom_field_values.each do |value|
+        custom_field_conditions << " AND #{CustomValue.table_name}.custom_field_id = #{value[0]} AND #{CustomValue.table_name}.value = '#{value[1]}'" unless value[1].empty?
+      end
+
       if self.date_from.present? && self.date_to.present?
-        conditions = ["spent_on >= (:from) AND spent_on <= (:to) AND #{TimeEntry.table_name}.project_id IN (:projects) AND user_id IN (:users) AND (activity_id IN (:activities) OR (#{::Enumeration.table_name}.parent_id IN (:activities) AND #{::Enumeration.table_name}.project_id IN (:projects)))",
+        conditions = ["spent_on >= (:from) AND spent_on <= (:to) AND #{TimeEntry.table_name}.project_id IN (:projects) AND user_id IN (:users) AND (activity_id IN (:activities) OR (#{::Enumeration.table_name}.parent_id IN (:activities) AND #{::Enumeration.table_name}.project_id IN (:projects))) #{custom_field_conditions}",
                       {
                         :from => self.date_from,
                         :to => self.date_to,
@@ -199,7 +220,7 @@ class Timesheet
                         :users => users
                       }]
       else # All time
-        conditions = ["#{TimeEntry.table_name}.project_id IN (:projects) AND user_id IN (:users) AND (activity_id IN (:activities) OR (#{::Enumeration.table_name}.parent_id IN (:activities) AND #{::Enumeration.table_name}.project_id IN (:projects)))",
+        conditions = ["#{TimeEntry.table_name}.project_id IN (:projects) AND user_id IN (:users) AND (activity_id IN (:activities) OR (#{::Enumeration.table_name}.parent_id IN (:activities) AND #{::Enumeration.table_name}.project_id IN (:projects))) #{custom_field_conditions}",
                       {
                         :projects => self.projects,
                         :activities => self.activities,
@@ -217,61 +238,61 @@ class Timesheet
     if extra_conditions
       conditions[0] = conditions.first + ' AND ' + extra_conditions
     end
-      
+
     Redmine::Hook.call_hook(:plugin_timesheet_model_timesheet_conditions, { :timesheet => self, :conditions => conditions})
     return conditions
   end
 
   def includes
-    includes = [:activity, :user, :project, {:issue => [:tracker, :assigned_to, :priority]}]
+    includes = [:activity, :user, :project, {:issue => [:tracker, :assigned_to, :priority]}, :custom_values]
     Redmine::Hook.call_hook(:plugin_timesheet_model_timesheet_includes, { :timesheet => self, :includes => includes})
     return includes
   end
 
   private
 
-  
+
   def time_entries_for_all_users(project)
     return project.time_entries.find(:all,
                                      :conditions => self.conditions(self.users),
                                      :include => self.includes,
                                      :order => "spent_on ASC")
   end
-  
+
   def time_entries_for_current_user(project)
     return project.time_entries.find(:all,
                                      :conditions => self.conditions(User.current.id),
                                      :include => self.includes,
-                                     :include => [:activity, :user, {:issue => [:tracker, :assigned_to, :priority]}],
+                                     :include => [:activity, :user, {:issue => [:tracker, :assigned_to, :priority]}, :custom_values],
                                      :order => "spent_on ASC")
   end
-  
+
   def issue_time_entries_for_all_users(issue)
     return issue.time_entries.find(:all,
                                    :conditions => self.conditions(self.users),
                                    :include => self.includes,
-                                   :include => [:activity, :user],
+                                   :include => [:activity, :user, :custom_values],
                                    :order => "spent_on ASC")
   end
-  
+
   def issue_time_entries_for_current_user(issue)
     return issue.time_entries.find(:all,
                                    :conditions => self.conditions(User.current.id),
                                    :include => self.includes,
-                                   :include => [:activity, :user],
+                                   :include => [:activity, :user, :custom_values],
                                    :order => "spent_on ASC")
   end
-  
+
   def time_entries_for_user(user, options={})
     extra_conditions = options.delete(:conditions)
-    
+
     return TimeEntry.find(:all,
                           :conditions => self.conditions([user], extra_conditions),
                           :include => self.includes,
                           :order => "spent_on ASC"
                           )
   end
-  
+
   def fetch_time_entries_by_project
     self.projects.each do |project|
       logs = []
@@ -291,11 +312,11 @@ class Timesheet
       else
         # Rest can see nothing
       end
-      
+
       # Append the parent project name
       if project.parent.nil?
         unless logs.empty?
-          self.time_entries[project.name] = { :logs => logs, :users => users } 
+          self.time_entries[project.name] = { :logs => logs, :users => users }
         end
       else
         unless logs.empty?
@@ -304,7 +325,7 @@ class Timesheet
       end
     end
   end
-  
+
   def fetch_time_entries_by_user
     self.users.each do |user_id|
       logs = []
@@ -321,20 +342,20 @@ class Timesheet
       else
         # Rest can see nothing
       end
-      
+
       unless logs.empty?
         user = User.find_by_id(user_id)
         self.time_entries[user.name] = { :logs => logs }  unless user.nil?
       end
     end
   end
-  
+
   #   project => { :users => [users shown in logs],
-  #                :issues => 
+  #                :issues =>
   #                  { issue => {:logs => [time entries],
   #                    issue => {:logs => [time entries],
   #                    issue => {:logs => [time entries]}
-  #     
+  #
   def fetch_time_entries_by_issue
     self.projects.each do |project|
       logs = []
@@ -356,19 +377,19 @@ class Timesheet
 
       logs.flatten! if logs.respond_to?(:flatten!)
       logs.uniq! if logs.respond_to?(:uniq!)
-      
+
       unless logs.empty?
         users << logs.collect(&:user).uniq.sort
 
-        
+
         issues = logs.collect(&:issue).uniq
         issue_logs = { }
         issues.each do |issue|
           issue_logs[issue] = logs.find_all {|time_log| time_log.issue == issue } # TimeEntry is for this issue
         end
-        
+
         # TODO: TE without an issue
-        
+
         self.time_entries[project] = { :issues => issue_logs, :users => users}
       end
     end
