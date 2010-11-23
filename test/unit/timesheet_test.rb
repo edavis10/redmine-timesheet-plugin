@@ -441,24 +441,48 @@ class TimesheetTest < ActiveSupport::TestCase
 
   context '#fetch_time_entries as a user with view_time_entries permission on a project' do
 
+    setup do
+      @project1 = project_factory(1, :name => 'Project 1')
+      @project2 = project_factory(2, :name => 'Project 2')
+      @archived_project = project_factory(3, :name => 'Archived Project', :status => Project::STATUS_ARCHIVED)
+      @timesheet = timesheet_factory(:activities => [@activity.id], :projects => [@project1, @project2, @archived_project])
+      stub_normal_user([@project1, @project2, @archived_project])
+      @te1 = TimeEntry.generate!(:project => @project1, :hours => 5, :activity => @activity, :spent_on => Date.today, :user => @current_user)
+      @te2 = TimeEntry.generate!(:project => @project1, :hours => 5, :activity => @activity, :spent_on => Date.today, :user => @current_user)
+      @te_on_archived_project = TimeEntry.generate!(:project => @archived_project, :hours => 5, :activity => @activity, :spent_on => Date.today, :user => @current_user)
+
+    end
+  
     should 'should collect time entries for only themself' do
-      project1 = project_factory(1, :name => 'Project 1')
-      project2 = project_factory(2, :name => 'Project 2')
-      timesheet = timesheet_factory(:activities => [@activity.id], :projects => [project1, project2])
-      stub_normal_user([project1, project2])
-      @te1 = TimeEntry.generate!(:project => project1, :hours => 5, :activity => @activity, :spent_on => Date.today, :user => @current_user)
-      @te2 = TimeEntry.generate!(:project => project1, :hours => 5, :activity => @activity, :spent_on => Date.today, :user => @current_user)
+      @timesheet.fetch_time_entries
 
-      timesheet.fetch_time_entries
-
-      assert timesheet.time_entries.present?
-      assert_equal ["Project 1"], timesheet.time_entries.keys
-      logs = timesheet.time_entries["Project 1"][:logs]
+      assert @timesheet.time_entries.present?
+      assert_equal ["Project 1"], @timesheet.time_entries.keys
+      logs = @timesheet.time_entries["Project 1"][:logs]
       assert_equal 2, logs.size
       assert_same_elements logs, [@te1, @te2]
-      users = timesheet.time_entries["Project 1"][:users]
+      users = @timesheet.time_entries["Project 1"][:users]
       assert_equal 1, users.size
       assert_same_elements users, [User.current]
+    
+    end
+
+    context "with project status set to all" do
+      setup do
+        Setting.plugin_timesheet_plugin['project_status'] = 'all'
+      end
+      
+      should 'collect time entries for archived projects' do
+        @timesheet.fetch_time_entries
+
+        assert @timesheet.time_entries.present?
+        assert_equal ["Project 1", "Archived Project"], @timesheet.time_entries.keys
+
+        archived_time_logs = @timesheet.time_entries["Archived Project"][:logs]
+        assert_equal 1, archived_time_logs.size
+        assert_same_elements archived_time_logs, [@te_on_archived_project]
+
+      end
     end
   end
 

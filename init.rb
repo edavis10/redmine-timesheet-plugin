@@ -11,6 +11,10 @@ end
 require 'dispatcher'
 Dispatcher.to_prepare :timesheet_plugin do
 
+  require_dependency 'principal'
+  require_dependency 'user'
+  User.send(:include, TimesheetPlugin::Patches::UserPatch)
+
   require_dependency 'project'
   Project.send(:include, TimesheetPlugin::Patches::ProjectPatch)
   # Needed for the compatibility check
