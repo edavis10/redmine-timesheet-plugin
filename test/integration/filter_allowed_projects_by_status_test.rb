@@ -5,13 +5,17 @@ class FilterAllowedProjectsByStatusTest < ActionController::IntegrationTest
     @active_project1 = Project.generate!
     @active_project2 = Project.generate!
     @archived_project1 = Project.generate!(:status => Project::STATUS_ARCHIVED)
+    @archived_private_project1 = Project.generate!(:status => Project::STATUS_ARCHIVED, :is_public => false)
     assert !@archived_project1.active?
+    assert !@archived_private_project1.active?
 
     @admin_user = User.generate_with_protected!(:login => 'theadmin', :admin => true, :password => 'testing', :password_confirmation => 'testing')
     @user = User.generate_with_protected!(:login => 'theuser', :admin => false, :password => 'testing', :password_confirmation => 'testing')
     @role = Role.generate!(:permissions => [:view_time_entries])
     @project = Project.generate!
     Member.generate!(:principal => @user, :project => @project, :roles => [@role])
+
+    Member.generate!(:principal => @user, :project => @archived_private_project1, :roles => [@role])
   end
 
   context "with project_status configured to all" do
@@ -31,6 +35,7 @@ class FilterAllowedProjectsByStatusTest < ActionController::IntegrationTest
           assert_select 'option[value=?]', @active_project1.id
           assert_select 'option[value=?]', @active_project2.id
           assert_select 'option[value=?]', @archived_project1.id
+          assert_select 'option[value=?]', @archived_private_project1.id
         end
       end
     end
@@ -47,6 +52,7 @@ class FilterAllowedProjectsByStatusTest < ActionController::IntegrationTest
           assert_select 'option[value=?]', @active_project1.id
           assert_select 'option[value=?]', @active_project2.id
           assert_select 'option[value=?]', @archived_project1.id
+          assert_select 'option[value=?]', @archived_private_project1.id
         end
       end
       

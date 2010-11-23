@@ -13,8 +13,15 @@ module TimesheetPlugin
           named_scope :timesheet_with_membership, lambda {|user|
             # Similar to Project.visible_by but without the STATUS check
             if user && user.memberships.any?
-              project_ids = user.memberships.collect{|m| m.project_id}
-            
+
+              # Principal#members gets all projects, but #memberships will only
+              # get the active ones
+              if Setting.plugin_timesheet_plugin['project_status'] == 'all'
+                project_ids = user.members.collect{|m| m.project_id}
+              else
+                project_ids = user.memberships.collect{|m| m.project_id}
+              end
+              
               {
                 :conditions => [
                                 "#{Project.table_name}.is_public = :true or #{Project.table_name}.id IN (:project_ids)",
