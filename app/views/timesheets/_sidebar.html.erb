@@ -2,7 +2,7 @@
 
 <ul>
 <% Timesheet.all.each do |timesheet| %>
-  <li><%= link_to(h(timesheet.name), timesheet_path(timesheet)) %></li>
+  <li><%= link_to(h(timesheet.name.present? ? timesheet.name : "(untitled)"), timesheet_path(timesheet)) %></li>
 <% end %>
 </ul>
 
