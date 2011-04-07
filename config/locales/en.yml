@@ -11,4 +11,6 @@ en:
   label_show_project_status: "Projects with the status:"
   text_active_projects: "Active"
   text_all_projects: "All (active and archived)"
+  text_timesheet_plural: Timesheets
+  text_new_timesheet: New timesheet
 

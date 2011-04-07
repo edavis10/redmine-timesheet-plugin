@@ -26,7 +26,7 @@ class SavingTimesheetTest < ActionController::IntegrationTest
       fill_in "Name", :with => 'Save test'
 
       assert_difference('Timesheet.count') do
-        click_button 'Apply'
+        click_button 'Save'
         assert_response :success
       end
 
@@ -43,7 +43,7 @@ class SavingTimesheetTest < ActionController::IntegrationTest
       fill_in "Name", :with => 'Save test'
 
       assert_difference('Timesheet.count') do
-        click_button 'Apply'
+        click_button 'Save'
         assert_response :success
       end
 
@@ -71,7 +71,7 @@ class SavingTimesheetTest < ActionController::IntegrationTest
       fill_in "Name", :with => 'Save test'
 
       assert_difference('Timesheet.count') do
-        click_button 'Apply'
+        click_button 'Save'
         assert_response :success
       end
 

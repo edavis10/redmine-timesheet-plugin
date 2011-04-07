@@ -51,9 +51,9 @@
 <%= call_hook(:plugin_timesheet_views_timesheet_form, { :timesheet => @timesheet, :params => params, :list_size => @list_size }) %>
 
 <div class="clear"></div>
-<%= submit_tag l(:button_apply),:class => 'button-small' -%>
+<%= submit_tag l(:button_save),:class => 'button-small' -%>
 
 <% end %>
-<%= button_to(l(:button_reset), {:controller => 'timesheet', :action => 'reset'}, :method => 'delete') %>
+<%= button_to(l(:button_reset), new_timesheet_path) %>
 </fieldset>
 </div>

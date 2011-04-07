@@ -3,9 +3,7 @@
 <%= render :partial => 'form' %>
 
 <% content_for :sidebar do %>
-  <% Timesheet.all.each do |timesheet| %>
-    <%= link_to(h(timesheet.name), timesheet_path(timesheet)) %>
-  <% end %>
+  <%= render :partial => 'sidebar' %>
 <% end %>
 
 <% content_for(:header_tags) do %>

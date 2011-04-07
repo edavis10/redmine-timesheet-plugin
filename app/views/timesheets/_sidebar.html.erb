@@ -1,0 +1,10 @@
+<%= content_tag(:h3, l(:text_timesheet_plural)) %>
+
+<ul>
+<% Timesheet.all.each do |timesheet| %>
+  <li><%= link_to(h(timesheet.name), timesheet_path(timesheet)) %></li>
+<% end %>
+</ul>
+
+
+<%= link_to(l(:text_new_timesheet), new_timesheet_path) %>

@@ -49,7 +49,5 @@ end # form_tag
 <%= call_hook(:plugin_timesheet_views_timesheets_report_bottom, { :timesheet => @timesheet }) %>
 
 <% content_for :sidebar do %>
-  <% Timesheet.all.each do |timesheet| %>
-    <%= link_to(h(timesheet.name), timesheet_path(timesheet)) %>
-  <% end %>
+  <%= render :partial => 'sidebar' %>
 <% end %>

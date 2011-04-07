@@ -32,6 +32,11 @@ class TimesheetsController < InheritedResources::Base
     end
   end
 
+  def new
+    clear_filters_from_session
+    redirect_to :action => 'index'
+  end
+
   def context_menu
     @time_entries = TimeEntry.find(:all, :conditions => ['id IN (?)', params[:ids]])
     render :layout => false
