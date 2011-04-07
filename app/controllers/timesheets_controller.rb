@@ -61,8 +61,9 @@ class TimesheetsController < InheritedResources::Base
   def get_activities
     @activities = TimeEntryActivity.all
   end
-  
-  def allowed_projects
+
+  # TODO: move to model
+  def self.allowed_projects
     if User.current.admin?
       Project.timesheet_order_by_name
     elsif Setting.plugin_timesheet_plugin['project_status'] == 'all'
@@ -70,6 +71,10 @@ class TimesheetsController < InheritedResources::Base
     else
       Project.timesheet_order_by_name.all(:conditions => Project.visible_by(User.current))
     end
+  end
+
+  def allowed_projects
+    self.class.allowed_projects
   end
 
   def clear_filters_from_session
@@ -96,6 +101,7 @@ class TimesheetsController < InheritedResources::Base
     end
 
     if timesheet
+      session[SessionKey] ||= {}
       session[SessionKey]['date_from'] = timesheet.date_from
       session[SessionKey]['date_to'] = timesheet.date_to
     end

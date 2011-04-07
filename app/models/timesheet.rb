@@ -1,4 +1,6 @@
 class Timesheet < ActiveRecord::Base
+  belongs_to :user
+  
   attr_accessible :name
   attr_accessible :date_from
   attr_accessible :date_to
@@ -6,8 +8,7 @@ class Timesheet < ActiveRecord::Base
   serialize :filters, Hash
 
   attr_accessor :allowed_projects
-  attr_accessor :period
-  attr_accessor :period_type
+  attr_accessor :projects # Don't serialize the whole objects
 
   # Time entries on the Timesheet in the form of:
   #   project.name => {:logs => [time entries], :users => [users shown in logs] }
@@ -41,6 +42,8 @@ class Timesheet < ActiveRecord::Base
       self.sort = args.first[:sort] if args.first[:sort].present?
       self.allowed_projects = args.first[:allowed_projects] if args.first[:allowed_projects].present?
       self.period_type = args.first[:period_type] if args.first[:period_type].present?
+      self.period = args.first[:period] if args.first[:period].present?
+      self.projects = args.first[:projects] if args.first[:projects].present?
     end
     
   end
@@ -48,9 +51,12 @@ class Timesheet < ActiveRecord::Base
   # Set up +filters+ and default filter options
   def after_initialize
     self.filters ||= {}
+    self.filters[:project_ids] ||= []
     # Default filters
     if new_record?
-      self.projects = []
+      self.projects ||= []
+      self.date_from ||= Date.today
+      self.date_to ||= Date.today
     end
     
     self.time_entries ||= {}
@@ -59,17 +65,55 @@ class Timesheet < ActiveRecord::Base
     self.activities ||= TimeEntryActivity.all.collect { |a| a.id.to_i }
     self.users ||= Timesheet.viewable_users.collect {|user| user.id.to_i }
     self.sort ||= :project
-    self.date_from ||= Date.today
-    self.date_to ||= Date.today
     self.period_type ||= ValidPeriodType[:free_period]
   end
 
+  def before_save
+    self.user = User.current
+    if period_type == ValidPeriodType[:default]
+      # clear dates
+      self.date_from = nil
+      self.date_to = nil
+    elsif period_type == ValidPeriodType[:free_period]
+      self.period = nil
+    end
+    self.filters[:project_ids] = self.project_ids
+    
+    true
+  end
+
   def projects
-    filters[:projects]
+    return @projects if @projects.present?
+
+    filters[:project_ids].collect do |project|
+      project = Project.find_by_id(project)
+      # TODO: MVC violation
+      if TimesheetsController.allowed_projects.include?(project)
+        project
+      else
+        nil
+      end
+    end.compact.uniq
   end
 
   def projects=(p)
-    filters[:projects] = p
+    @projects = p.collect do |project|
+      unless project.is_a?(Project)
+        project = Project.find_by_id(project)
+      end
+
+      # TODO: MVC violation
+      if TimesheetsController.allowed_projects.include?(project)
+        project
+      else
+        nil
+      end
+      
+    end.compact.uniq
+  end
+
+  def project_ids
+    projects.collect(&:id) if projects.present?
   end
 
   def activities
@@ -77,7 +121,7 @@ class Timesheet < ActiveRecord::Base
   end
 
   def activities=(a)
-    filters[:activities] = a.collect {|a| a.to_i}
+    filters[:activities] = a.collect {|a| a.to_i}.uniq
   end
 
   def users
@@ -85,7 +129,7 @@ class Timesheet < ActiveRecord::Base
   end
 
   def users=(u)
-    filters[:users] = u.collect {|i| i.to_i}
+    filters[:users] = u.collect {|i| i.to_i}.uniq
   end
 
   def sort
@@ -98,22 +142,26 @@ class Timesheet < ActiveRecord::Base
     end
   end
 
-  # Gets all the time_entries for all the projects
-  def fetch_time_entries
-    self.time_entries = { }
-    case self.sort
-    when :project
-      fetch_time_entries_by_project
-    when :user
-      fetch_time_entries_by_user
-    when :issue
-      fetch_time_entries_by_issue
-    else
-      fetch_time_entries_by_project
+  def period_type
+    filters[:period_type]
+  end
+
+  def period_type=(p)
+    if Timesheet::ValidPeriodType.values.include?(p.to_i)
+      filters[:period_type] = p.to_i
     end
   end
 
-  def period=(period)
+  # Named periods e.g. 'today'
+  def period
+    filters[:period]
+  end
+
+  def period=(p)
+    filters[:period] = p.to_s
+  end
+
+  def set_dates_from_period
     return if self.period_type == Timesheet::ValidPeriodType[:free_period]
     # Stolen from the TimelogController
     case period.to_s
@@ -146,6 +194,22 @@ class Timesheet < ActiveRecord::Base
       self.date_from = self.date_to = nil
     end
     self
+  end
+
+  # Gets all the time_entries for all the projects
+  def fetch_time_entries
+    self.time_entries = { }
+    set_dates_from_period
+    case self.sort
+    when :project
+      fetch_time_entries_by_project
+    when :user
+      fetch_time_entries_by_user
+    when :issue
+      fetch_time_entries_by_issue
+    else
+      fetch_time_entries_by_project
+    end
   end
 
   def to_permalink

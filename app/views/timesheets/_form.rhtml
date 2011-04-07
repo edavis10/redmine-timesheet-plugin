@@ -5,7 +5,7 @@
 <p id="date-options">
   <label><%= l(:label_date)%>:</label><br />
   <%= radio_button_tag 'timesheet[period_type]', '1', @timesheet.period_type == Timesheet::ValidPeriodType[:default] %>
-  <%= select_tag 'timesheet[period]', options_for_period_select((params[:timesheet].nil? ? nil : params[:timesheet][:period])),
+  <%= select_tag 'timesheet[period]', options_for_period_select(@timesheet.period),
                            :onfocus => '$("timesheet_period_type_1").checked = true;' %>
   <br /><br />
 

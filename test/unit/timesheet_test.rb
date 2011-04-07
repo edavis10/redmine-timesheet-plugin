@@ -480,6 +480,8 @@ class TimesheetTest < ActiveSupport::TestCase
     context "with project status set to all" do
       setup do
         Setting.plugin_timesheet_plugin['project_status'] = 'all'
+        # Need to reset @timesheet#projects now that the setting changed
+        @timesheet.projects = [@project1, @project2, @archived_project]
       end
       
       should 'collect time entries for archived projects' do
@@ -512,7 +514,7 @@ class TimesheetTest < ActiveSupport::TestCase
     end
   end
 
-  context '#period=' do
+  context '#set_dates_from_period' do
     
     context 'should set the date_to and date_from for' do
       setup do
@@ -523,60 +525,70 @@ class TimesheetTest < ActiveSupport::TestCase
       
       should 'today' do
         @timesheet.period = 'today'
+        @timesheet.set_dates_from_period
         assert_equal @date, @timesheet.date_from
         assert_equal @date, @timesheet.date_to
       end
       
       should 'yesterday' do
         @timesheet.period = 'yesterday'
+        @timesheet.set_dates_from_period
         assert_equal @date.yesterday, @timesheet.date_from
         assert_equal @date.yesterday, @timesheet.date_to
       end
       
       should 'current_week' do
         @timesheet.period = 'current_week'
+        @timesheet.set_dates_from_period
         assert_equal Date.new(2009,2,2), @timesheet.date_from
         assert_equal Date.new(2009,2,8), @timesheet.date_to
       end
       
       should 'last_week' do
         @timesheet.period = 'last_week'
+        @timesheet.set_dates_from_period
         assert_equal Date.new(2009,1,26), @timesheet.date_from
         assert_equal Date.new(2009,2,1), @timesheet.date_to
       end
       
       should '7_days' do
         @timesheet.period = '7_days'
+        @timesheet.set_dates_from_period
         assert_equal @date - 7, @timesheet.date_from
         assert_equal @date, @timesheet.date_to
       end
       
       should 'current_month' do
         @timesheet.period = 'current_month'
+        @timesheet.set_dates_from_period
         assert_equal Date.new(2009,2,1), @timesheet.date_from
         assert_equal Date.new(2009,2,28), @timesheet.date_to
       end
       
       should 'last_month' do
         @timesheet.period = 'last_month'
+        @timesheet.set_dates_from_period
         assert_equal Date.new(2009,1,1), @timesheet.date_from
         assert_equal Date.new(2009,1,31), @timesheet.date_to
       end
       
       should '30_days' do
         @timesheet.period = '30_days'
+        @timesheet.set_dates_from_period
         assert_equal @date - 30, @timesheet.date_from
         assert_equal @date, @timesheet.date_to
       end
       
       should 'current_year' do
         @timesheet.period = 'current_year'
+        @timesheet.set_dates_from_period
         assert_equal Date.new(2009,1,1), @timesheet.date_from
         assert_equal Date.new(2009,12,31), @timesheet.date_to
       end
       
       should 'all' do
         @timesheet.period = 'all'
+        @timesheet.set_dates_from_period
         assert_equal nil, @timesheet.date_from
         assert_equal nil, @timesheet.date_to
       end
