@@ -1,6 +1,6 @@
 <div id="timesheet-form">
 <fieldset>
-<% form_for :timesheet, :url =>{:action => 'report'} do |f|  %>
+<% form_for resource do |f|  %>
 
 <p id="date-options">
   <label><%= l(:label_date)%>:</label><br />
@@ -41,6 +41,11 @@
   <%= select_tag 'timesheet[users][]', user_options(@timesheet), { :multiple => true, :size => @list_size} %>
 </p>
 
+<br />
+
+<p>
+  <label for="timesheet_name"><%= l(:field_name) %></label><%= f.text_field "name" %>
+</p>
 <%# TODO: Typo on hook %>
 <%= call_hook(:plugin_timesheet_view_timesheet_form, { :timesheet => @timesheet, :params => params, :list_size => @list_size }) %>
 <%= call_hook(:plugin_timesheet_views_timesheet_form, { :timesheet => @timesheet, :params => params, :list_size => @list_size }) %>

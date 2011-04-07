@@ -50,18 +50,18 @@ class Timesheet < ActiveRecord::Base
     self.filters ||= {}
     # Default filters
     if new_record?
-      self.time_entries ||= {}
-      self.potential_time_entry_ids ||= []
       self.projects = []
-      self.allowed_projects ||= []
-      self.activities ||= TimeEntryActivity.all.collect { |a| a.id.to_i }
-      self.users ||= Timesheet.viewable_users.collect {|user| user.id.to_i }
-      self.sort ||= :project
-      self.date_from ||= Date.today
-      self.date_to ||= Date.today
-      self.period_type ||= ValidPeriodType[:free_period]
     end
     
+    self.time_entries ||= {}
+    self.potential_time_entry_ids ||= []
+    self.allowed_projects ||= []
+    self.activities ||= TimeEntryActivity.all.collect { |a| a.id.to_i }
+    self.users ||= Timesheet.viewable_users.collect {|user| user.id.to_i }
+    self.sort ||= :project
+    self.date_from ||= Date.today
+    self.date_to ||= Date.today
+    self.period_type ||= ValidPeriodType[:free_period]
   end
 
   def projects

@@ -6,6 +6,7 @@ class TimesheetsController < InheritedResources::Base
   before_filter :get_list_size
   before_filter :get_precision
   before_filter :get_activities
+  before_filter :run_report_for_show, :only => :show
 
   helper :timesheet
   helper :sort
@@ -31,65 +32,6 @@ class TimesheetsController < InheritedResources::Base
     end
   end
 
-  def report
-    if params && params[:timesheet]
-      @timesheet = Timesheet.new( params[:timesheet] )
-    else
-      redirect_to :action => 'index'
-      return
-    end
-    
-    @timesheet.allowed_projects = allowed_projects
-    
-    if @timesheet.allowed_projects.empty?
-      render :action => 'no_projects'
-      return
-    end
-
-    if !params[:timesheet][:projects].blank?
-      @timesheet.projects = @timesheet.allowed_projects.find_all { |project| 
-        params[:timesheet][:projects].include?(project.id.to_s)
-      }
-    else 
-      @timesheet.projects = @timesheet.allowed_projects
-    end
-
-    call_hook(:plugin_timesheet_controller_report_pre_fetch_time_entries, { :timesheet => @timesheet, :params => params })
-
-    save_filters_to_session(@timesheet)
-
-    @timesheet.fetch_time_entries
-
-    # Sums
-    @total = { }
-    unless @timesheet.sort == :issue
-      @timesheet.time_entries.each do |project,logs|
-        @total[project] = 0
-        if logs[:logs]
-          logs[:logs].each do |log|
-            @total[project] += log.hours
-          end
-        end
-      end
-    else
-      @timesheet.time_entries.each do |project, project_data|
-        @total[project] = 0
-        if project_data[:issues]
-          project_data[:issues].each do |issue, issue_data|
-            @total[project] += issue_data.collect(&:hours).sum
-          end
-        end
-      end
-    end
-    
-    @grand_total = @total.collect{|k,v| v}.inject{|sum,n| sum + n}
-
-    respond_to do |format|
-      format.html { render :action => 'details', :layout => false if request.xhr? }
-      format.csv  { send_data @timesheet.to_csv, :filename => 'timesheet.csv', :type => "text/csv" }
-    end
-  end
-  
   def context_menu
     @time_entries = TimeEntry.find(:all, :conditions => ['id IN (?)', params[:ids]])
     render :layout => false
@@ -158,4 +100,48 @@ class TimesheetsController < InheritedResources::Base
       session[SessionKey]['date_to'] = timesheet.date_to
     end
   end
+
+  # TODO: extracted out of the action
+  def run_report_for_show
+    @timesheet = resource
+    @timesheet.allowed_projects = allowed_projects
+    
+    if @timesheet.allowed_projects.empty?
+      render :action => 'no_projects'
+      return
+    end
+
+    @timesheet.projects = @timesheet.allowed_projects
+
+    call_hook(:plugin_timesheet_controller_report_pre_fetch_time_entries, { :timesheet => @timesheet, :params => params })
+
+    save_filters_to_session(@timesheet)
+
+    @timesheet.fetch_time_entries
+
+    # Sums
+    @total = { }
+    unless @timesheet.sort == :issue
+      @timesheet.time_entries.each do |project,logs|
+        @total[project] = 0
+        if logs[:logs]
+          logs[:logs].each do |log|
+            @total[project] += log.hours
+          end
+        end
+      end
+    else
+      @timesheet.time_entries.each do |project, project_data|
+        @total[project] = 0
+        if project_data[:issues]
+          project_data[:issues].each do |issue, issue_data|
+            @total[project] += issue_data.collect(&:hours).sum
+          end
+        end
+      end
+    end
+    
+    @grand_total = @total.collect{|k,v| v}.inject{|sum,n| sum + n}
+  end
+  
 end
