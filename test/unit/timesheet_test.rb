@@ -147,6 +147,16 @@ class TimesheetTest < ActiveSupport::TestCase
       assert_equal :project, timesheet.sort
     end
 
+    should 'initialize period_type to the free period' do
+      timesheet = Timesheet.new
+      assert_equal Timesheet::ValidPeriodType[:free_period], timesheet.period_type
+    end
+    
+    should 'initialize period_type to the passed in period_type' do
+      timesheet = Timesheet.new(:period_type => Timesheet::ValidPeriodType[:default])
+      assert_equal Timesheet::ValidPeriodType[:default], timesheet.period_type
+    end
+
     should 'should initialize time_entries to the passed in options' do 
       data = { :test => true }
       timesheet = Timesheet.new({ :time_entries => data })

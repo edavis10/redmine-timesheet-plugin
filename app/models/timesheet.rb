@@ -40,6 +40,7 @@ class Timesheet < ActiveRecord::Base
       self.activities = args.first[:activities] if args.first[:activities].present?
       self.sort = args.first[:sort] if args.first[:sort].present?
       self.allowed_projects = args.first[:allowed_projects] if args.first[:allowed_projects].present?
+      self.period_type = args.first[:period_type] if args.first[:period_type].present?
     end
     
   end
@@ -58,6 +59,7 @@ class Timesheet < ActiveRecord::Base
       self.sort ||= :project
       self.date_from ||= Date.today
       self.date_to ||= Date.today
+      self.period_type ||= ValidPeriodType[:free_period]
     end
     
   end
