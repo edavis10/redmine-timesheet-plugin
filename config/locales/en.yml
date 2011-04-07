@@ -13,4 +13,4 @@ en:
   text_all_projects: "All (active and archived)"
   text_timesheet_plural: Timesheets
   text_new_timesheet: New timesheet
-
+  button_run_without_saving: Run without saving

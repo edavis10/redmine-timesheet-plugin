@@ -37,6 +37,15 @@ class TimesheetsController < InheritedResources::Base
     redirect_to :action => 'index'
   end
 
+  def create
+    if params['query-only'].present?
+      run_report_for_show(Timesheet.new(params[:timesheet]))
+      render :action => 'show'
+    else
+      create!
+    end
+  end
+
   def context_menu
     @time_entries = TimeEntry.find(:all, :conditions => ['id IN (?)', params[:ids]])
     render :layout => false
@@ -113,8 +122,8 @@ class TimesheetsController < InheritedResources::Base
   end
 
   # TODO: extracted out of the action
-  def run_report_for_show
-    @timesheet = resource
+  def run_report_for_show(timesheet=nil)
+    @timesheet = timesheet || resource
     @timesheet.allowed_projects = allowed_projects
     
     if @timesheet.allowed_projects.empty?

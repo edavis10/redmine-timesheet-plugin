@@ -52,6 +52,7 @@
 
 <div class="clear"></div>
 <%= submit_tag l(:button_save),:class => 'button-small' -%>
+<%= submit_tag l(:button_run_without_saving),:name => 'query-only', :class => 'button-small' -%>
 
 <% end %>
 <%= button_to(l(:button_reset), new_timesheet_path) %>
