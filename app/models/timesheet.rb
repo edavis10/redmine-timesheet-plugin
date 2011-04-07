@@ -57,6 +57,7 @@ class Timesheet < ActiveRecord::Base
       self.projects ||= []
       self.date_from ||= Date.today
       self.date_to ||= Date.today
+      self.user ||= User.current
     end
     
     self.time_entries ||= {}
@@ -69,7 +70,6 @@ class Timesheet < ActiveRecord::Base
   end
 
   def before_save
-    self.user = User.current
     if period_type == ValidPeriodType[:default]
       # clear dates
       self.date_from = nil

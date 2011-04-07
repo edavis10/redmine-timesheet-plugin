@@ -1,7 +1,7 @@
 <%= content_tag(:h3, l(:text_timesheet_plural)) %>
 
 <ul>
-<% Timesheet.all.each do |timesheet| %>
+<% User.current.timesheets.each do |timesheet| %>
   <li><%= link_to(h(timesheet.name.present? ? timesheet.name : "(untitled)"), timesheet_path(timesheet)) %></li>
 <% end %>
 </ul>

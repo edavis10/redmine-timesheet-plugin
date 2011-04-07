@@ -63,6 +63,12 @@ class TimesheetsController < InheritedResources::Base
     redirect_to :action => 'index'
   end
 
+  protected
+
+  def begin_of_association_chain
+    User.current
+  end
+
   private
   def get_list_size
     @list_size = Setting.plugin_timesheet_plugin['list_size'].to_i
