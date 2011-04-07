@@ -133,32 +133,13 @@ class TimesheetsControllerTest < ActionController::TestCase
 
   end
 
-  context "#report with GET request from an Anonymous user" do
-    setup do
-      get :report
-    end
-
-    should_respond_with :redirect
-    should_redirect_to('index') {{:action => 'index'}}
-  end
-
-  context "#report with POST request from an Anonymous user" do
-    setup do
-      post :report
-    end
-
-    should_respond_with :redirect
-    should_redirect_to('index') {{:action => 'index'}}
-
-  end
-
-  context "#report with POST request" do
+  context "#create with POST request without saving" do
     setup do
       generate_and_login_user
     end
 
     use_timesheet_controller_shared do
-      post :report, :timesheet => {}
+      post :create, 'query-only' => true, :timesheet => {}
     end
     
     should 'should only allow the allowed projects into @timesheet.projects' do
@@ -168,7 +149,7 @@ class TimesheetsControllerTest < ActionController::TestCase
 
       Member.generate!(:principal => @current_user, :project => project1, :roles => [@normal_role])
 
-      post :report, :timesheet => { :projects => [project1.id.to_s, project2.id.to_s] }
+      post :create, 'query-only' => true, :timesheet => { :projects => [project1.id.to_s, project2.id.to_s] }
 
       assert_equal [project1], assigns['timesheet'].projects
     end
@@ -178,7 +159,7 @@ class TimesheetsControllerTest < ActionController::TestCase
       project2 = Project.generate!(:is_public => true)
       projects = [project1, project2]
 
-      post :report, :timesheet => { :projects => [project1.id.to_s, project2.id.to_s] }
+      post :create, 'query-only' => true, :timesheet => { :projects => [project1.id.to_s, project2.id.to_s] }
 
       assert_contains assigns['timesheet'].allowed_projects, project1
       assert_contains assigns['timesheet'].allowed_projects, project2
@@ -186,7 +167,7 @@ class TimesheetsControllerTest < ActionController::TestCase
 
     should 'should save the session data' do
       generate_project_membership(@current_user)
-      post :report, :timesheet => { :projects => ['1'] }
+      post :create, 'query-only' => true, :timesheet => { :projects => ['1'] }
 
       assert @request.session[TimesheetsController::SessionKey]
       assert @request.session[TimesheetsController::SessionKey].keys.include?('projects')
@@ -196,37 +177,11 @@ class TimesheetsControllerTest < ActionController::TestCase
     context ":csv format" do
       setup do
         generate_project_membership(@current_user)
-        post :report, :timesheet => {:projects => ['1']}, :format => 'csv'
+        post :create, 'query-only' => true, :timesheet => {:projects => ['1']}, :format => 'csv'
       end
 
       should_respond_with_content_type 'text/csv'
       should_respond_with :success
-    end
-  end
-
-  context "#report with request with no data" do
-    setup do
-      generate_and_login_user
-    end
-
-    context 'should redirect to the index' do
-      context "from a GET request" do
-        setup do
-          get 'report', { }
-        end
-
-        should_respond_with :redirect
-        should_redirect_to('index') {{:action => 'index' }}
-      end
-
-      context "from a POST request" do
-        setup do
-          post 'report', { }
-        end
-
-        should_respond_with :redirect
-        should_redirect_to('index') {{:action => 'index' }}
-      end
     end
   end
 

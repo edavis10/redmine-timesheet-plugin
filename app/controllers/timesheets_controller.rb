@@ -2,6 +2,7 @@ class TimesheetsController < InheritedResources::Base
   unloadable
 
   respond_to :html
+  respond_to :csv, :only => [:create, :show]
 
   before_filter :get_list_size
   before_filter :get_precision
@@ -39,8 +40,14 @@ class TimesheetsController < InheritedResources::Base
 
   def create
     if params['query-only'].present?
-      run_report_for_show(Timesheet.new(params[:timesheet]))
-      render :action => 'show'
+      if run_report_for_show(Timesheet.new(params[:timesheet]))
+        respond_to do |format|
+          format.html { render :action => 'show' }
+          format.csv  { send_data @timesheet.to_csv, :filename => 'timesheet.csv', :type => "text/csv" }
+        end
+      else
+        render :action => 'no_projects'
+      end
     else
       create!
     end
@@ -127,8 +134,7 @@ class TimesheetsController < InheritedResources::Base
     @timesheet.allowed_projects = allowed_projects
     
     if @timesheet.allowed_projects.empty?
-      render :action => 'no_projects'
-      return
+      return false
     end
 
     @timesheet.projects = @timesheet.allowed_projects
@@ -162,6 +168,7 @@ class TimesheetsController < InheritedResources::Base
     end
     
     @grand_total = @total.collect{|k,v| v}.inject{|sum,n| sum + n}
+    @timesheet
   end
   
 end
