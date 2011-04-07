@@ -1,4 +1,4 @@
-class TimesheetController < ApplicationController
+class TimesheetsController < ApplicationController
   unloadable
 
   layout 'base'
@@ -6,6 +6,7 @@ class TimesheetController < ApplicationController
   before_filter :get_precision
   before_filter :get_activities
 
+  helper :timesheet
   helper :sort
   include SortHelper
   helper :issues

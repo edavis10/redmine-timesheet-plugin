@@ -43,7 +43,7 @@ unless Redmine::Plugin.registered_plugins.keys.include?(:timesheet_plugin)
 
     menu(:top_menu,
          :timesheet,
-         {:controller => 'timesheet', :action => 'index'},
+         {:controller => 'timesheets', :action => 'index'},
          :caption => :timesheet_title,
          :if => Proc.new {
            User.current.allowed_to?(:see_project_timesheets, nil, :global => true) ||

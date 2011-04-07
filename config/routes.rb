@@ -1,4 +1,4 @@
 ActionController::Routing::Routes.draw do |map|
-  map.connect 'timesheet/report.:format', :controller => 'timesheet', :action => 'report'
-  map.connect 'timesheet/reset', :controller => 'timesheet', :action => 'reset', :conditions => { :method => :delete }
+  map.connect 'timesheets/report.:format', :controller => 'timesheets', :action => 'report'
+  map.connect 'timesheets/reset', :controller => 'timesheets', :action => 'reset', :conditions => { :method => :delete }
 end

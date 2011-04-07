@@ -65,7 +65,7 @@ class ActiveSupport::TestCase
 end
 
 
-class TimesheetControllerTest < ActionController::TestCase
+class TimesheetsControllerTest < ActionController::TestCase
   def generate_and_login_user(options = {})
     @current_user = User.generate_with_protected!(:admin => false)
     @request.session[:user_id] = @current_user.id
@@ -111,7 +111,7 @@ class TimesheetControllerTest < ActionController::TestCase
         projects << Project.generate!
       end
       
-      session[TimesheetController::SessionKey] = HashWithIndifferentAccess.new(
+      session[TimesheetsController::SessionKey] = HashWithIndifferentAccess.new(
                                                                                :projects => projects.collect(&:id).collect(&:to_s),
                                                                                :date_to => '2009-01-01',
                                                                                :date_from => '2009-01-01'
@@ -188,9 +188,9 @@ class TimesheetControllerTest < ActionController::TestCase
       generate_project_membership(@current_user)
       post :report, :timesheet => { :projects => ['1'] }
 
-      assert @request.session[TimesheetController::SessionKey]
-      assert @request.session[TimesheetController::SessionKey].keys.include?('projects')
-      assert_equal ['1'], @request.session[TimesheetController::SessionKey]['projects']
+      assert @request.session[TimesheetsController::SessionKey]
+      assert @request.session[TimesheetsController::SessionKey].keys.include?('projects')
+      assert_equal ['1'], @request.session[TimesheetsController::SessionKey]['projects']
     end
 
     context ":csv format" do
@@ -237,7 +237,7 @@ class TimesheetControllerTest < ActionController::TestCase
       @current_user.save!
 
       @project = Project.generate!
-      session[TimesheetController::SessionKey] = HashWithIndifferentAccess.new(
+      session[TimesheetsController::SessionKey] = HashWithIndifferentAccess.new(
                                                                                :projects => [@project.id.to_s],
                                                                                :date_to => '2009-01-01',
                                                                                :date_from => '2009-01-01'
@@ -249,7 +249,7 @@ class TimesheetControllerTest < ActionController::TestCase
     should_respond_with :redirect
     should_redirect_to('index') {{:action => 'index'}}
     should 'clear the session' do
-      assert session[TimesheetController::SessionKey].blank?
+      assert session[TimesheetsController::SessionKey].blank?
     end
 
   end
