@@ -90,8 +90,8 @@ class TimesheetTest < ActiveSupport::TestCase
     @manager_role = Role.generate!(:permissions => [:view_time_entries, :see_project_timesheets])
   end
   
-  should 'not be an ActiveRecord class' do
-    assert !Timesheet.new.is_a?(ActiveRecord::Base)
+  should 'be an ActiveRecord class' do
+    assert Timesheet.new.is_a?(ActiveRecord::Base)
   end
   
   context "initializing" do

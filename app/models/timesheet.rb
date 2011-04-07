@@ -1,5 +1,13 @@
-class Timesheet
-  attr_accessor :date_from, :date_to, :projects, :activities, :users, :allowed_projects, :period, :period_type
+class Timesheet < ActiveRecord::Base
+  attr_accessible :name
+  attr_accessible :date_from
+  attr_accessible :date_to
+  attr_accessible :filters
+  serialize :filters, Hash
+
+  attr_accessor :allowed_projects
+  attr_accessor :period
+  attr_accessor :period_type
 
   # Time entries on the Timesheet in the form of:
   #   project.name => {:logs => [time entries], :users => [users shown in logs] }
@@ -11,7 +19,6 @@ class Timesheet
   attr_accessor :potential_time_entry_ids
 
   # Sort time entries by this field
-  attr_accessor :sort
   ValidSortOptions = {
     :project => 'Project',
     :user => 'User',
@@ -22,40 +29,71 @@ class Timesheet
     :free_period => 0,
     :default => 1
   }
-  
-  def initialize(options = { })
-    self.projects = [ ]
-    self.time_entries = options[:time_entries] || { }
-    self.potential_time_entry_ids = options[:potential_time_entry_ids] || [ ]
-    self.allowed_projects = options[:allowed_projects] || [ ]
 
-    unless options[:activities].nil?
-      self.activities = options[:activities].collect { |a| a.to_i }
-    else
-      self.activities =  TimeEntryActivity.all.collect { |a| a.id.to_i }
+  # Set up +filters+ on passed in args
+  def initialize(*args)
+    super
+    if args.first && args.first.is_a?(Hash)
+      self.users = args.first[:users] if args.first[:users].present?
+      self.time_entries = args.first[:time_entries] if args.first[:time_entries].present?
+      self.potential_time_entry_ids = args.first[:potential_time_entry_ids] if args.first[:potential_time_entry_ids].present?
+      self.activities = args.first[:activities] if args.first[:activities].present?
+      self.sort = args.first[:sort] if args.first[:sort].present?
+      self.allowed_projects = args.first[:allowed_projects] if args.first[:allowed_projects].present?
     end
     
-    unless options[:users].nil?
-      self.users = options[:users].collect { |u| u.to_i }
-    else
-      self.users = Timesheet.viewable_users.collect {|user| user.id.to_i }
-    end
+  end
 
-    if !options[:sort].nil? && options[:sort].respond_to?(:to_sym) && ValidSortOptions.keys.include?(options[:sort].to_sym)
-      self.sort = options[:sort].to_sym
-    else
-      self.sort = :project
+  # Set up +filters+ and default filter options
+  def after_initialize
+    self.filters ||= {}
+    # Default filters
+    if new_record?
+      self.time_entries ||= {}
+      self.potential_time_entry_ids ||= []
+      self.projects = []
+      self.allowed_projects ||= []
+      self.activities ||= TimeEntryActivity.all.collect { |a| a.id.to_i }
+      self.users ||= Timesheet.viewable_users.collect {|user| user.id.to_i }
+      self.sort ||= :project
+      self.date_from ||= Date.today
+      self.date_to ||= Date.today
     end
     
-    self.date_from = options[:date_from] || Date.today.to_s
-    self.date_to = options[:date_to] || Date.today.to_s
+  end
 
-    if options[:period_type] && ValidPeriodType.values.include?(options[:period_type].to_i)
-      self.period_type = options[:period_type].to_i
-    else
-      self.period_type = ValidPeriodType[:free_period]
+  def projects
+    filters[:projects]
+  end
+
+  def projects=(p)
+    filters[:projects] = p
+  end
+
+  def activities
+    filters[:activities]
+  end
+
+  def activities=(a)
+    filters[:activities] = a.collect {|a| a.to_i}
+  end
+
+  def users
+    filters[:users]
+  end
+
+  def users=(u)
+    filters[:users] = u.collect {|i| i.to_i}
+  end
+
+  def sort
+    filters[:sort]
+  end
+
+  def sort=(s)
+    if ValidSortOptions.keys.include?(s.to_sym)
+      filters[:sort] = s.to_sym
     end
-    self.period = options[:period] || nil
   end
 
   # Gets all the time_entries for all the projects

@@ -118,8 +118,8 @@ class TimesheetControllerTest < ActionController::TestCase
                                                                                )
 
       get :index
-      assert_equal '2009-01-01', assigns['timesheet'].date_from
-      assert_equal '2009-01-01', assigns['timesheet'].date_to
+      assert_equal '2009-01-01', assigns['timesheet'].date_from.to_s
+      assert_equal '2009-01-01', assigns['timesheet'].date_to.to_s
       assert_equal projects, assigns['timesheet'].projects
     end
   end
