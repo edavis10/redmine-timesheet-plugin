@@ -41,20 +41,21 @@
   <%= select_tag 'timesheet[users][]', user_options(@timesheet), { :multiple => true, :size => @list_size} %>
 </p>
 
-<br />
-
-<p>
-  <label for="timesheet_name"><%= l(:field_name) %></label><%= f.text_field "name" %>
-</p>
 <%# TODO: Typo on hook %>
 <%= call_hook(:plugin_timesheet_view_timesheet_form, { :timesheet => @timesheet, :params => params, :list_size => @list_size }) %>
 <%= call_hook(:plugin_timesheet_views_timesheet_form, { :timesheet => @timesheet, :params => params, :list_size => @list_size }) %>
 
 <div class="clear"></div>
+<p style="float:none;">
+  <label for="timesheet_name"><%= l(:field_name) %></label><%= f.text_field "name" %>
+</p>
+
 <%= submit_tag l(:button_save),:class => 'button-small' -%>
 <%= submit_tag l(:button_run_without_saving),:name => 'query-only', :class => 'button-small' -%>
 
 <% end %>
-<%= button_to(l(:button_reset), new_timesheet_path) %>
+<div class="contextual">
+  <%= link_to(l(:button_reset), new_timesheet_path) %>
+</div>
 </fieldset>
 </div>
