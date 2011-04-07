@@ -7,7 +7,7 @@ module TimesheetHelper
     link_to(l(:timesheet_permalink),
             :controller => 'timesheet',
             :action => 'report',
-            :timesheet => timesheet.to_param)
+            :timesheet => timesheet.to_permalink)
   end
 
   def link_to_csv_export(timesheet)
@@ -16,7 +16,7 @@ module TimesheetHelper
               :controller => 'timesheet',
               :action => 'report',
               :format => 'csv',
-              :timesheet => timesheet.to_param
+              :timesheet => timesheet.to_permalink
             },
             :method => 'post',
             :class => 'icon icon-timesheet')

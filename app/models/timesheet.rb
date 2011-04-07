@@ -148,7 +148,7 @@ class Timesheet < ActiveRecord::Base
     self
   end
 
-  def to_param
+  def to_permalink
     {
       :projects => projects.collect(&:id),
       :date_from => date_from,
