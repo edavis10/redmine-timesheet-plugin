@@ -2,6 +2,10 @@
 
 <%= render :partial => 'form' %>
 
+<% content_for :sidebar do %>
+
+<% end %>
+
 <% content_for(:header_tags) do %>
 <%= stylesheet_link_tag "timesheet.css", :plugin => "timesheet_plugin", :media => 'all' %>
 <%= javascript_include_tag 'timesheet.js', :plugin => 'timesheet_plugin' %>

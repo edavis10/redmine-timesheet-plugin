@@ -47,3 +47,7 @@ end # form_tag
 <%# TODO: Typo on hook %>
 <%= call_hook(:plugin_timesheet_view_timesheets_report_bottom, { :timesheet => @timesheet }) %>
 <%= call_hook(:plugin_timesheet_views_timesheets_report_bottom, { :timesheet => @timesheet }) %>
+
+<% content_for :sidebar do %>
+
+<% end %>
