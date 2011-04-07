@@ -10,6 +10,9 @@ end
 
 require 'dispatcher'
 Dispatcher.to_prepare :timesheet_plugin do
+  gem 'inherited_resources', :version => '1.0.6'
+  require_dependency 'inherited_resources'
+  require_dependency 'inherited_resources/base'
 
   require_dependency 'principal'
   require_dependency 'user'

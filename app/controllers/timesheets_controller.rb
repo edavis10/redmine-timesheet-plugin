@@ -1,7 +1,8 @@
-class TimesheetsController < ApplicationController
+class TimesheetsController < InheritedResources::Base
   unloadable
 
-  layout 'base'
+  respond_to :html
+
   before_filter :get_list_size
   before_filter :get_precision
   before_filter :get_activities
