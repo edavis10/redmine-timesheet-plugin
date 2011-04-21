@@ -148,10 +148,16 @@ class TimesheetController < ApplicationController
 
   def save_filters_to_session(timesheet)
     if params[:timesheet]
-      session[SessionKey] = params[:timesheet]
+      # Check that the params will fit in the session before saving
+      # prevents an ActionController::Session::CookieStore::CookieOverflow
+      encoded = Base64.encode64(Marshal.dump(params[:timesheet]))
+      if encoded.size < 2.kilobytes # Only use 2K of the cookie
+        session[SessionKey] = params[:timesheet]
+      end
     end
 
     if timesheet
+      session[SessionKey] ||= {}
       session[SessionKey]['date_from'] = timesheet.date_from
       session[SessionKey]['date_to'] = timesheet.date_to
     end
