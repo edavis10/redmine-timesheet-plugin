@@ -1,9 +1,9 @@
-<p><label>List size</label><%= text_field_tag 'settings[list_size]', @settings['list_size'] %></p>
+<p><label for="settings_list_size">List size</label><%= text_field_tag 'settings[list_size]', @settings['list_size'] %></p>
 
-<p><label>Number precision</label><%= text_field_tag 'settings[precision]', @settings['precision'] %></p>
+<p><label for="settings_precision">Number precision</label><%= text_field_tag 'settings[precision]', @settings['precision'] %></p>
 
 <p>
-  <label><%= l(:label_show_project_status) %></label>
+  <label for="settings_project_status"><%= l(:label_show_project_status) %></label>
   <%= select_tag('settings[project_status]',
                  options_for_select({
                                       l(:text_active_projects) => 'active',
