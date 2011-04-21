@@ -202,6 +202,60 @@ class TimesheetTest < ActiveSupport::TestCase
     end
   end
 
+  context "#viewable_users" do
+    setup do
+      @active_user = User.generate!
+      @active2_user = User.generate!
+      @inactive_user = User.generate!(:status => User::STATUS_LOCKED)
+      @no_permission_user = User.generate!
+      @role = Role.generate!(:permissions => [:log_time])
+      @project = Project.generate!
+      User.add_to_project(@active_user, @project, @role)
+      User.add_to_project(@active2_user, @project, @role)
+      User.add_to_project(@inactive_user, @project, @role)
+    end
+    
+    context "with the user_status configured to all" do
+      setup do
+        reconfigure_plugin('user_status' => 'all')
+      end
+      
+      should "show return all users with the log_time permission" do
+        assert Timesheet.viewable_users.include?(@active_user)
+        assert Timesheet.viewable_users.include?(@active2_user)
+        assert Timesheet.viewable_users.include?(@inactive_user)
+        assert !Timesheet.viewable_users.include?(@no_permission_user)
+      end
+    end
+
+    context "with the user_status configured to active" do
+      setup do
+        reconfigure_plugin('user_status' => 'active')
+      end
+      
+      should "show return active users with the log_time permission" do
+        assert Timesheet.viewable_users.include?(@active_user)
+        assert Timesheet.viewable_users.include?(@active2_user)
+        assert !Timesheet.viewable_users.include?(@inactive_user)
+        assert !Timesheet.viewable_users.include?(@no_permission_user)
+      end
+    end
+
+    context "with the user_status not configured" do
+      setup do
+        reconfigure_plugin('user_status' => '')
+      end
+      
+      should "show default to the 'active' option and return active users with the log_time permission" do
+        assert Timesheet.viewable_users.include?(@active_user)
+        assert Timesheet.viewable_users.include?(@active2_user)
+        assert !Timesheet.viewable_users.include?(@inactive_user)
+        assert !Timesheet.viewable_users.include?(@no_permission_user)
+      end
+    end
+
+  end
+
   context "#fetch_time_entries" do
     setup do
       stub_admin_user

@@ -146,7 +146,13 @@ class Timesheet
   end
 
   def self.viewable_users
-    User.active.select {|user|
+    if Setting['plugin_timesheet_plugin'].present? && Setting['plugin_timesheet_plugin']['user_status'] == 'all'
+      user_scope = User.all
+    else
+      user_scope = User.active
+    end
+    
+    user_scope.select {|user|
       user.allowed_to?(:log_time, nil, :global => true)
     }
   end

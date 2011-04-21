@@ -100,12 +100,13 @@ class ActiveSupport::TestCase
     Setting.plugin_timesheet_plugin = {
       'list_size' => '5',
       'precision' => '2',
-      'project_status' => 'active'
+      'project_status' => 'active',
+      'user_status' => 'active'
     }.merge(configuration_change)
   end
 
   def reconfigure_plugin(configuration_change)
-    Settings['plugin_timesheet_plugin'] = Setting['plugin_timesheet_plugin'].merge(configuration_change)
+    Setting['plugin_timesheet_plugin'] = Setting['plugin_timesheet_plugin'].merge(configuration_change)
   end
 
   def plugin_configuration
