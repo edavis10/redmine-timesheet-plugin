@@ -9,3 +9,11 @@
                                       l(:text_active_projects) => 'active',
                                       l(:text_all_projects) => 'all'}, @settings['project_status'])) %>
 </p>
+
+<p>
+  <label for="settings_user_status"><%= l(:label_user_status) %></label>
+  <%= select_tag('settings[user_status]',
+                 options_for_select({
+                                      l(:text_active_users) => 'active',
+                                      l(:text_all_users) => 'all'}, @settings['user_status'])) %>
+</p>

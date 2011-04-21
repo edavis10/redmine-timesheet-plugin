@@ -47,4 +47,14 @@ class ConfigurationTest < ActionController::IntegrationTest
 
     assert_equal 'all', plugin_configuration['project_status']
   end
+
+  should "be able to configure what types of users are shown" do
+    login_as(@user.login, 'test')
+    visit_configuration_panel
+
+    select "All", :from => 'settings_user_status'
+    click_button 'Apply'
+
+    assert_equal 'all', plugin_configuration['user_status']
+  end
 end

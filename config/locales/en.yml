@@ -11,4 +11,7 @@ en:
   label_show_project_status: "Projects with the status:"
   text_active_projects: "Active"
   text_all_projects: "All (active and archived)"
+  label_user_status: "Show users with the status of"
+  text_active_users: "Active only"
+  text_all_users: "All"
 
