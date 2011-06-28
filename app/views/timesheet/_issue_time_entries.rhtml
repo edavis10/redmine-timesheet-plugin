@@ -20,7 +20,7 @@
       </div>
     </td>
     <td align="center"><strong><%= number_with_precision(displayed_time_entries_for_issue(time_entries), @precision) %></strong></td>
-    <%= Redmine::Hook.call_hook(:plugin_timesheet_views_timesheet_time_entry_sum, {:time_entries => time_entries, :precision => @precision }) %>
+    <%= Redmine::Hook.call_hook(:plugin_timesheet_views_timesheet_time_entry_sum, {:issue => issue, :time_entries => time_entries, :precision => @precision }) %>
     <td align="center"></td>
   </tr>
 <% time_entries.each do |time_entry| %>
