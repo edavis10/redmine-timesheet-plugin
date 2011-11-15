@@ -30,7 +30,14 @@ class Timesheet
     self.allowed_projects = options[:allowed_projects] || [ ]
 
     unless options[:activities].nil?
-      self.activities = options[:activities].collect { |a| a.to_i }
+      self.activities = options[:activities].collect do |activity_id|
+        # Include project-overridden activities
+        activity = TimeEntryActivity.find(activity_id)
+        project_activities = TimeEntryActivity.all(:conditions => ['parent_id IN (?)', activity.id]) if activity.parent_id.nil?
+        project_activities ||= []
+        
+        [activity.id.to_i] + project_activities.collect(&:id)
+      end.flatten.uniq.compact
     else
       self.activities =  TimeEntryActivity.all.collect { |a| a.id.to_i }
     end
@@ -196,7 +203,7 @@ class Timesheet
   def conditions(users, extra_conditions=nil)
     if self.potential_time_entry_ids.empty?
       if self.date_from.present? && self.date_to.present?
-        conditions = ["spent_on >= (:from) AND spent_on <= (:to) AND #{TimeEntry.table_name}.project_id IN (:projects) AND user_id IN (:users) AND (activity_id IN (:activities) OR (#{::Enumeration.table_name}.parent_id IN (:activities) AND #{::Enumeration.table_name}.project_id IN (:projects)))",
+        conditions = ["spent_on >= (:from) AND spent_on <= (:to) AND #{TimeEntry.table_name}.project_id IN (:projects) AND user_id IN (:users) AND activity_id IN (:activities)",
                       {
                         :from => self.date_from,
                         :to => self.date_to,
@@ -205,7 +212,7 @@ class Timesheet
                         :users => users
                       }]
       else # All time
-        conditions = ["#{TimeEntry.table_name}.project_id IN (:projects) AND user_id IN (:users) AND (activity_id IN (:activities) OR (#{::Enumeration.table_name}.parent_id IN (:activities) AND #{::Enumeration.table_name}.project_id IN (:projects)))",
+        conditions = ["#{TimeEntry.table_name}.project_id IN (:projects) AND user_id IN (:users) AND activity_id IN (:activities)",
                       {
                         :projects => self.projects,
                         :activities => self.activities,
