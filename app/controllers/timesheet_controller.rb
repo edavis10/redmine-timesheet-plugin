@@ -115,7 +115,7 @@ class TimesheetController < ApplicationController
   end
 
   def get_activities
-    @activities = TimeEntryActivity.all
+    @activities = TimeEntryActivity.all(:conditions => 'parent_id IS NULL')
   end
   
   def allowed_projects
