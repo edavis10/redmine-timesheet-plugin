@@ -3,8 +3,10 @@
     <td align="center"><%= check_box_tag 'ids[]', time_entry.id, false, { :class => 'checkbox' } %></td>
     <td align="center"><%= format_date(time_entry.spent_on) %></td>
     <td align="center"><%= time_entry.user.name %></td>
+    <td align="center"><% time_entry.user.groups.each do |group| %><%= group.name %> <% end %></td> 
     <td align="center"><%= time_entry.activity.name %></td>
-    <td align="center"><%= time_entry.project.name %></td>
+    <td align="center"><%= link_to_project time_entry.project %></td>
+    <td align="center"><%= time_entry.version %></td>
     <td align="center">
       <% if time_entry.issue %>
       <div class="tooltip">
@@ -16,7 +18,7 @@
       <% end %>
     </td>
     <td><%=h time_entry.comments %></td>
-    <td align="center"><strong><%= number_with_precision(time_entry.hours, @precision) %></strong></td>
+    <td align="center"><strong><%= number_with_precision(time_entry.hours, :precision => @precision) %></strong></td>
     <%= Redmine::Hook.call_hook(:plugin_timesheet_views_timesheet_time_entry, {:time_entry => time_entry, :precision => @precision }) %>
     <td align="center">
       <% if time_entry.editable_by?(User.current) -%>

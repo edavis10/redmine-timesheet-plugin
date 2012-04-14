@@ -4,13 +4,15 @@
       <%= link_to image_tag('toggle_check.png'), {}, :onclick => 'toggleIssuesSelection(Element.up(this, "table")); return false;',
                                                            :title => "#{l(:button_check_all)}/#{l(:button_uncheck_all)}", :class => 'toggle-all' %>
     </th>
-    <th width="8%"><%= l(:label_date) %></th>
-    <th width="10%"><%= l(:label_member) %></th>
-    <th width="15%"><%= l(:label_activity) %></th>
-    <th width="15%"><%= l(:label_project) %></th>
+    <th width="8%"><%= link_to_sort_by l(:label_date), "date" %></th>
+    <th width="10%"><%= link_to_sort_by l(:label_member), "member" %></th>
+    <th width="10%"><%= l(:label_group) %></td>
+    <th width="10%"><%= link_to_sort_by l(:label_activity), "activity" %></th>
+    <th width="10%"><%= l(:label_project) %></th>
+    <th width="10%"><%= l(:label_version) %></th>
     <th width="10%"><%= l(:label_issue) %></th>
     <th width="25%"><%= l(:field_comments) %></th>
-    <th width="10%"><%= l(:field_hours) %></th>
+    <th width="10%"><%= link_to_sort_by l(:field_hours), "hours" %></th>
     <%= Redmine::Hook.call_hook(:plugin_timesheet_views_timesheet_group_header, { }) %>
     <th></th>
   </thead>

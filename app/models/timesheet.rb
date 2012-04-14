@@ -1,5 +1,5 @@
-class Timesheet
-  attr_accessor :date_from, :date_to, :projects, :activities, :users, :allowed_projects, :period, :period_type
+  class Timesheet
+  attr_accessor :date_from, :date_to, :projects, :activities, :users, :allowed_projects, :period, :period_type, :version, :order
 
   # Time entries on the Timesheet in the form of:
   #   project.name => {:logs => [time entries], :users => [users shown in logs] }
@@ -15,7 +15,8 @@ class Timesheet
   ValidSortOptions = {
     :project => 'Project',
     :user => 'User',
-    :issue => 'Issue'
+    :issue => 'Issue',
+    :version => 'Version'
   }
 
   ValidPeriodType = {
@@ -63,6 +64,7 @@ class Timesheet
       self.period_type = ValidPeriodType[:free_period]
     end
     self.period = options[:period] || nil
+    self.order = options[:order] || nil
   end
 
   # Gets all the time_entries for all the projects
@@ -75,6 +77,8 @@ class Timesheet
       fetch_time_entries_by_user
     when :issue
       fetch_time_entries_by_issue
+    when :version
+      fetch_time_entries_by_version
     else
       fetch_time_entries_by_project
     end
@@ -133,7 +137,7 @@ class Timesheet
 
         # Write the CSV based on the group/sort
         case sort
-        when :user, :project
+        when :user, :project, :version
           time_entries.sort.each do |entryname, entry|
             entry[:logs].each do |e|
               csv << time_entry_to_csv(e)
@@ -150,6 +154,28 @@ class Timesheet
         end
       end
     end
+  end
+
+  def to_xlsx
+    path ="#{RAILS_ROOT}/files/timesheet.xlsx"   
+    FileUtils.rm(path) if FileTest.exists?(path)
+
+  case sort
+  when :user, :project, :version
+    SimpleXlsx::Serializer.new(path) do |doc|
+      doc.add_sheet("Sesit") do |sheet|
+        sheet.add_row csv_header
+        time_entries.sort.each do |entryname, entry|
+          entry[:logs].each do |e|
+            sheet.add_row time_entry_to_csv(e)
+          end
+        end
+      end
+    end
+  end
+
+  return path
+
   end
 
   def self.viewable_users
@@ -248,7 +274,7 @@ class Timesheet
     return project.time_entries.find(:all,
                                      :conditions => self.conditions(self.users),
                                      :include => self.includes,
-                                     :order => "spent_on ASC")
+                                     :order => self.order)
   end
   
   def time_entries_for_current_user(project)
@@ -256,7 +282,36 @@ class Timesheet
                                      :conditions => self.conditions(User.current.id),
                                      :include => self.includes,
                                      :include => [:activity, :user, {:issue => [:tracker, :assigned_to, :priority]}],
-                                     :order => "spent_on ASC")
+                                     :order => self.order)
+  end
+
+  def empty_version_time_entries_for_all_users(project)
+    return project.time_entries.find(:all,
+                                     :conditions => self.conditions(self.users, "version_id is NULL"),
+                                     :include => self.includes,
+                                     :order => self.order)
+  end
+
+  def empty_version_time_entries_for_current_user(project)
+    return project.time_entries.find(:all,
+                                     :conditions => self.conditions(User.current.id, "version_id is NULL"),
+                                     :include => self.includes,
+                                     :order => self.order)
+  end
+
+  def version_time_entries_for_all_users(version)
+    return version.time_entries.find(:all,
+                                     :conditions => self.conditions(self.users),
+                                     :include => self.includes,
+                                     :order => self.order)
+  end
+  
+  def version_time_entries_for_current_user(version)
+    return version.time_entries.find(:all,
+                                     :conditions => self.conditions(User.current.id),
+                                     :include => self.includes,
+                                     :include => [:activity, :user, {:issue => [:tracker, :assigned_to, :priority]}],
+                                     :order => self.order)
   end
   
   def issue_time_entries_for_all_users(issue)
@@ -264,7 +319,7 @@ class Timesheet
                                    :conditions => self.conditions(self.users),
                                    :include => self.includes,
                                    :include => [:activity, :user],
-                                   :order => "spent_on ASC")
+                                   :order => self.order)
   end
   
   def issue_time_entries_for_current_user(issue)
@@ -272,7 +327,7 @@ class Timesheet
                                    :conditions => self.conditions(User.current.id),
                                    :include => self.includes,
                                    :include => [:activity, :user],
-                                   :order => "spent_on ASC")
+                                   :order => self.order)
   end
   
   def time_entries_for_user(user, options={})
@@ -281,8 +336,69 @@ class Timesheet
     return TimeEntry.find(:all,
                           :conditions => self.conditions([user], extra_conditions),
                           :include => self.includes,
-                          :order => "spent_on ASC"
+                          :order => self.order
                           )
+  end
+
+  def fetch_time_entries_by_version
+    self.projects.each do |project|
+      project.versions.each do |version|
+        unless version.nil?
+          logs = []
+          users = []
+
+          if User.current.admin?
+            # Administrators can see all time entries
+            logs = version_time_entries_for_all_users(version)
+            users = logs.collect(&:user).uniq.sort
+          elsif User.current.allowed_to_on_single_potentially_archived_project?(:see_project_timesheets, project)
+            # Users with the Role and correct permission can see all time entries
+            logs = time_entries_for_all_users(project)
+            users = logs.collect(&:user).uniq.sort
+          elsif User.current.allowed_to_on_single_potentially_archived_project?(:view_time_entries, project)
+            # Users with permission to see their time entries
+            logs = version_time_entries_for_current_user(version)
+            users = logs.collect(&:user).uniq.sort
+          else
+            # Rest can see nothing
+          end
+          
+          # Append project and version name
+          unless logs.empty?
+            self.time_entries[project.name + ' / v: ' + version.name] = { :logs => logs, :users => users } 
+          end
+        end
+      end
+
+    logs = []
+    users = []
+    if User.current.admin?
+      # Administrators can see all time entries
+      logs = empty_version_time_entries_for_all_users(project)
+      users = logs.collect(&:user).uniq.sort
+    elsif User.current.allowed_to_on_single_potentially_archived_project?(:see_project_timesheets, project)
+      # Users with the Role and correct permission can see all time entries
+      logs = time_entries_for_all_users(project)
+      users = logs.collect(&:user).uniq.sort
+    elsif User.current.allowed_to_on_single_potentially_archived_project?(:view_time_entries, project)
+      # Users with permission to see their time entries
+      logs = empty_version_time_entries_for_current_user(project)
+      users = logs.collect(&:user).uniq.sort
+    else
+      # Rest can see nothing
+    end
+          
+    # Append the parent project name
+      if project.parent.nil?
+        unless logs.empty?
+          self.time_entries[project.name] = { :logs => logs, :users => users } 
+        end
+      else
+        unless logs.empty?
+          self.time_entries[project.parent.name + ' / ' + project.name] = { :logs => logs, :users => users }
+        end
+      end
+    end
   end
   
   def fetch_time_entries_by_project
@@ -391,4 +507,8 @@ class Timesheet
   def l(*args)
     I18n.t(*args)
   end
+
+  # def number_with_custom_delimiter(number)
+  #   number.to_s.gsub('.', Setting.plugin_timesheet_plugin['custom_delimiter'])
+  # end
 end
