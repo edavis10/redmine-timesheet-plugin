@@ -124,7 +124,7 @@ class TimesheetController < ApplicationController
     elsif Setting.plugin_timesheet_plugin['project_status'] == 'all'
       Project.timesheet_order_by_name.timesheet_with_membership(User.current)
     else
-      Project.timesheet_order_by_name.all(:conditions => Project.visible_by(User.current))
+      Project.timesheet_order_by_name.all(:conditions => Project.visible_condition(User.current))
     end
   end
 
