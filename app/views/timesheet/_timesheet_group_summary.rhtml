@@ -1,0 +1,16 @@
+
+<table class="list issues">
+  
+  <tbody>
+      <%= render :partial => "time_entry_summary", :collection => entry[:logs] %>
+    <% if entry[:logs].count > 1 %>
+      <tr>
+        <td colspan="2" style="text-align: center;width: 70%;">Sub Total</td>
+        <td style="text-align:right;width: 15%;"><strong><%= h number_with_precision(@total[name], @precision)%></strong></td>
+        <td style="text-align:right;width: 15%;"><strong><%= h number_with_precision(@total_non_billable_hours[name], @precision) %></strong></td>
+      </tr>
+    <% end %>
+  </tbody>
+  
+</table>
+<br />

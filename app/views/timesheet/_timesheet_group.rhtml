@@ -6,16 +6,27 @@
     </th>
     <th width="8%"><%= l(:label_date) %></th>
     <th width="10%"><%= l(:label_member) %></th>
-    <th width="15%"><%= l(:label_activity) %></th>
-    <th width="15%"><%= l(:label_project) %></th>
+    <th width="10%"><%= l(:label_activity) %></th>
+    <th width="10%"><%= l(:label_project) %></th>
     <th width="10%"><%= l(:label_issue) %></th>
-    <th width="25%"><%= l(:field_comments) %></th>
-    <th width="10%"><%= l(:field_hours) %></th>
+    <th width="20%"><%= l(:field_comments) %></th>
+    <th width="10%" style="text-align: center;"><%= l(:field_hours) %></th>
+    <th width="10%" style="text-align: right;"><%= l(:field_non_billable_hours) %></th>
     <%= Redmine::Hook.call_hook(:plugin_timesheet_views_timesheet_group_header, { }) %>
-    <th></th>
+    <th width="2%">&nbsp;</th>
   </thead>
   <tbody>
     <%= render :partial => "time_entry", :collection => entry[:logs] %>
+    <% if entry[:logs].count > 1 %>
+      <tr>
+        <td style="width: 2%;">&nbsp;</td>
+        <td colspan="6" style="text-align: center;width: 68%;">Sub Total</td>
+        <td style="text-align:right;width: 10%;"><strong><%= h number_with_precision(@total[name], @precision)%></strong></td>
+        <td style="text-align:right;width: 10%;"><strong><%= h number_with_precision(@total_non_billable_hours[name], @precision) %></strong></td>
+        <td style="width: 8%;">&nbsp;</td>
+        <td style="width: 2%">&nbsp;</td>
+      </tr>
+    <% end %>
   </tbody>
 </table>
 <br />

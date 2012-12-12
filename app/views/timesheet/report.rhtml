@@ -8,30 +8,55 @@
 <%= render :partial => 'form' %>
 
 <%= call_hook(:plugin_timesheet_views_timesheets_report_before_time_entries, { :timesheet => @timesheet }) %>
-
-<% form_tag({}, { :id => 'time_entries'}) do -%>
 <% if @timesheet.time_entries.length > 0 %>
-<h2><%= l(:label_spent_time) %> (<%= h(number_with_precision(@grand_total, @precision)) -%> <%= h(l(:field_hours)) -%>)</h2>
-
-<% @timesheet.time_entries.each do |entryname,entry|
-    case @timesheet.sort
-    when :user %>
-   <h3><%= h entryname -%> (<%= h number_with_precision(@total[entryname], @precision) %> <%= h(l(:field_hours)) -%>)</h3>
-   <%= render :partial => 'timesheet_group', :locals => {:entry => entry, :name => entryname, :total => @total[entryname] } %>
-<% when :issue %>
-   <h3><%= h entryname -%> (<%= h number_with_precision(@total[entryname], @precision) %> <%= h(l(:field_hours)) -%>)</h3>
-   <%= render :partial => 'by_issue', :locals => {:entry => entry, :name => entryname, :total => 0 } %>
-<% else %>
-<%# Default to :project %>
-   <h3><%= h entryname -%> (<%= h number_with_precision(@total[entryname], @precision) %> <%= h(l(:field_hours)) -%>) <%= showing_users(entry[:users]) %></h3> 
-   <%= render :partial => 'timesheet_group', :locals => {:entry => entry, :name => entryname, :total => @total[entryname] } %>
-
-<% end
-end # each
-end # length
-end # form_tag
--%>
-
+  <%  if @timesheet.detailed == "yes" %>
+    <% form_tag({}, { :id => 'time_entries'}) do -%>
+      <% @timesheet.time_entries.sort{ |a,b| a.to_s.downcase <=> b.to_s.downcase }.each do |entryname,entry|
+        case @timesheet.sort
+          when :user %>
+            <h3><%= h entryname -%></h3>
+            <%= render :partial => 'timesheet_group', :locals => {:entry => entry, :name => entryname, :total => @total[entryname]} %>
+          <% when :issue %>
+            <%= render :partial => 'by_issue', :locals => {:entry => entry, :name => entryname, :total => 0 } %>
+          <% else %>
+            <%# Default to :project %>
+            <h3><%= h entryname -%> <%= showing_users(entry[:users]) %></h3>   
+            <%= render :partial => 'timesheet_group', :locals => {:entry => entry, :name => entryname, :total => @total[entryname]} %>
+        <% end %>
+      <% end %>
+    <% end %>
+    <table style="width: 100%;" class="list issues">   
+      <tr>
+        <td style="width: 2%;">&nbsp;</td>
+        <td style="text-align: center;width: 68%;">Grand Total</td>
+        <td style="text-align: right;width: 10%;"><strong><%= h(number_with_precision(@grand_total, @precision)) -%></strong></td>
+        <td style="text-align: right;width: 10%;"><strong><%= h(number_with_precision(@grand_total_non_billable_hours, @precision)) -%></strong></td>
+        <td style="width: 10%;">&nbsp;</td>
+      </tr> 
+    </table>
+  <% else %>
+    <%= render :partial => 'timesheet_summary_header'  %>        
+    <% @timesheet.time_entries.sort{ |a,b| a.to_s.downcase <=> b.to_s.downcase }.each do |entryname,entry|
+      case @timesheet.sort
+        when :user %>
+          <%= render :partial => 'timesheet_group_summary', :locals => {:entry => entry, :name => entryname } %>
+        <% when :issue %>
+          <h3><%= h entryname -%> (<%= h number_with_precision(@total[entryname], @precision) %> <%= h(l(:field_hours)) -%>)</h3>
+          <%= render :partial => 'by_issue', :locals => {:entry => entry, :name => entryname, :total => 0 } %>
+        <% else %>
+          <%# Default to :project %>
+          <%= render :partial => 'timesheet_group_summary', :locals => {:entry => entry,:name => entryname} %>
+      <% end %>
+    <% end %>
+    <table class="list issues">   
+      <tr>
+        <td style="text-align: center;width: 70%;">Grand Total</td>
+        <td style="text-align: right;width: 15%;"><strong><%= h(number_with_precision(@grand_total, @precision)) -%></strong></td>
+        <td style="text-align: right;width: 15%;"><strong><%= h(number_with_precision(@grand_total_non_billable_hours, @precision)) -%></strong></td>
+      </tr> 
+    </table> 
+  <% end %>
+<% end %>
 <% content_for(:header_tags) do %>
 <%= javascript_include_tag 'context_menu' %>
 <%= stylesheet_link_tag 'context_menu' %>

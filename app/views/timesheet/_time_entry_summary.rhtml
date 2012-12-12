@@ -1,0 +1,10 @@
+<%# TODO: Typo on hook %>
+    <tr id="time_entry<%#= time_entry.id %>" class="time_entry <%= cycle("odd", "even") %> hascontextmenu <%#= call_hook(:plugin_timesheet_view_timesheets_time_entry_row_class, {:time_entry => time_entry }) %> <%#= call_hook(:plugin_timesheet_views_timesheets_time_entry_row_class, {:time_entry => time_entry }) %>">
+      <!--td align="center"><%#= check_box_tag 'ids[]', time_entry.id, false, { :class => 'checkbox' } %></td-->
+      <td align="left" style="width: 30%;"><%=  time_entry_summary.first_name+" "+time_entry_summary.last_name %></td>
+      <td align="left" style="width: 40%;"><%= time_entry_summary.project_name %></td>
+      <td align="right" style="width: 15%;"><strong><%= number_with_precision(time_entry_summary.hours, @precision) %></strong></td>
+      <td align="right" style="width: 15%;"><strong><%= number_with_precision(time_entry_summary.non_billable_hours, @precision) %></strong></td>
+      <%= Redmine::Hook.call_hook(:plugin_timesheet_views_timesheet_time_entry_summary, {:time_entry => time_entry_summary, :precision => @precision }) %>
+    </tr>
+

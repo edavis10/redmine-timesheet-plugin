@@ -17,12 +17,11 @@ class TimesheetController < ApplicationController
   verify :method => :delete, :only => :reset, :render => {:nothing => true, :status => :method_not_allowed }
 
   def index
-    load_filters_from_session
+    #load_filters_from_session
     unless @timesheet
       @timesheet ||= Timesheet.new
     end
     @timesheet.allowed_projects = allowed_projects
-
     if @timesheet.allowed_projects.empty?
       render :action => 'no_projects'
       return
@@ -36,7 +35,7 @@ class TimesheetController < ApplicationController
       redirect_to :action => 'index'
       return
     end
-    
+        
     @timesheet.allowed_projects = allowed_projects
     
     if @timesheet.allowed_projects.empty?
@@ -51,27 +50,31 @@ class TimesheetController < ApplicationController
     else 
       @timesheet.projects = @timesheet.allowed_projects
     end
-
+  
     call_hook(:plugin_timesheet_controller_report_pre_fetch_time_entries, { :timesheet => @timesheet, :params => params })
 
-    save_filters_to_session(@timesheet)
+    #save_filters_to_session(@timesheet)
 
-    @timesheet.fetch_time_entries
-
+    @timesheet.fetch_time_entries if @timesheet.detailed == "yes"
+    @timesheet.fetch_time_entries_summary unless @timesheet.detailed == "yes"
     # Sums
     @total = { }
+    @total_non_billable_hours = { }
     unless @timesheet.sort == :issue
       @timesheet.time_entries.each do |project,logs|
         @total[project] = 0
+        @total_non_billable_hours[project] = 0
         if logs[:logs]
           logs[:logs].each do |log|
             @total[project] += log.hours
+            @total_non_billable_hours[project] += log.non_billable_hours.to_f unless log.non_billable_hours.blank?
           end
         end
       end
     else
       @timesheet.time_entries.each do |project, project_data|
         @total[project] = 0
+        @total_non_billable_hours[project] = 0
         if project_data[:issues]
           project_data[:issues].each do |issue, issue_data|
             @total[project] += issue_data.collect(&:hours).sum
@@ -79,12 +82,13 @@ class TimesheetController < ApplicationController
         end
       end
     end
-    
     @grand_total = @total.collect{|k,v| v}.inject{|sum,n| sum + n}
-
+    @grand_total_non_billable_hours = @total_non_billable_hours.collect{|k,v| v}.inject{|sum,n| sum + n}
+    
+    
     respond_to do |format|
       format.html { render :action => 'details', :layout => false if request.xhr? }
-      format.csv  { send_data @timesheet.to_csv, :filename => 'timesheet.csv', :type => "text/csv" }
+      format.csv  { send_data @timesheet.to_csv, :filename => 'timesheet.csv', :type => "text/csv" } 
     end
   end
   
@@ -96,6 +100,44 @@ class TimesheetController < ApplicationController
   def reset
     clear_filters_from_session
     redirect_to :action => 'index'
+  end
+  
+  def getprojects
+    custom_field_id = CustomField.find_by_name("Project Type").id
+    project_type = params[:project_type]
+    project_status = params[:project_status]
+    cond = ARCondition.new
+    cond << ["status =?",project_status] unless project_status == "Both"
+    if User.current.admin?
+      if project_type == "Both"
+        projects = Project.timesheet_order_by_name.find(:all,:conditions => cond.conditions,:order => "name ASC")
+      else
+        cond << ["custom_values.custom_field_id=?  && custom_values.value=?",custom_field_id,project_type]
+        projects = Project.timesheet_order_by_name.find(:all,:joins => :custom_values,:conditions => cond.conditions,:order => "name ASC")
+      end
+    elsif Setting.plugin_timesheet_plugin['project_status'] == 'all'
+      if project_type == "Both"
+        projects = Project.timesheet_order_by_name.timesheet_with_membership(User.current).find(:all,:conditions => cond.conditions,:order => "name ASC")
+      else
+        cond << ["custom_values.custom_field_id=?  && custom_values.value=?",custom_field_id,project_type]
+        projects = Project.timesheet_order_by_name.timesheet_with_membership(User.current).find(:all,:joins => :custom_values,:conditions => cond.conditions,:order => "name ASC")
+      end
+    else
+      cond << Project.visible_condition(User.current)
+      if project_type == "Both"
+        projects = Project.timesheet_order_by_name.find(:all,:conditions => cond.conditions,:order => "name ASC")
+      else
+        cond << ["custom_values.custom_field_id=?  && custom_values.value=?",custom_field_id,project_type]
+        projects = Project.timesheet_order_by_name.find(:all,:joins => :custom_values,:conditions => cond.conditions,:order => "name ASC")
+      end
+    end
+    projStr =""
+    projects.each do |project|
+      projStr << project.id.to_s() + ',' + project.name + "\n" 
+    end
+    respond_to do |format|
+      format.text  { render :text => projStr }
+    end
   end
 
   private
@@ -115,7 +157,7 @@ class TimesheetController < ApplicationController
   end
 
   def get_activities
-    @activities = TimeEntryActivity.all(:conditions => 'parent_id IS NULL')
+    @activities = TimeEntryActivity.all(:conditions => 'parent_id IS NULL',:order => "name ASC")
   end
   
   def allowed_projects
@@ -124,7 +166,7 @@ class TimesheetController < ApplicationController
     elsif Setting.plugin_timesheet_plugin['project_status'] == 'all'
       Project.timesheet_order_by_name.timesheet_with_membership(User.current)
     else
-      Project.timesheet_order_by_name.all(:conditions => Project.visible_by(User.current))
+      Project.timesheet_order_by_name.all(:conditions => Project.visible_condition(User.current))
     end
   end
 
