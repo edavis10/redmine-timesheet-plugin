@@ -1,3 +1,33 @@
+<script type="text/javascript">
+  function populate_projects_dropdown(){
+    projTypeDropdown = document.getElementById("timesheet_project_type")
+    var project_type = projTypeDropdown.options[projTypeDropdown.selectedIndex].value;
+    projStatusDropdown = document.getElementById("timesheet_project_status")
+    var project_status = projStatusDropdown.options[projStatusDropdown.selectedIndex].value;
+    var fmt = 'text';
+	   new Ajax.Updater('project_container', 
+		"<%=url_for(:controller => 'timesheet', :action => 'getprojects')%>", {
+        parameters: { project_type: project_type, project_status: project_status, format:fmt },
+        onSuccess: function(request){ updateProjDropdown(request.responseText) }
+       });
+  }
+  
+  
+  function updateProjDropdown(projStr){
+    var projects = projStr.split('\n');
+	var projDropdown = document.getElementById("timesheet_projects_");
+	projDropdown.options.length = 0;
+	for(i=0; i < projects.length-1; i++){
+		index = projects[i].indexOf(',');
+		if(index != -1){
+			val = projects[i].substring(0, index);
+			text = projects[i].substring(index+1);
+			projDropdown.options[i] = new Option(text, val,true, true)
+		}
+	}
+  }
+</script>
+
 <div id="timesheet-form">
 <fieldset>
 <% form_for :timesheet, :url =>{:action => 'report'} do |f|  %>
@@ -11,20 +41,27 @@
 
   <%= radio_button_tag 'timesheet[period_type]', '2', @timesheet.period_type  == Timesheet::ValidPeriodType[:free_period] %>
   <span onclick="$('timesheet_period_type_2').checked = true;">
-    <label for="timesheet_date_from"><%= l(:timesheet_date_from_label)%>:</label><br />
+    
     <%= f.text_field "date_from", :size => 10 %><%= calendar_for('timesheet_date_from') %><br />
 
-    <label for="timesheet_date_to"><%= l(:timesheet_date_to_label)%>:</label><br />
     <%= f.text_field "date_to", :size => 10 %><%= calendar_for('timesheet_date_to') %><br /><br />
   </span>
 </p>
 
-<p>
+<p id="date-options">
   <label for="timesheet_sort"><%= l(:timesheet_group_by) %>:</label><br />
   <%= select_tag("timesheet[sort]", options_for_select(Timesheet::ValidSortOptions.invert, @timesheet.sort)) %>
 
-</p>
+  </br></br>
 
+  <label>Project Type:</label><br />
+  <%= select_tag "timesheet[project_type]",options_for_select(Timesheet::ValidProjectTypes,@timesheet.project_type),:onChange => 'populate_projects_dropdown()' %>
+  
+  <br/><br/>
+  
+  <label>Project Status:</label><br/>
+  <%= select_tag "timesheet[project_status]",options_for_select(Timesheet::ValidProjectStatuses,@timesheet.project_status.blank? ? Project::STATUS_ACTIVE : (@timesheet.project_status.to_i == 0 ? "Both" : @timesheet.project_status.to_i)),:onChange => 'populate_projects_dropdown()' %>
+</p> 
 <p>
   <label for="timesheet_projects_" class="select_all"><%= l(:timesheet_project_label)%>:</label><br />
   <%= select_tag 'timesheet[projects][]', project_options(@timesheet), { :multiple => true, :size => @list_size} %>
@@ -40,6 +77,11 @@
   <label for="timesheet_users_" class="select_all"><%= l(:timesheet_users_label)%>:</label><br />
   <%= select_tag 'timesheet[users][]', user_options(@timesheet), { :multiple => true, :size => @list_size} %>
 </p>
+
+<p>
+  <%= check_box_tag "timesheet[detailed]",'yes',@timesheet.detailed == "yes" %>
+  <label>Detailed</label>
+</p>  
 
 <%# TODO: Typo on hook %>
 <%= call_hook(:plugin_timesheet_view_timesheet_form, { :timesheet => @timesheet, :params => params, :list_size => @list_size }) %>

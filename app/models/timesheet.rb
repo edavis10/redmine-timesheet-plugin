@@ -1,5 +1,5 @@
 class Timesheet
-  attr_accessor :date_from, :date_to, :projects, :activities, :users, :allowed_projects, :period, :period_type
+  attr_accessor :date_from, :date_to, :projects, :activities, :users, :allowed_projects, :period, :period_type,:project_type,:detailed,:project_status
 
   # Time entries on the Timesheet in the form of:
   #   project.name => {:logs => [time entries], :users => [users shown in logs] }
@@ -12,16 +12,29 @@ class Timesheet
 
   # Sort time entries by this field
   attr_accessor :sort
+  
   ValidSortOptions = {
     :project => 'Project',
-    :user => 'User',
-    :issue => 'Issue'
+    :user => 'User'#,
+    #:issue => 'Issue'
+  }
+  ValidProjectTypes = {
+    :Billable => 'Billable',
+    :NonBillable => 'Non Billable',
+    :Both => 'Both'
   }
 
   ValidPeriodType = {
     :free_period => 0,
     :default => 1
   }
+  
+  ValidProjectStatuses = {
+    :Active => Project::STATUS_ACTIVE,
+    :Archived => Project::STATUS_ARCHIVED,
+    :Both => "Both"
+  }
+  CUSTOM_FIELD = CustomField.find_by_name("Non Billable Hours").id
   
   def initialize(options = { })
     self.projects = [ ]
@@ -56,6 +69,12 @@ class Timesheet
     
     self.date_from = options[:date_from] || Date.today.to_s
     self.date_to = options[:date_to] || Date.today.to_s
+    
+    self.project_type = options[:project_type] || ValidProjectTypes[:Billable]
+    
+    self.detailed = options[:detailed]
+    
+    self.project_status  = options[:project_status] unless options[:project_status].nil?
 
     if options[:period_type] && ValidPeriodType.values.include?(options[:period_type].to_i)
       self.period_type = options[:period_type].to_i
@@ -77,6 +96,20 @@ class Timesheet
       fetch_time_entries_by_issue
     else
       fetch_time_entries_by_project
+    end
+  end
+  
+  def fetch_time_entries_summary
+    self.time_entries = { }
+    case self.sort
+    when :project
+      fetch_time_entries_by_project_summary
+    when :user
+      fetch_time_entries_by_user_summary
+    when :issue
+      fetch_time_entries_by_issue
+    else
+      fetch_time_entries_by_project_summary
     end
   end
 
@@ -122,7 +155,8 @@ class Timesheet
       :date_to => date_to,
       :activities => activities,
       :users => users,
-      :sort => sort
+      :sort => sort,
+      :detailed => detailed
     }
   end
 
@@ -164,10 +198,42 @@ class Timesheet
     }
   end
   
+  def filtered_projects(project_type,project_status)
+    custom_field_id = CustomField.find_by_name("Project Type").id
+    cond = ARCondition.new
+    cond << ["status =?",project_status] unless project_status == "Both"
+    if User.current.admin?
+      if project_type == "Both"
+        projects = Project.timesheet_order_by_name.find(:all,:conditions => cond.conditions,:order => "name ASC")
+      else
+        cond << ["custom_values.custom_field_id=?  && custom_values.value=?",custom_field_id,project_type]
+        projects = Project.timesheet_order_by_name.find(:all,:joins => :custom_values,:conditions => cond.conditions,:order => "name ASC")
+      end
+    elsif Setting.plugin_timesheet_plugin['project_status'] == 'all'
+      if project_type == "Both"
+        projects = Project.timesheet_order_by_name.timesheet_with_membership(User.current).find(:all,:conditions => cond.conditions,:order => "name ASC")
+      else
+        cond << ["custom_values.custom_field_id=?  && custom_values.value=?",custom_field_id,project_type]
+        projects = Project.timesheet_order_by_name.timesheet_with_membership(User.current).find(:all,:joins => :custom_values,:conditions => cond.conditions,:order => "name ASC")
+      end
+    else
+      cond << Project.visible_condition(User.current)
+      if project_type == "Both"
+        projects = Project.timesheet_order_by_name.find(:all,:conditions => cond.conditions,:order => "name ASC")
+      else
+        cond << ["custom_values.custom_field_id=?  && custom_values.value=?",custom_field_id,project_type]
+        projects = Project.timesheet_order_by_name.find(:all,:joins => :custom_values,:conditions => cond.conditions,:order => "name ASC")
+      end
+    end
+ 
+    return projects
+  end
+  
   protected
 
   def csv_header
-    csv_data = [
+    if self.detailed == "yes"
+      csv_data = [
                 '#',
                 l(:label_date),
                 l(:label_member),
@@ -176,14 +242,24 @@ class Timesheet
                 l(:label_issue),
                 "#{l(:label_issue)} #{l(:field_subject)}",
                 l(:field_comments),
-                l(:field_hours)
+                l(:field_hours),
+                l(:field_non_billable_hours)
                ]
+    else
+      csv_data = [
+        l(:label_member),
+        l(:label_project),
+        l(:field_hours),
+        l(:field_non_billable_hours)
+      ]
+    end  
     Redmine::Hook.call_hook(:plugin_timesheet_model_timesheet_csv_header, { :timesheet => self, :csv_data => csv_data})
     return csv_data
   end
 
   def time_entry_to_csv(time_entry)
-    csv_data = [
+    if self.detailed == "yes"
+      csv_data = [
                 time_entry.id,
                 time_entry.spent_on,
                 time_entry.user.name,
@@ -192,8 +268,17 @@ class Timesheet
                 ("#{time_entry.issue.tracker.name} ##{time_entry.issue.id}" if time_entry.issue),
                 (time_entry.issue.subject if time_entry.issue),
                 time_entry.comments,
-                time_entry.hours
+                sprintf('%.2f', time_entry.hours),
+                time_entry.non_billable_hours.blank? ? nil : sprintf('%.2f', time_entry.non_billable_hours) 
                ]
+    else
+      csv_data = [
+        time_entry.first_name+" "+time_entry.last_name,
+        time_entry.project_name,
+        sprintf('%.2f', time_entry.hours),
+        time_entry.non_billable_hours.blank? ? nil : sprintf('%.2f', time_entry.non_billable_hours) 
+      ]
+    end  
     Redmine::Hook.call_hook(:plugin_timesheet_model_timesheet_time_entry_to_csv, { :timesheet => self, :time_entry => time_entry, :csv_data => csv_data})
     return csv_data
   end
@@ -240,23 +325,46 @@ class Timesheet
     Redmine::Hook.call_hook(:plugin_timesheet_model_timesheet_includes, { :timesheet => self, :includes => includes})
     return includes
   end
-
-  private
+  
+ private
 
   
   def time_entries_for_all_users(project)
     return project.time_entries.find(:all,
-                                     :conditions => self.conditions(self.users),
+                                     :conditions => self.conditions(self.users,"custom_values.custom_field_id=#{CUSTOM_FIELD}"),
                                      :include => self.includes,
+                                     :joins => :custom_values,
+                                     :select => "time_entries.*,custom_values.value as non_billable_hours",
                                      :order => "spent_on ASC")
+  end
+  
+  def hours_summary_for_all_users(project)
+    return project.time_entries.find(:all,
+                                     :conditions => self.conditions(self.users,"custom_values.custom_field_id=#{CUSTOM_FIELD}"),
+                                     :joins => [:custom_values,:user,:project],
+                                     :select => "sum(time_entries.hours) as hours,time_entries.user_id,sum(custom_values.value) as non_billable_hours,users.firstname as first_name,projects.name as project_name,users.lastname as last_name",
+                                     :group => "user_id",
+                                     :order => "first_name ASC"
+                                 )
   end
   
   def time_entries_for_current_user(project)
     return project.time_entries.find(:all,
-                                     :conditions => self.conditions(User.current.id),
+                                     :conditions => self.conditions(User.current.id,"custom_values.custom_field_id=#{CUSTOM_FIELD}"),
                                      :include => self.includes,
                                      :include => [:activity, :user, {:issue => [:tracker, :assigned_to, :priority]}],
+                                     :joins => :custom_values,
+                                     :select => "time_entries.*,custom_values.value as non_billable_hours",
                                      :order => "spent_on ASC")
+  end
+  
+   def hours_summary_for_current_user(project)
+    return project.time_entries.find(:all,
+                                     :conditions => self.conditions(User.current.id,"custom_values.custom_field_id=#{CUSTOM_FIELD}"),
+                                     :joins => [:custom_values,:user,:project],
+                                     :select => "sum(time_entries.hours) as hours,time_entries.user_id,sum(custom_values.value) as non_billable_hours,users.firstname as first_name,projects.name as project_name,users.lastname as last_name",
+                                     :group => "user_id",
+                                     :order => "first_name ASC")
   end
   
   def issue_time_entries_for_all_users(issue)
@@ -276,12 +384,26 @@ class Timesheet
   end
   
   def time_entries_for_user(user, options={})
-    extra_conditions = options.delete(:conditions)
+    extra_conditions = "custom_values.custom_field_id=#{CUSTOM_FIELD}"
     
     return TimeEntry.find(:all,
                           :conditions => self.conditions([user], extra_conditions),
                           :include => self.includes,
+                          :joins => :custom_values,
+                          :select => "time_entries.*,custom_values.value as non_billable_hours",
                           :order => "spent_on ASC"
+                          )
+  end
+  
+  def hours_summary_for_user(user, options={})
+    extra_conditions = "custom_values.custom_field_id=#{CUSTOM_FIELD}"
+    
+    return TimeEntry.find(:all,
+                          :conditions => self.conditions([user], extra_conditions),
+                          :joins => [:custom_values,:user,:project],
+                          :select => "sum(time_entries.hours) as hours,time_entries.user_id,time_entries.project_id,sum(custom_values.value) as non_billable_hours,users.firstname as first_name,projects.name as project_name,users.lastname as last_name",
+                          :group => "project_id",
+                          :order => "project_name ASC"
                           )
   end
   
@@ -297,7 +419,7 @@ class Timesheet
         # Users with the Role and correct permission can see all time entries
         logs = time_entries_for_all_users(project)
         users = logs.collect(&:user).uniq.sort
-      elsif User.current.allowed_to_on_single_potentially_archived_project?(:view_time_entries, project)
+      elsif User.current.allowed_to_on_single_potentially_archived_project?(:view_time_entries, project) && self.users.include?(User.current.id)
         # Users with permission to see their time entries
         logs = time_entries_for_current_user(project)
         users = logs.collect(&:user).uniq.sort
@@ -305,15 +427,34 @@ class Timesheet
         # Rest can see nothing
       end
       
-      # Append the parent project name
-      if project.parent.nil?
-        unless logs.empty?
+      unless logs.empty?
           self.time_entries[project.name] = { :logs => logs, :users => users } 
-        end
+      end
+    end
+  end
+  
+  def fetch_time_entries_by_project_summary
+    self.projects.each do |project|
+      logs = []
+      users = []
+      if User.current.admin?
+        # Administrators can see all time entries
+        logs = hours_summary_for_all_users(project)
+        users = logs.collect(&:user).uniq.sort
+      elsif User.current.allowed_to_on_single_potentially_archived_project?(:see_project_timesheets, project)
+        # Users with the Role and correct permission can see all time entries
+        logs = hours_summary_for_all_users(project)
+        users = logs.collect(&:user).uniq.sort
+      elsif User.current.allowed_to_on_single_potentially_archived_project?(:view_time_entries, project) && self.users.include?(User.current.id)
+        # Users with permission to see their time entries
+        logs = hours_summary_for_current_user(project) 
+        users = logs.collect(&:user).uniq.sort
       else
-        unless logs.empty?
-          self.time_entries[project.parent.name + ' / ' + project.name] = { :logs => logs, :users => users }
-        end
+        # Rest can see nothing
+      end
+      
+      unless logs.empty?
+          self.time_entries[project.name] = { :logs => logs, :users => users } 
       end
     end
   end
@@ -331,6 +472,30 @@ class Timesheet
         # User can see project timesheets in at least once place, so
         # fetch the user timelogs for those projects
         logs = time_entries_for_user(user_id, :conditions => Project.allowed_to_condition(User.current, :see_project_timesheets))
+      else
+        # Rest can see nothing
+      end
+      
+      unless logs.empty?
+        user = User.find_by_id(user_id)
+        self.time_entries[user.name] = { :logs => logs }  unless user.nil?
+      end
+    end
+  end
+  
+  def fetch_time_entries_by_user_summary
+    self.users.each do |user_id|
+      logs = []
+      if User.current.admin?
+        # Administrators can see all time entries
+        logs = hours_summary_for_user(user_id)
+      elsif User.current.id == user_id
+        # Users can see their own their time entries
+        logs = hours_summary_for_user(user_id)
+      elsif User.current.allowed_to_on_single_potentially_archived_project?(:see_project_timesheets, nil, :global => true)
+        # User can see project timesheets in at least once place, so
+        # fetch the user timelogs for those projects
+        logs = hours_summary_for_user(user_id, :conditions => Project.allowed_to_condition(User.current, :see_project_timesheets))
       else
         # Rest can see nothing
       end

@@ -16,7 +16,7 @@ module TimesheetHelper
               :controller => 'timesheet',
               :action => 'report',
               :format => 'csv',
-              :timesheet => timesheet.to_param
+              :timesheet => timesheet.to_param,
             },
             :method => 'post',
             :class => 'icon icon-timesheet')
@@ -46,7 +46,8 @@ module TimesheetHelper
   end
 
   def project_options(timesheet)
-    available_projects = timesheet.allowed_projects
+    #Onload of the page the project type is billable
+    available_projects = timesheet.filtered_projects(timesheet.project_type.blank? ? "Billable" : timesheet.project_type,timesheet.project_status.blank? ? Project::STATUS_ACTIVE : timesheet.project_status)
     selected_projects = timesheet.projects.collect(&:id)
     selected_projects = available_projects.collect(&:id) if selected_projects.blank?
     
