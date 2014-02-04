@@ -8,15 +8,27 @@ else
   FCSV = CSV
 end
 
+require 'simple_xlsx'
 require 'dispatcher'
-Dispatcher.to_prepare :timesheet_plugin do
+require 'timesheet_plugin/hooks/timesheet_hooks'
+require_dependency 'timesheet_plugin/hooks/timesheet_hooks'
 
+require 'timesheet_plugin/patches/time_entry_patch'
+require 'timesheet_plugin/patches/version_patch'
+
+Dispatcher.to_prepare :timesheet_plugin do
   require_dependency 'principal'
   require_dependency 'user'
   User.send(:include, TimesheetPlugin::Patches::UserPatch)
 
   require_dependency 'project'
   Project.send(:include, TimesheetPlugin::Patches::ProjectPatch)
+
+  require_dependency 'time_entry'
+  TimeEntry.send(:include, TimesheetPlugin::Patches::TimeEntryPatch)
+  
+  require_dependency 'version'
+  Version.send(:include, TimesheetPlugin::Patches::VersionPatch)
   # Needed for the compatibility check
   begin
     require_dependency 'time_entry_activity'
@@ -41,7 +53,8 @@ unless Redmine::Plugin.registered_plugins.keys.include?(:timesheet_plugin)
                'list_size' => '5',
                'precision' => '2',
                'project_status' => 'active',
-               'user_status' => 'active'
+               'user_status' => 'active',
+               'custom_delimiter' => '.'
              }, :partial => 'settings/timesheet_settings')
 
     permission :see_project_timesheets, { }, :require => :member

@@ -13,10 +13,22 @@ class TimesheetController < ApplicationController
   helper :timelog
 
   SessionKey = 'timesheet_filter'
+  SessionKey2 = 'timesheet_session'
 
   verify :method => :delete, :only => :reset, :render => {:nothing => true, :status => :method_not_allowed }
 
+  # save filter values into session because of sorting
+  def save_session(values)
+    session[SessionKey2] = values
+  end
+
+  def load_session
+    values = session[SessionKey2]
+    return values
+  end
+
   def index
+    session[SessionKey2] = nil
     load_filters_from_session
     unless @timesheet
       @timesheet ||= Timesheet.new
@@ -30,6 +42,33 @@ class TimesheetController < ApplicationController
   end
 
   def report
+    @p = params
+    if params[:sort].nil?
+      save_session(params[:timesheet])
+      params[:sort] = "date"
+      params[:type] = "asc"
+    else
+      sort = params[:sort]
+      type = params[:type]
+      params[:timesheet] = load_session
+      
+      # new ordering
+      case sort
+        when "date"
+          params[:timesheet][:order] = "spent_on #{type}"
+        when "member"
+          params[:timesheet][:order] = "users.firstname #{type}"
+        when "activity"
+          params[:timesheet][:order] = "enumerations.name #{type}"
+        when "hours"
+          params[:timesheet][:order] = "hours #{type}"
+        else
+          params[:timesheet][:order] = "spent_on ASC"
+      end
+    end
+
+    @ts = params[:timesheet]
+
     if params && params[:timesheet]
       @timesheet = Timesheet.new( params[:timesheet] )
     else
@@ -84,6 +123,7 @@ class TimesheetController < ApplicationController
 
     respond_to do |format|
       format.html { render :action => 'details', :layout => false if request.xhr? }
+      format.xlsx { send_file @timesheet.to_xlsx }
       format.csv  { send_data @timesheet.to_csv, :filename => 'timesheet.csv', :type => "text/csv" }
     end
   end

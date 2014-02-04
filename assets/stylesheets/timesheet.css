@@ -4,3 +4,8 @@ div#timesheet-form p { padding:0px 10px; float:left; }
 #date-options { margin-left: 10px; }
 #date-options input[type='radio'] { margin-left: -20px; }
 #timesheet-form .button-to div {display:inline; }
+
+table.list th a { text-decoration: underline; }
+table.list th a.asc:after { content: url('../images/sort_up.gif');} 
+table.list th a.desc:after { content: url('../images/sort_down.gif');} 
+table.list th a:hover { text-decoration: none; }

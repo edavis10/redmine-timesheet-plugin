@@ -3,6 +3,26 @@ module TimesheetHelper
     l(:timesheet_showing_users) + users.collect(&:name).join(', ')
   end
 
+  # generate link with parameters to order by specific field
+  def link_to_sort_by(label, field)
+    unless params[:sort].nil?
+      type = params[:type] == "desc" ? "asc" : "desc" if params[:sort] == field
+    else
+      type = "asc"
+    end
+
+    css = ""
+    # css class for arrow must be opossite to new sort type
+    css = type == "desc" ? "asc" : "desc"  if field == params[:sort]
+    
+    return link_to label,
+                  {:controller => 'timesheet',
+                  :action => 'report',
+                  :sort => field,
+                  :type => type},
+                  :class => css
+  end
+
   def permalink_to_timesheet(timesheet)
     link_to(l(:timesheet_permalink),
             :controller => 'timesheet',
@@ -20,6 +40,18 @@ module TimesheetHelper
             },
             :method => 'post',
             :class => 'icon icon-timesheet')
+  end
+
+  def link_to_xlsx_export(timesheet)
+    link_to('XLSX',
+            {
+              :controller => 'timesheet',
+              :action => 'report',
+              :format => 'xlsx',
+              :timesheet => timesheet.to_param
+            },
+            :method => 'post',
+            :class => 'icon, icon-timesheet')
   end
   
   def toggle_issue_arrows(issue_id)
@@ -70,4 +102,8 @@ module TimesheetHelper
                                        selected_users)
 
   end
+
+  # def number_with_custom_delimiter(number)
+  #   number.to_s.gsub('.', Setting.plugin_timesheet_plugin['custom_delimiter'])
+  # end
 end
